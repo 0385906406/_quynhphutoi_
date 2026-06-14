@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getHealthBySlug, listByWard, OWNERSHIP_LABEL } from "@/lib/health";
 import { getAdminUnitBySlug, fullOldAddress } from "@/lib/admin-units";
 import { DetailSocial } from "@/components/common/DetailSocial";
+import { buildMetadata, jsonLdHealth, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const h = await getHealthBySlug(slug);
   if (!h) return { title: "Không tìm thấy cơ sở y tế" };
   const u = await getAdminUnitBySlug(h.wardSlug);
-  return { title: `${h.name} — Y tế Quỳnh Phụ`, description: h.description || `${h.name} tại ${fullOldAddress(u ?? undefined, h.address)}.` };
+  return buildMetadata({
+    title: `${h.name} — Y tế Quỳnh Phụ`,
+    description: h.description || `${h.name} tại ${fullOldAddress(u ?? undefined, h.address)}.`,
+    path: `/y-te/${slug}`,
+    modifiedTime: h.updatedAt?.toISOString(),
+  });
 }
 
 export default async function HealthDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,6 +34,14 @@ export default async function HealthDetailPage({ params }: { params: Promise<{ s
 
   return (
     <article>
+      <JsonLd data={[
+        jsonLdHealth(h, h.description || `${h.name} tại ${oldAddress}`, unit?.name),
+        jsonLdBreadcrumb([
+          { name: "Trang chủ", path: "/" },
+          { name: "Y tế", path: "/y-te" },
+          { name: h.name, path: `/y-te/${slug}` },
+        ]),
+      ]} />
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="h-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

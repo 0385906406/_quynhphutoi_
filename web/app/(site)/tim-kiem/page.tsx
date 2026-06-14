@@ -1,8 +1,13 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { searchAll, SEARCH_MODULES, MODULE_ICON } from "@/lib/search";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Tìm kiếm — Quỳnh Phụ Tôi" };
+export const metadata = buildMetadata({
+  title: "Tìm kiếm",
+  description: "Tìm kiếm tin tức, việc làm, mua bán, tìm đồ rơi, trường học, y tế, giao thông và di tích trên Cổng thông tin Quỳnh Phụ.",
+  path: "/tim-kiem",
+  noindex: true,
+});
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {

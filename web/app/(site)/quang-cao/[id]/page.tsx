@@ -5,6 +5,7 @@ import { getPublicAd, recordImpression, listAllActiveAds } from "@/lib/ads";
 import { MapEmbed } from "@/components/common/MapEmbed";
 import { ImageGallery } from "@/components/common/ImageGallery";
 import { stripHtml } from "@/lib/strip-html";
+import { buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +13,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const ad = await getPublicAd(id);
   if (!ad) return { title: "Không tìm thấy quảng cáo" };
-  return {
-    title: `${ad.title} — ${ad.advertiser} | Quảng cáo Quỳnh Phụ`,
+  return buildMetadata({
+    title: `${ad.title} — ${ad.advertiser}`,
     description: (stripHtml(ad.description || "") || ad.title).slice(0, 160),
-    robots: { index: false, follow: true }, // trang quảng cáo — không index
-  };
+    path: `/quang-cao/${id}`,
+    image: ad.images?.[0] || ad.imageDesktop,
+    noindex: true, // trang quảng cáo — không index
+  });
 }
 
 const ICON = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.9, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, width: 18, height: 18 };

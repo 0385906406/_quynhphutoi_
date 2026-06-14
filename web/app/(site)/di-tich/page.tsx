@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listRelics, countByType, RANKING_LABEL, type RelicDoc } from "@/lib/relics";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { RelicBrowser, type RelicItem } from "@/components/relics/RelicBrowser";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Di tích lịch sử - văn hoá Quỳnh Phụ",
   description: "Đình, chùa, đền, miếu và các di tích lịch sử - văn hoá huyện Quỳnh Phụ — đền Đồng Bằng, đền A Sào… Tra cứu theo loại di tích và xã, thị trấn.",
-};
+  path: "/di-tich",
+});
 
 export const dynamic = "force-dynamic";
 

@@ -6,6 +6,7 @@
 // chuyển sang nội dung thật — xem ghi chú "mapping" cuối file để gắn vào page.
 
 import { getDb, ensureIndexes } from "@/lib/db";
+import { SITE } from "@/lib/seo";
 import { ObjectId, type Filter } from "mongodb";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { formatDate } from "@/lib/datetime";
@@ -62,7 +63,7 @@ export type ArticleDoc = {
   updatedAt: Date;
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://congquynhphu.vn";
+const SITE_URL = SITE.url;
 
 export async function articles() {
   const db = await getDb();

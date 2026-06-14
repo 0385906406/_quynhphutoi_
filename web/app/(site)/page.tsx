@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroSlider } from "@/components/home/HeroSlider";
 import { NEWS } from "@/lib/news";
 import { NewsCard } from "@/components/news/NewsCard";
+import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
+
+export const metadata: Metadata = {
+  ...buildMetadata({ title: SITE.name, description: SITE.description, path: "/" }),
+  title: { absolute: `${SITE.name} — Tin tức, việc làm & cộng đồng Quỳnh Phụ, Thái Bình` },
+};
 
 /* ----------------------------- Dữ liệu mẫu ----------------------------- */
 const KPIS = [
@@ -111,6 +119,7 @@ function SectionHead({ eyebrow, title, href, linkLabel = "Xem tất cả", desc 
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={[jsonLdWebSite(), jsonLdOrganization()]} />
       <HeroSlider />
 
       {/* KPI STRIP */}

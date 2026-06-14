@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listSchools, countByLevel } from "@/lib/schools";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { SchoolBrowser, type SchoolItem } from "@/components/schools/SchoolBrowser";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Trường học huyện Quỳnh Phụ",
   description:
     "Danh bạ trường học huyện Quỳnh Phụ, Thái Bình — mầm non, tiểu học, THCS, THPT và GDTX theo từng xã, thị trấn.",
-};
+  path: "/truong-hoc",
+});
 
 // Đọc dữ liệu từ MongoDB tại thời điểm request.
 export const dynamic = "force-dynamic";

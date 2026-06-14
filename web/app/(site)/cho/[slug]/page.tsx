@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getMarketBySlug, relatedMarket } from "@/lib/market";
 import { getAdminUnitBySlug, fullOldAddress } from "@/lib/admin-units";
 import { DetailSocial } from "@/components/common/DetailSocial";
+import { buildMetadata, jsonLdMarket, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const m = await getMarketBySlug(slug);
   if (!m) return { title: "Không tìm thấy" };
-  return { title: `${m.name} — Chợ Quỳnh Phụ`, description: m.description || `${m.name} (${m.categoryLabel}) tại Quỳnh Phụ.` };
+  return buildMetadata({
+    title: `${m.name} — Chợ Quỳnh Phụ`,
+    description: m.description || `${m.name} (${m.categoryLabel}) tại Quỳnh Phụ.`,
+    path: `/cho/${slug}`,
+    modifiedTime: m.updatedAt?.toISOString(),
+  });
 }
 
 export default async function MarketDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -26,6 +33,14 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ s
 
   return (
     <article>
+      <JsonLd data={[
+        jsonLdMarket(m, m.description || `${m.name} (${m.categoryLabel}) tại Quỳnh Phụ.`, unit?.name),
+        jsonLdBreadcrumb([
+          { name: "Trang chủ", path: "/" },
+          { name: "Chợ", path: "/cho" },
+          { name: m.name, path: `/cho/${slug}` },
+        ]),
+      ]} />
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="m-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

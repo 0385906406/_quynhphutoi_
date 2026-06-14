@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { listAllActiveAds, PLACEMENT_LABEL } from "@/lib/ads";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Quảng cáo — Nhà tài trợ Quỳnh Phụ",
   description: "Danh sách nhà tài trợ và quảng cáo của doanh nghiệp, cửa hàng trên địa bàn huyện Quỳnh Phụ.",
-  robots: { index: false, follow: true },
-};
+  path: "/quang-cao",
+  noindex: true,
+});
 
 export const dynamic = "force-dynamic";
 

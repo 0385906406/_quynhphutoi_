@@ -13,6 +13,8 @@ import { CommentsSection, type CommentItem } from "@/components/lostfound/Commen
 import { ImageGallery } from "@/components/common/ImageGallery";
 import { MapEmbed } from "@/components/common/MapEmbed";
 import { formatDate } from "@/lib/datetime";
+import { buildMetadata, jsonLdLostFound, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return { title: "Không tìm thấy tin" };
-  return {
-    title: `${post.title} — Tìm đồ rơi Quỳnh Phụ`,
+  return buildMetadata({
+    title: `${post.title} — ${post.kind === "tim-do" ? "Tìm đồ" : "Nhặt được"}`,
     description: stripHtml(post.description).slice(0, 160),
-    robots: post.approved ? undefined : { index: false, follow: false },
-  };
+    path: `/tim-do-roi/${slug}`,
+    image: post.images?.[0],
+    type: "article",
+    publishedTime: post.createdAt?.toISOString(),
+    modifiedTime: post.updatedAt?.toISOString(),
+    noindex: !post.approved,
+  });
 }
 
 export default async function LostFoundDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -74,6 +81,16 @@ export default async function LostFoundDetailPage({ params }: { params: Promise<
 
   return (
     <article>
+      {post.approved && (
+        <JsonLd data={[
+          jsonLdLostFound(post, lead),
+          jsonLdBreadcrumb([
+            { name: "Trang chủ", path: "/" },
+            { name: "Tìm đồ rơi", path: "/tim-do-roi" },
+            { name: post.title, path: `/tim-do-roi/${slug}` },
+          ]),
+        ]} />
+      )}
       {/* ── Hero banner ── */}
       <section className={`qp-pagehero qp-lf-hero is-${post.kind}`} aria-labelledby="lf-detail-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />

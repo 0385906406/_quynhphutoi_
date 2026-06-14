@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listJobs, listMyJobs, countJobs, formatSalary, type JobDoc } from "@/lib/jobs";
 import { getSession } from "@/lib/auth";
@@ -8,10 +8,11 @@ import { getAdminUnitsMap, type AdminUnit } from "@/lib/admin-units";
 import { JobBrowser, type JobItem } from "@/components/jobs/JobBrowser";
 import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Việc làm Quỳnh Phụ",
   description: "Tin tuyển dụng, việc làm tại huyện Quỳnh Phụ — toàn thời gian, bán thời gian, thời vụ. Lọc theo ngành nghề và xã/thị trấn.",
-};
+  path: "/viec-lam",
+});
 
 export const dynamic = "force-dynamic";
 

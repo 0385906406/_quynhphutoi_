@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listClassifieds, listMyClassifieds, countClassifieds, CLASSIFIED_CATEGORIES, type ClassifiedDoc } from "@/lib/classifieds";
 import { getSession } from "@/lib/auth";
@@ -7,10 +7,11 @@ import { stripHtml } from "@/lib/strip-html";
 import { ClassifiedBrowser, type ClassifiedItem } from "@/components/classifieds/ClassifiedBrowser";
 import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Mua bán — Quỳnh Phụ",
   description: "Rao vặt mua bán của người dân Quỳnh Phụ — xe cộ, nhà đất, điện tử, đồ gia dụng, nông sản… Đăng tin và tìm mua dễ dàng.",
-};
+  path: "/mua-ban",
+});
 
 export const dynamic = "force-dynamic";
 

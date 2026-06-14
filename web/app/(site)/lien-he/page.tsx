@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact/ContactForm";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Liên hệ & đặt quảng cáo",
   description: "Liên hệ với Cổng thông tin Quỳnh Phụ — góp ý, hợp tác và đặt quảng cáo.",
-};
+  path: "/lien-he",
+});
 
 const EMAIL = "duongnv10504@gmail.com";
 

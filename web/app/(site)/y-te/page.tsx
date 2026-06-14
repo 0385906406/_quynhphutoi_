@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listHealth, countByType, type HealthDoc } from "@/lib/health";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { HealthBrowser, type HealthItem } from "@/components/health/HealthBrowser";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Y tế huyện Quỳnh Phụ",
   description: "Danh bạ cơ sở y tế huyện Quỳnh Phụ — bệnh viện, trung tâm y tế, trạm y tế xã, phòng khám, nhà thuốc. Tra cứu theo loại và xã/thị trấn.",
-};
+  path: "/y-te",
+});
 
 export const dynamic = "force-dynamic";
 

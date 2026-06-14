@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { listAdminUnits } from "@/lib/admin-units";
@@ -8,10 +8,11 @@ import { health } from "@/lib/health";
 import { transit } from "@/lib/transit";
 import { relics } from "@/lib/relics";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Tổng quan huyện Quỳnh Phụ",
   description: "Tổng quan huyện Quỳnh Phụ (Thái Bình): vị trí địa lý, dân số, hành chính, kinh tế và sáp nhập đơn vị hành chính 2025.",
-};
+  path: "/tong-quan",
+});
 
 export const dynamic = "force-dynamic";
 

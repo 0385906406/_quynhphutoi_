@@ -11,6 +11,8 @@ import { ImageGallery } from "@/components/common/ImageGallery";
 import { DetailSocial } from "@/components/common/DetailSocial";
 import { MapEmbed } from "@/components/common/MapEmbed";
 import { formatDate } from "@/lib/datetime";
+import { buildMetadata, jsonLdJob, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +31,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const job = await getJobBySlug(slug);
   if (!job) return { title: "Không tìm thấy tin" };
-  return {
-    title: `${job.title} — ${job.company} | Việc làm Quỳnh Phụ`,
+  return buildMetadata({
+    title: `${job.title} — ${job.company}`,
     description: stripHtml(job.description).slice(0, 160),
-    robots: job.approved ? undefined : { index: false, follow: false },
-  };
+    path: `/viec-lam/${slug}`,
+    image: job.images?.[0],
+    type: "article",
+    publishedTime: job.createdAt?.toISOString(),
+    modifiedTime: job.updatedAt?.toISOString(),
+    noindex: !job.approved,
+  });
 }
 
 export default async function JobDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -58,6 +65,16 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
 
   return (
     <article>
+      {job.approved && (
+        <JsonLd data={[
+          jsonLdJob(job, lead, wardName),
+          jsonLdBreadcrumb([
+            { name: "Trang chủ", path: "/" },
+            { name: "Việc làm", path: "/viec-lam" },
+            { name: job.title, path: `/viec-lam/${slug}` },
+          ]),
+        ]} />
+      )}
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="jb-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

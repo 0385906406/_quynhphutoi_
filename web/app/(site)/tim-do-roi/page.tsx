@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listPosts, listMyPosts, type LostFoundDoc } from "@/lib/lostfound";
 import { getSession } from "@/lib/auth";
@@ -10,11 +10,12 @@ import { LostFoundBrowser, type LostFoundItem } from "@/components/lostfound/Los
 import { getSettings } from "@/lib/settings";
 import type { CategoryOption } from "@/components/lostfound/PostModal";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Tìm đồ rơi — Quỳnh Phụ",
   description:
     "Bảng tin tìm đồ rơi huyện Quỳnh Phụ: đăng tin tìm đồ bị mất và tin nhặt được đồ để trả lại người mất. Lọc theo danh mục, xã/thị trấn.",
-};
+  path: "/tim-do-roi",
+});
 
 // Đọc dữ liệu từ MongoDB tại thời điểm request.
 export const dynamic = "force-dynamic";

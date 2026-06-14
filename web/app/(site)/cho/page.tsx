@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listMarket, countByCategory, type MarketDoc } from "@/lib/market";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { MarketBrowser, type MarketItem } from "@/components/market/MarketBrowser";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Chợ huyện Quỳnh Phụ",
   description: "Chợ phiên và đặc sản địa phương huyện Quỳnh Phụ — lịch họp chợ, giá tham khảo theo từng xã, thị trấn.",
-};
+  path: "/cho",
+});
 
 export const dynamic = "force-dynamic";
 

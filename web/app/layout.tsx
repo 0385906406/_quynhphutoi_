@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { SITE } from "@/lib/seo";
 import { Be_Vietnam_Pro, Space_Grotesk, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
@@ -34,12 +35,36 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: {
-    default: "Cổng thông tin Quỳnh Phụ",
-    template: "%s · Cổng thông tin Quỳnh Phụ",
+    default: SITE.name,
+    template: `%s · ${SITE.name}`,
   },
-  description:
-    "Cổng thông tin huyện Quỳnh Phụ — tin tức, việc làm, tìm đồ rơi và kết nối cộng đồng.",
+  description: SITE.description,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.name }],
+  keywords: [
+    "Quỳnh Phụ", "Thái Bình", "cổng thông tin Quỳnh Phụ", "tin tức Quỳnh Phụ",
+    "việc làm Quỳnh Phụ", "mua bán Quỳnh Phụ", "tìm đồ rơi", "trường học Quỳnh Phụ",
+    "y tế Quỳnh Phụ", "giao thông Quỳnh Phụ", "di tích Quỳnh Phụ", "chợ Quỳnh Phụ",
+  ],
+  alternates: { canonical: "/" },
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/img/patterns/logo.png", apple: "/img/patterns/logo.png", shortcut: "/img/patterns/logo.png" },
+  robots: {
+    index: true, follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    title: SITE.name,
+    description: SITE.description,
+    url: SITE.url,
+    locale: SITE.locale,
+    images: [{ url: `${SITE.url}/opengraph-image`, width: 1200, height: 630 }],
+  },
+  twitter: { card: "summary_large_image", title: SITE.name, description: SITE.description, images: [`${SITE.url}/opengraph-image`] },
 };
 
 // Root layout TỐI GIẢN — chỉ <html>/<body>, fonts & CSS toàn cục.

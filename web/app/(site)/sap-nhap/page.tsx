@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { listAdminUnits } from "@/lib/admin-units";
 import { ReorgExplorer, type ReorgGroup } from "@/components/admin-units/ReorgExplorer";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Sáp nhập hành chính 2025 — Quỳnh Phụ",
   description: "Tra cứu sáp nhập đơn vị hành chính huyện Quỳnh Phụ năm 2025: 35 xã/thị trấn cũ hợp nhất thành 9 xã mới thuộc tỉnh Hưng Yên. Chọn xã mới để xem gồm những xã cũ nào.",
-};
+  path: "/sap-nhap",
+});
 
 export const dynamic = "force-dynamic";
 

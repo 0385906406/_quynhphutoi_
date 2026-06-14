@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getSchoolBySlug, listByWard, SCHOOL_LEVELS, type SchoolDoc, type SchoolLevel } from "@/lib/schools";
 import { getAdminUnitBySlug, fullOldAddress } from "@/lib/admin-units";
 import { DetailSocial } from "@/components/common/DetailSocial";
+import { buildMetadata, jsonLdSchool, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +20,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const s = await getSchoolBySlug(slug);
   if (!s) return { title: "Không tìm thấy trường" };
   const u = await getAdminUnitBySlug(s.wardSlug);
-  return {
+  return buildMetadata({
     title: `${s.name} — Trường học Quỳnh Phụ`,
     description: s.description || `${s.name} tại ${fullOldAddress(u ?? undefined, s.address)}.`,
-  };
+    path: `/truong-hoc/${slug}`,
+    modifiedTime: s.updatedAt?.toISOString(),
+  });
 }
 
 export default async function SchoolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -36,6 +40,14 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
 
   return (
     <article>
+      <JsonLd data={[
+        jsonLdSchool(s, s.description || `${s.name} tại ${oldAddress}`, unit?.name),
+        jsonLdBreadcrumb([
+          { name: "Trang chủ", path: "/" },
+          { name: "Trường học", path: "/truong-hoc" },
+          { name: s.name, path: `/truong-hoc/${slug}` },
+        ]),
+      ]} />
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="sc-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

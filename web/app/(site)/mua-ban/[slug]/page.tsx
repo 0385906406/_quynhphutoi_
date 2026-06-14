@@ -11,6 +11,8 @@ import { ImageGallery } from "@/components/common/ImageGallery";
 import { DetailSocial } from "@/components/common/DetailSocial";
 import { MapEmbed } from "@/components/common/MapEmbed";
 import { formatDate } from "@/lib/datetime";
+import { buildMetadata, jsonLdClassified, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const a = await getClassifiedBySlug(slug);
   if (!a) return { title: "Không tìm thấy tin" };
-  return { title: `${a.title} — Mua bán Quỳnh Phụ`, description: stripHtml(a.description).slice(0, 160), robots: a.approved ? undefined : { index: false, follow: false } };
+  return buildMetadata({
+    title: `${a.title} — ${a.priceText}`,
+    description: stripHtml(a.description).slice(0, 160),
+    path: `/mua-ban/${slug}`,
+    image: a.images?.[0],
+    type: "article",
+    publishedTime: a.createdAt?.toISOString(),
+    modifiedTime: a.updatedAt?.toISOString(),
+    noindex: !a.approved,
+  });
 }
 
 export default async function ClassifiedDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -48,6 +59,16 @@ export default async function ClassifiedDetailPage({ params }: { params: Promise
 
   return (
     <article>
+      {a.approved && (
+        <JsonLd data={[
+          jsonLdClassified(a, lead),
+          jsonLdBreadcrumb([
+            { name: "Trang chủ", path: "/" },
+            { name: "Mua bán", path: "/mua-ban" },
+            { name: a.title, path: `/mua-ban/${slug}` },
+          ]),
+        ]} />
+      )}
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="a-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

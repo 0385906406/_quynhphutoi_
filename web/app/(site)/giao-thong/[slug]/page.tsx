@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTransitBySlug, relatedTransit } from "@/lib/transit";
 import { DetailSocial } from "@/components/common/DetailSocial";
+import { buildMetadata, jsonLdTransit, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const t = await getTransitBySlug(slug);
   if (!t) return { title: "Không tìm thấy tuyến" };
-  return { title: `${t.name} — Giao thông Quỳnh Phụ`, description: `Tuyến ${t.typeLabel}: ${t.origin} → ${t.destination}. ${t.fare ? "Giá vé " + t.fare + ". " : ""}${t.frequency ?? ""}` };
+  return buildMetadata({
+    title: `${t.name} — Giao thông Quỳnh Phụ`,
+    description: `Tuyến ${t.typeLabel}: ${t.origin} → ${t.destination}. ${t.fare ? "Giá vé " + t.fare + ". " : ""}${t.frequency ?? ""}`,
+    path: `/giao-thong/${slug}`,
+    modifiedTime: t.updatedAt?.toISOString(),
+  });
 }
 
 export default async function TransitDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,6 +29,14 @@ export default async function TransitDetailPage({ params }: { params: Promise<{ 
 
   return (
     <article>
+      <JsonLd data={[
+        jsonLdTransit(t, `Tuyến ${t.typeLabel}: ${t.origin} → ${t.destination}.`),
+        jsonLdBreadcrumb([
+          { name: "Trang chủ", path: "/" },
+          { name: "Giao thông", path: "/giao-thong" },
+          { name: t.name, path: `/giao-thong/${slug}` },
+        ]),
+      ]} />
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="t-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

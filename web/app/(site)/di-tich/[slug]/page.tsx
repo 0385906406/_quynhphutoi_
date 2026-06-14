@@ -5,6 +5,8 @@ import { getRelicBySlug, relatedRelics, RANKING_LABEL } from "@/lib/relics";
 import { getAdminUnitBySlug, fullOldAddress } from "@/lib/admin-units";
 import { ImageGallery } from "@/components/common/ImageGallery";
 import { DetailSocial } from "@/components/common/DetailSocial";
+import { buildMetadata, jsonLdRelic, jsonLdBreadcrumb } from "@/lib/seo";
+import { JsonLd } from "@/components/common/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const r = await getRelicBySlug(slug);
   if (!r) return { title: "Không tìm thấy" };
-  return { title: `${r.name} — Di tích Quỳnh Phụ`, description: r.description || `${r.name} (${r.typeLabel}) tại Quỳnh Phụ.` };
+  return buildMetadata({
+    title: `${r.name} — Di tích Quỳnh Phụ`,
+    description: r.description || `${r.name} (${r.typeLabel}) tại Quỳnh Phụ.`,
+    path: `/di-tich/${slug}`,
+    image: r.images?.[0],
+    modifiedTime: r.updatedAt?.toISOString(),
+  });
 }
 
 export default async function RelicDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,6 +35,14 @@ export default async function RelicDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <article>
+      <JsonLd data={[
+        jsonLdRelic(r, r.description || `${r.name} (${r.typeLabel}) tại Quỳnh Phụ.`, unit?.name),
+        jsonLdBreadcrumb([
+          { name: "Trang chủ", path: "/" },
+          { name: "Di tích", path: "/di-tich" },
+          { name: r.name, path: `/di-tich/${slug}` },
+        ]),
+      ]} />
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="r-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

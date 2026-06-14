@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
 import { listArticles, toNewsCardArticle } from "@/lib/articles";
 import { NEWS, type Article } from "@/lib/news";
 
-export const metadata: Metadata = {
+export const metadata = buildMetadata({
   title: "Tin tức & thông báo",
   description: "Tin tức, thông báo và hoạt động tại huyện Quỳnh Phụ, Thái Bình.",
-};
+  path: "/tin-tuc",
+});
 
 export const dynamic = "force-dynamic";
 
