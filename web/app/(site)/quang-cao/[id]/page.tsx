@@ -89,18 +89,20 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
           </aside>
         </div>
 
-        {/* Nội dung giới thiệu (rich-text) */}
-        {hasDesc && (
-          <section className="qp-addetail__content">
-            <h2 className="qp-addetail__h2">Giới thiệu</h2>
-            <div className="rich-text-editor__content qp-rte-view" dangerouslySetInnerHTML={{ __html: ad.description! }} />
-          </section>
-        )}
-
-        {/* Bản đồ */}
-        {ad.mapUrl && (
-          <div className="qp-addetail__map">
-            <MapEmbed url={ad.mapUrl} address={ad.address} />
+        {/* Nội dung: mô tả bên TRÁI · bản đồ bên PHẢI (giống bố cục đầu trang) */}
+        {(hasDesc || ad.mapUrl) && (
+          <div className={`qp-addetail__body${hasDesc && ad.mapUrl ? "" : " is-single"}`}>
+            {hasDesc && (
+              <section className="qp-addetail__content">
+                <h2 className="qp-addetail__h2">Giới thiệu</h2>
+                <div className="rich-text-editor__content qp-rte-view" dangerouslySetInnerHTML={{ __html: ad.description! }} />
+              </section>
+            )}
+            {ad.mapUrl && (
+              <aside className="qp-addetail__map">
+                <MapEmbed url={ad.mapUrl} address={ad.address} />
+              </aside>
+            )}
           </div>
         )}
 
