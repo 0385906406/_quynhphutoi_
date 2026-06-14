@@ -3,7 +3,7 @@ import Link from "next/link";
 import { listClassifieds, listMyClassifieds, countClassifieds, CLASSIFIED_CATEGORIES, type ClassifiedDoc } from "@/lib/classifieds";
 import { getSession } from "@/lib/auth";
 import { getAdminUnitsMap, type AdminUnit } from "@/lib/admin-units";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { ClassifiedBrowser, type ClassifiedItem } from "@/components/classifieds/ClassifiedBrowser";
 import { getSettings } from "@/lib/settings";
 

@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { createContact } from "@/lib/contact";
 import { notifyAdmins } from "@/lib/notifications";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 

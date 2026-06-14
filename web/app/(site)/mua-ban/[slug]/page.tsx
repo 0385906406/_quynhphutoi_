@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getClassifiedBySlug, incrementViews, relatedClassifieds, CONDITION_LABEL } from "@/lib/classifieds";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { ClassifiedActions } from "@/components/classifieds/ClassifiedActions";
 import { ImageGallery } from "@/components/common/ImageGallery";

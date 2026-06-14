@@ -5,7 +5,7 @@ import { getPostBySlug, incrementViews, relatedPosts } from "@/lib/lostfound";
 import { likeInfo, listComments } from "@/lib/lostfound-social";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { ResolveButton } from "@/components/lostfound/ResolveButton";
 import { PostInteractions } from "@/components/lostfound/PostInteractions";

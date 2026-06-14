@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getJobBySlug, incrementViews, relatedJobs, formatSalary } from "@/lib/jobs";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { JobActions } from "@/components/jobs/JobActions";
 import { ImageGallery } from "@/components/common/ImageGallery";

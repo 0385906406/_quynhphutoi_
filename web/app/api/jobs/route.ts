@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
-import { sanitizeHtml, stripHtml } from "@/lib/sanitize";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";

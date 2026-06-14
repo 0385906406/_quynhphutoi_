@@ -3,7 +3,7 @@ import Link from "next/link";
 import { listPosts, listMyPosts, type LostFoundDoc } from "@/lib/lostfound";
 import { getSession } from "@/lib/auth";
 import { getTree, type CategoryNode } from "@/lib/categories";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 import { WARDS } from "@/lib/wards";
 import { getAdminUnitsMap, type AdminUnit } from "@/lib/admin-units";
 import { LostFoundBrowser, type LostFoundItem } from "@/components/lostfound/LostFoundBrowser";

@@ -9,7 +9,7 @@ import { health } from "@/lib/health";
 import { transit } from "@/lib/transit";
 import { schools } from "@/lib/schools";
 import { NEWS } from "@/lib/news";
-import { stripHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 
 export type SearchHit = { module: string; moduleLabel: string; title: string; subtitle: string; href: string; image: string | null };
 export type SearchGroup = { module: string; moduleLabel: string; hits: SearchHit[] };
