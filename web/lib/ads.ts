@@ -24,6 +24,8 @@ export type AdDoc = {
   imageMobile?: string;      // ảnh cho mobile (tuỳ chọn)
   linkUrl: string;           // link đích (tuỳ chọn — rỗng nếu chỉ liên hệ qua SĐT)
   phone?: string;            // SĐT liên hệ (tuỳ chọn)
+  address?: string;          // địa chỉ hiển thị (tuỳ chọn)
+  mapUrl?: string;           // link Google Maps đã resolve (tuỳ chọn)
   placement: AdPlacement;
   weight: number;            // trọng số xoay vòng (≥1)
   startDate?: Date | null;

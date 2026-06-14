@@ -10,6 +10,7 @@ export default async function AdminAdsPage() {
   const initial: AdRow[] = docs.map((a) => ({
     id: a._id!.toString(), advertiser: a.advertiser, title: a.title, description: a.description ?? "",
     imageDesktop: a.imageDesktop, imageMobile: a.imageMobile ?? "", linkUrl: a.linkUrl, phone: a.phone ?? "",
+    address: a.address ?? "", mapUrl: a.mapUrl ?? "",
     placement: a.placement, weight: a.weight,
     startDate: a.startDate ? a.startDate.toISOString().slice(0, 10) : "",
     endDate: a.endDate ? a.endDate.toISOString().slice(0, 10) : "",

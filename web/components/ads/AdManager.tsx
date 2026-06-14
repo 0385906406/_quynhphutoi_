@@ -8,8 +8,8 @@ import { useToast } from "@/components/common/Toast";
 
 export type AdRow = {
   id: string; advertiser: string; title: string; description: string; imageDesktop: string; imageMobile: string;
-  linkUrl: string; phone: string; placement: string; weight: number; startDate: string; endDate: string;
-  active: boolean; impressions: number; clicks: number;
+  linkUrl: string; phone: string; address: string; mapUrl: string; placement: string; weight: number;
+  startDate: string; endDate: string; active: boolean; impressions: number; clicks: number;
 };
 
 const PLACEMENTS = [
@@ -21,7 +21,7 @@ const PLACEMENTS = [
 ];
 const placeLabel = (s: string) => PLACEMENTS.find((p) => p.slug === s)?.label ?? s;
 
-const EMPTY = { id: "", advertiser: "", title: "", description: "", imageDesktop: "", imageMobile: "", linkUrl: "", phone: "", placement: "home-banner", weight: 1, startDate: "", endDate: "", active: true, impressions: 0, clicks: 0 };
+const EMPTY = { id: "", advertiser: "", title: "", description: "", imageDesktop: "", imageMobile: "", linkUrl: "", phone: "", address: "", mapUrl: "", placement: "home-banner", weight: 1, startDate: "", endDate: "", active: true, impressions: 0, clicks: 0 };
 
 export function AdManager({ initial }: { initial: AdRow[] }) {
   const [rows, setRows] = useState<AdRow[]>(initial);
@@ -53,7 +53,8 @@ export function AdManager({ initial }: { initial: AdRow[] }) {
       const body = {
         advertiser: form.advertiser, title: form.title, description: form.description,
         imageDesktop: form.imageDesktop, imageMobile: form.imageMobile,
-        linkUrl: form.linkUrl, phone: form.phone, placement: form.placement, weight: Number(form.weight) || 1,
+        linkUrl: form.linkUrl, phone: form.phone, address: form.address, mapUrl: form.mapUrl,
+        placement: form.placement, weight: Number(form.weight) || 1,
         startDate: form.startDate || null, endDate: form.endDate || null, active: form.active,
       };
       const res = await fetch(editingId ? `/api/admin/ads/${editingId}` : "/api/admin/ads", {
@@ -118,6 +119,16 @@ export function AdManager({ initial }: { initial: AdRow[] }) {
             <div className="qp-form-group">
               <label className="qp-label">Trọng số ưu tiên</label>
               <input type="number" min={1} className="qp-input" value={form.weight} onChange={(e) => set("weight", Number(e.target.value))} />
+            </div>
+          </div>
+          <div className="qp-acc-grid2">
+            <div className="qp-form-group">
+              <label className="qp-label">Địa chỉ (tuỳ chọn)</label>
+              <input className="qp-input" value={form.address} maxLength={200} onChange={(e) => set("address", e.target.value)} placeholder="VD: Số 1 đường ABC, TT Quỳnh Côi" />
+            </div>
+            <div className="qp-form-group">
+              <label className="qp-label">Link Google Maps (tuỳ chọn)</label>
+              <input className="qp-input" type="url" inputMode="url" value={form.mapUrl} maxLength={500} onChange={(e) => set("mapUrl", e.target.value)} placeholder="Dán link Google Maps (nút Chia sẻ)" />
             </div>
           </div>
           <div className="qp-form-group">

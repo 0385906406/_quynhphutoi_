@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
 import { updateAd, deleteAd, isPlacement, type CreateAdInput } from "@/lib/ads";
+import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 
 async function guard() {
   const user = await getCurrentUser();
@@ -24,11 +25,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof b.imageDesktop === "string") patch.imageDesktop = b.imageDesktop.trim();
   if (typeof b.imageMobile === "string") patch.imageMobile = b.imageMobile.trim() || undefined;
   if (typeof b.phone === "string") patch.phone = b.phone.trim() || undefined;
+  if (typeof b.address === "string") patch.address = b.address.trim() || undefined;
   if (typeof b.linkUrl === "string") {
     const url = b.linkUrl.trim();
     // Link đích TUỲ CHỌN — cho phép rỗng; chỉ kiểm định khi có nhập.
     if (url && !/^https?:\/\//i.test(url)) return NextResponse.json({ error: "Link đích không hợp lệ." }, { status: 400 });
     patch.linkUrl = url;
+  }
+  if (typeof b.mapUrl === "string") {
+    const raw = b.mapUrl.trim();
+    // Link Google Maps TUỲ CHỌN — cho phép rỗng để gỡ; có nhập thì kiểm định + resolve.
+    if (raw && (raw.length > 500 || !isGoogleMapsUrl(raw))) return NextResponse.json({ error: "Link Google Maps không hợp lệ." }, { status: 400 });
+    patch.mapUrl = raw ? await resolveMapUrl(raw) : undefined;
   }
   if (typeof b.placement === "string" && isPlacement(b.placement)) patch.placement = b.placement;
   if (b.weight !== undefined) patch.weight = Math.max(1, Number(b.weight) || 1);

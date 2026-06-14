@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicAd, recordImpression, listAllActiveAds, PLACEMENT_LABEL } from "@/lib/ads";
+import { MapEmbed } from "@/components/common/MapEmbed";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     robots: { index: false, follow: true }, // trang quảng cáo — không index
   };
 }
-
-const fmt = (n: number) => n.toLocaleString("vi-VN");
 
 export default async function AdDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,6 +66,12 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
             ) : (
               <p className="qp-ad-detail__desc text-muted">Nhà tài trợ chưa cung cấp mô tả chi tiết. Vui lòng liên hệ trực tiếp qua thông tin bên cạnh.</p>
             )}
+
+            {ad.mapUrl && (
+              <div style={{ marginTop: "var(--space-6)" }}>
+                <MapEmbed url={ad.mapUrl} address={ad.address} />
+              </div>
+            )}
           </div>
 
           <aside className="qp-lf-aside">
@@ -77,6 +82,9 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
                 <div className="qp-lf-spec__row"><span>Nhãn hàng</span><b>{ad.advertiser}</b></div>
                 {ad.phone && (
                   <div className="qp-lf-spec__row"><span>Điện thoại</span><b><a href={`tel:${ad.phone}`}>{ad.phone}</a></b></div>
+                )}
+                {ad.address && (
+                  <div className="qp-lf-spec__row"><span>Địa chỉ</span><b>{ad.address}</b></div>
                 )}
               </div>
               {ad.phone && <a href={`tel:${ad.phone}`} className="qp-btn-primary qp-btn-block mt-6">Gọi ngay</a>}
@@ -89,15 +97,6 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
               {!ad.phone && !ad.linkUrl && (
                 <p className="type-body-small text-muted" style={{ margin: "12px 0 0" }}>Chưa có thông tin liên hệ.</p>
               )}
-            </div>
-
-            {/* Thống kê */}
-            <div className="qp-lf-infocard">
-              <div className="qp-lf-infocard__title">Thống kê</div>
-              <div className="qp-lf-spec">
-                <div className="qp-lf-spec__row"><span>Lượt xem</span><b>{fmt(ad.impressions)}</b></div>
-                <div className="qp-lf-spec__row"><span>Lượt click</span><b>{fmt(ad.clicks)}</b></div>
-              </div>
             </div>
           </aside>
         </div>
