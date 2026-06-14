@@ -91,6 +91,9 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
                 <Field label="Số ảnh tối đa mỗi tin">
                   <input type="number" min={1} max={20} className="qp-input" value={form.postMaxImages} onChange={num("postMaxImages")} />
                 </Field>
+                <Field label="Số ảnh tối đa mỗi quảng cáo" hint="Thư viện ảnh hiển thị ở trang chi tiết quảng cáo.">
+                  <input type="number" min={1} max={20} className="qp-input" value={form.adMaxImages} onChange={num("adMaxImages")} />
+                </Field>
                 <Field label="Thời gian chờ cơ bản (phút)" hint="Khoảng cách tối thiểu giữa 2 tin.">
                   <input type="number" min={0} max={1440} className="qp-input" value={form.postCooldownMin} onChange={num("postCooldownMin")} />
                 </Field>

@@ -6,6 +6,7 @@ import { updateAd, deleteAd, isPlacement, type CreateAdInput } from "@/lib/ads";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { stripHtml } from "@/lib/strip-html";
+import { getSettings } from "@/lib/settings";
 
 async function guard() {
   const user = await getCurrentUser();
@@ -29,6 +30,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   if (typeof b.imageDesktop === "string") patch.imageDesktop = b.imageDesktop.trim();
   if (typeof b.imageMobile === "string") patch.imageMobile = b.imageMobile.trim() || undefined;
+  if (Array.isArray(b.images)) {
+    const max = (await getSettings()).adMaxImages;
+    const imgs = b.images.filter((x: unknown): x is string => typeof x === "string" && x.trim().length > 0).map((x: string) => x.trim()).slice(0, max);
+    patch.images = imgs.length ? imgs : undefined;
+  }
   if (typeof b.phone === "string") patch.phone = b.phone.trim() || undefined;
   if (typeof b.address === "string") patch.address = b.address.trim() || undefined;
   if (typeof b.linkUrl === "string") {

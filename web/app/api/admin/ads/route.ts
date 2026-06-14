@@ -6,6 +6,13 @@ import { listAllAds, createAd, isPlacement, type AdPlacement } from "@/lib/ads";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { stripHtml } from "@/lib/strip-html";
+import { getSettings } from "@/lib/settings";
+
+// Lọc mảng URL ảnh hợp lệ, cắt theo giới hạn settings.adMaxImages.
+function parseImages(raw: unknown, max: number): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()).slice(0, max);
+}
 
 async function guard() {
   const user = await getCurrentUser();
@@ -21,7 +28,7 @@ export async function GET() {
   return NextResponse.json({
     ads: rows.map((a) => ({
       id: a._id!.toString(), advertiser: a.advertiser, title: a.title, description: a.description ?? "",
-      imageDesktop: a.imageDesktop, imageMobile: a.imageMobile ?? null,
+      imageDesktop: a.imageDesktop, imageMobile: a.imageMobile ?? null, images: a.images ?? [],
       linkUrl: a.linkUrl, phone: a.phone ?? "", address: a.address ?? "", mapUrl: a.mapUrl ?? "",
       placement: a.placement, weight: a.weight,
       startDate: a.startDate ? a.startDate.toISOString().slice(0, 10) : null,
@@ -60,10 +67,14 @@ export async function POST(req: Request) {
     mapUrl = await resolveMapUrl(rawMap);
   }
 
+  const settings = await getSettings();
+  const images = parseImages(b.images, settings.adMaxImages);
+
   const ad = await createAd({
     advertiser, title, imageDesktop,
     description: description || undefined,
     imageMobile: typeof b.imageMobile === "string" && b.imageMobile.trim() ? b.imageMobile.trim() : undefined,
+    images: images.length ? images : undefined,
     linkUrl, phone: phone || undefined, address: address || undefined, mapUrl,
     placement: placement as AdPlacement,
     weight: Number(b.weight) || 1,

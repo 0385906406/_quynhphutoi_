@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicAd, recordImpression, listAllActiveAds } from "@/lib/ads";
 import { MapEmbed } from "@/components/common/MapEmbed";
+import { ImageGallery } from "@/components/common/ImageGallery";
 import { stripHtml } from "@/lib/strip-html";
 
 export const dynamic = "force-dynamic";
@@ -54,9 +55,8 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
       <div className="container-wide qp-lf-body">
         <div className="qp-article-layout is-lf">
           <div className="qp-lf-main">
-            <div className="qp-ad-detail__media">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ad.imageDesktop} alt={ad.title} />
+            <div className="qp-ad-detail__gallery">
+              <ImageGallery images={ad.images?.length ? ad.images : [ad.imageDesktop]} alt={ad.title} />
             </div>
 
             {stripHtml(ad.description || "") ? (

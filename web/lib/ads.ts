@@ -20,8 +20,9 @@ export type AdDoc = {
   advertiser: string;        // tên nhãn hàng
   title: string;             // dòng chữ hiển thị (native) / alt
   description?: string;      // mô tả chi tiết (hiển thị ở trang chi tiết quảng cáo)
-  imageDesktop: string;      // ảnh chính
-  imageMobile?: string;      // ảnh cho mobile (tuỳ chọn)
+  imageDesktop: string;      // ảnh banner chính (dùng cho ô quảng cáo / slot)
+  imageMobile?: string;      // ảnh banner cho mobile (tuỳ chọn)
+  images?: string[];         // thư viện ảnh hiển thị ở trang chi tiết (tuỳ chọn, max = settings.adMaxImages)
   linkUrl: string;           // link đích (tuỳ chọn — rỗng nếu chỉ liên hệ qua SĐT)
   phone?: string;            // SĐT liên hệ (tuỳ chọn)
   address?: string;          // địa chỉ hiển thị (tuỳ chọn)

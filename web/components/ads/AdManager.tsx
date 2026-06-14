@@ -9,7 +9,7 @@ import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 
 export type AdRow = {
   id: string; advertiser: string; title: string; description: string; imageDesktop: string; imageMobile: string;
-  linkUrl: string; phone: string; address: string; mapUrl: string; placement: string; weight: number;
+  images: string[]; linkUrl: string; phone: string; address: string; mapUrl: string; placement: string; weight: number;
   startDate: string; endDate: string; active: boolean; impressions: number; clicks: number;
 };
 
@@ -22,9 +22,9 @@ const PLACEMENTS = [
 ];
 const placeLabel = (s: string) => PLACEMENTS.find((p) => p.slug === s)?.label ?? s;
 
-const EMPTY = { id: "", advertiser: "", title: "", description: "", imageDesktop: "", imageMobile: "", linkUrl: "", phone: "", address: "", mapUrl: "", placement: "home-banner", weight: 1, startDate: "", endDate: "", active: true, impressions: 0, clicks: 0 };
+const EMPTY: AdRow = { id: "", advertiser: "", title: "", description: "", imageDesktop: "", imageMobile: "", images: [], linkUrl: "", phone: "", address: "", mapUrl: "", placement: "home-banner", weight: 1, startDate: "", endDate: "", active: true, impressions: 0, clicks: 0 };
 
-export function AdManager({ initial }: { initial: AdRow[] }) {
+export function AdManager({ initial, adMaxImages = 6 }: { initial: AdRow[]; adMaxImages?: number }) {
   const [rows, setRows] = useState<AdRow[]>(initial);
   const [form, setForm] = useState<AdRow>({ ...EMPTY });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,6 +54,7 @@ export function AdManager({ initial }: { initial: AdRow[] }) {
       const body = {
         advertiser: form.advertiser, title: form.title, description: form.description,
         imageDesktop: form.imageDesktop, imageMobile: form.imageMobile,
+        images: form.images,
         linkUrl: form.linkUrl, phone: form.phone, address: form.address, mapUrl: form.mapUrl,
         placement: form.placement, weight: Number(form.weight) || 1,
         startDate: form.startDate || null, endDate: form.endDate || null, active: form.active,
@@ -143,6 +144,10 @@ export function AdManager({ initial }: { initial: AdRow[] }) {
           <div className="qp-form-group">
             <label className="qp-label">Ảnh cho mobile (tuỳ chọn)</label>
             <ImageUploader value={form.imageMobile ? [form.imageMobile] : []} onChange={(arr) => set("imageMobile", arr[0] ?? "")} max={1} />
+          </div>
+          <div className="qp-form-group">
+            <label className="qp-label">Thư viện ảnh chi tiết (tuỳ chọn — tối đa {adMaxImages} ảnh, hiển thị ở trang chi tiết)</label>
+            <ImageUploader value={form.images} onChange={(arr) => set("images", arr)} max={adMaxImages} />
           </div>
           <div className="qp-acc-grid2">
             <div className="qp-form-group">

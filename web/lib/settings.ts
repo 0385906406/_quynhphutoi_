@@ -8,6 +8,7 @@ export type AppSettings = {
   postCooldownMin: number;
   postCooldownMax: number;
   postMaxImages: number;
+  adMaxImages: number;             // số ảnh tối đa cho 1 quảng cáo (thư viện trang chi tiết)
   postRequireApproval: boolean;
   jobsPostEnabled: boolean;        // cho phép đăng tin Việc làm
   lostfoundPostEnabled: boolean;   // cho phép đăng tin Tìm đồ rơi
@@ -38,6 +39,7 @@ const DEFAULTS: AppSettings = {
   postCooldownMin: Number(process.env.POST_COOLDOWN_MIN || "10"),
   postCooldownMax: Number(process.env.POST_COOLDOWN_MAX || "60"),
   postMaxImages: 8,
+  adMaxImages: 6,
   postRequireApproval: true,
   jobsPostEnabled: true,
   lostfoundPostEnabled: true,
@@ -95,6 +97,7 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     postCooldownMin: int(patch.postCooldownMin ?? c.postCooldownMin, 0, 1440, c.postCooldownMin),
     postCooldownMax: int(patch.postCooldownMax ?? c.postCooldownMax, 0, 1440, c.postCooldownMax),
     postMaxImages: int(patch.postMaxImages ?? c.postMaxImages, 1, 20, c.postMaxImages),
+    adMaxImages: int(patch.adMaxImages ?? c.adMaxImages, 1, 20, c.adMaxImages),
     postRequireApproval: bool(patch.postRequireApproval, c.postRequireApproval),
     jobsPostEnabled: bool(patch.jobsPostEnabled, c.jobsPostEnabled),
     lostfoundPostEnabled: bool(patch.lostfoundPostEnabled, c.lostfoundPostEnabled),
