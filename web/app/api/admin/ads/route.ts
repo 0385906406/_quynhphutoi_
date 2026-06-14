@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
 import { listAllAds, createAd, isPlacement, type AdPlacement } from "@/lib/ads";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 
 async function guard() {
   const user = await getCurrentUser();
@@ -36,7 +38,9 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => ({}));
   const advertiser = String(b.advertiser || "").trim();
   const title = String(b.title || "").trim();
-  const description = String(b.description || "").trim();
+  // Nội dung là rich-text → khử XSS bằng sanitizeHtml; rỗng khi bỏ hết thẻ thì coi như không có.
+  const descHtml = sanitizeHtml(typeof b.description === "string" ? b.description : "");
+  const description = stripHtml(descHtml) ? descHtml : "";
   const imageDesktop = String(b.imageDesktop || "").trim();
   const linkUrl = String(b.linkUrl || "").trim();
   const phone = String(b.phone || "").trim();

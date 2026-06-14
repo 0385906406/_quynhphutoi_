@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublicAd, recordImpression, listAllActiveAds, PLACEMENT_LABEL } from "@/lib/ads";
+import { getPublicAd, recordImpression, listAllActiveAds } from "@/lib/ads";
 import { MapEmbed } from "@/components/common/MapEmbed";
+import { stripHtml } from "@/lib/strip-html";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!ad) return { title: "Không tìm thấy quảng cáo" };
   return {
     title: `${ad.title} — ${ad.advertiser} | Quảng cáo Quỳnh Phụ`,
-    description: (ad.description || ad.title).slice(0, 160),
+    description: (stripHtml(ad.description || "") || ad.title).slice(0, 160),
     robots: { index: false, follow: true }, // trang quảng cáo — không index
   };
 }
@@ -43,8 +44,7 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
             <span className="qp-breadcrumb__current">{ad.advertiser}</span>
           </nav>
           <div className="qp-lf-detail__badges">
-            <span className="qp-ad__label" style={{ position: "static" }}>Tài trợ</span>
-            <span className="qp-tag-cat">{PLACEMENT_LABEL[ad.placement]}</span>
+            <span className="qp-ad-sponsor-badge">★ Nội dung tài trợ</span>
           </div>
           <h1 id="ad-detail-title" className="type-h1" style={{ margin: "var(--space-3) 0 var(--space-4)" }}>{ad.title}</h1>
           <p className="qp-pagehero__lead">{ad.advertiser}</p>
@@ -59,12 +59,10 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
               <img src={ad.imageDesktop} alt={ad.title} />
             </div>
 
-            {ad.description ? (
-              <div className="qp-ad-detail__desc">
-                {ad.description.split(/\n+/).map((p, i) => <p key={i}>{p}</p>)}
-              </div>
+            {stripHtml(ad.description || "") ? (
+              <div className="rich-text-editor__content qp-rte-view qp-ad-detail__desc" dangerouslySetInnerHTML={{ __html: ad.description! }} />
             ) : (
-              <p className="qp-ad-detail__desc text-muted">Nhà tài trợ chưa cung cấp mô tả chi tiết. Vui lòng liên hệ trực tiếp qua thông tin bên cạnh.</p>
+              <p className="qp-ad-detail__desc text-muted">Nhà tài trợ chưa cung cấp nội dung chi tiết. Vui lòng liên hệ trực tiếp qua thông tin bên cạnh.</p>
             )}
 
             {ad.mapUrl && (

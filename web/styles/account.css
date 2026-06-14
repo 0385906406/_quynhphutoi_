@@ -126,9 +126,14 @@
 /* ===== Trang chi tiết quảng cáo (/quang-cao/[id]) ===== */
 .qp-ad-detail__media { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-gray-border); background: var(--color-navy-pale); }
 .qp-ad-detail__media img { width: 100%; height: auto; display: block; }
-.qp-ad-detail__desc { margin-top: var(--space-6); color: var(--color-gray-text); line-height: 1.75; font-size: 15.5px; }
-.qp-ad-detail__desc p { margin: 0 0 var(--space-4); }
-.qp-ad-detail__desc p:last-child { margin-bottom: 0; }
+.qp-ad-detail__desc { margin-top: var(--space-6); }
+/* Nhãn "Nội dung tài trợ" — minh bạch, không giả làm tin tức thật */
+.qp-ad-sponsor-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 700 11px/1 var(--font-mono-sans); letter-spacing: 0.8px; text-transform: uppercase;
+  padding: 6px 12px; border-radius: var(--radius-pill);
+  background: var(--color-yellow); color: var(--color-navy-deep);
+}
 
 /* Thanh quảng cáo nổi sát đáy màn hình (slider, có nút đóng) */
 .qp-stickybar {

@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
 import { updateAd, deleteAd, isPlacement, type CreateAdInput } from "@/lib/ads";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { stripHtml } from "@/lib/strip-html";
 
 async function guard() {
   const user = await getCurrentUser();
@@ -21,7 +23,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const patch: Partial<CreateAdInput> = {};
   if (typeof b.advertiser === "string") patch.advertiser = b.advertiser.trim();
   if (typeof b.title === "string") patch.title = b.title.trim();
-  if (typeof b.description === "string") patch.description = b.description.trim() || undefined;
+  if (typeof b.description === "string") {
+    const html = sanitizeHtml(b.description); // khử XSS rich-text
+    patch.description = stripHtml(html) ? html : undefined;
+  }
   if (typeof b.imageDesktop === "string") patch.imageDesktop = b.imageDesktop.trim();
   if (typeof b.imageMobile === "string") patch.imageMobile = b.imageMobile.trim() || undefined;
   if (typeof b.phone === "string") patch.phone = b.phone.trim() || undefined;

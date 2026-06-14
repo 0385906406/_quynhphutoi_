@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { RowActions } from "@/components/admin/RowActions";
 import { useToast } from "@/components/common/Toast";
+import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 
 export type AdRow = {
   id: string; advertiser: string; title: string; description: string; imageDesktop: string; imageMobile: string;
@@ -132,8 +133,8 @@ export function AdManager({ initial }: { initial: AdRow[] }) {
             </div>
           </div>
           <div className="qp-form-group">
-            <label className="qp-label">Mô tả chi tiết (tuỳ chọn — hiển thị ở trang chi tiết quảng cáo)</label>
-            <textarea className="qp-input" rows={4} value={form.description} maxLength={2000} onChange={(e) => set("description", e.target.value)} placeholder="Giới thiệu sản phẩm/dịch vụ, ưu đãi, địa chỉ cửa hàng…" />
+            <label className="qp-label">Nội dung quảng cáo (tuỳ chọn — hiển thị ở trang chi tiết, soạn như một bài viết)</label>
+            <RichTextEditor value={form.description} onChange={(html) => set("description", html)} placeholder="Giới thiệu sản phẩm/dịch vụ, ưu đãi, chèn ảnh, định dạng…" />
           </div>
           <div className="qp-form-group">
             <label className="qp-label">Ảnh quảng cáo (desktop) <span className="req">*</span></label>
