@@ -201,6 +201,15 @@ export function TopBar({ user, isAdmin = false }: { user: SessionUser | null; is
               </div>
             );
           })}
+
+          {/* Đăng nhập trong drawer — chỉ hiện trên điện thoại (≤767px) khi chưa đăng nhập,
+              vì nút Đăng nhập ở thanh trên bị ẩn ở breakpoint đó. */}
+          {!user && (
+            <Link className="qp-nav__login" href="/dang-nhap">
+              Đăng nhập
+              <span className="qp-login__arrow" aria-hidden>→</span>
+            </Link>
+          )}
         </nav>
 
         <div className="qp-topbar__actions">

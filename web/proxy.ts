@@ -26,6 +26,29 @@ function ipOf(req: NextRequest): string {
   return xff ? xff.split(",")[0].trim() : (req.headers.get("x-real-ip") || "unknown");
 }
 
+// Request do Next.js/trình duyệt TỰ bắn (prefetch link + điều hướng mềm RSC), KHÔNG phải
+// người dùng tải lại trang. Một lần mở trang danh sách (chợ, việc làm…) sinh ra hàng chục
+// prefetch như vậy — nếu đếm chúng sẽ chặn oan. Chỉ đếm lượt tải tài liệu HTML thật.
+function isPrefetchOrRsc(req: NextRequest): boolean {
+  // QUAN TRỌNG (Next.js 16): tới tầng proxy thì các header nội bộ `RSC`,
+  // `Next-Router-Prefetch` và query `_rsc` ĐÃ BỊ Next STRIP → đọc ra null/false,
+  // KHÔNG dùng để nhận diện được. Tín hiệu còn sót lại mà proxy vẫn thấy:
+  //   • RSC payload (điều hướng mềm)  → Accept: text/x-component
+  //   • Prefetch (<Link> + suy đoán)  → Sec-Purpose chứa "prefetch"
+  // Tài liệu HTML thật (mở trang / F5) → Accept: text/html, Sec-Fetch-Mode: navigate
+  // ⇒ chỉ những lượt tải tài liệu thật mới bị tính vào bộ đếm chống-flood.
+  const accept = req.headers.get("accept") || "";
+  if (accept.includes("text/x-component")) return true;     // RSC payload (điều hướng mềm)
+  const purpose = req.headers.get("sec-purpose") || req.headers.get("purpose") || "";
+  if (purpose.includes("prefetch")) return true;            // prefetch (<Link> + suy đoán trình duyệt)
+
+  // Fallback phòng xa — môi trường/đời Next khác có thể vẫn để lọt header/query gốc.
+  if (req.headers.get("next-router-prefetch")) return true;
+  if (req.headers.get("rsc")) return true;
+  if (req.nextUrl.searchParams.has("_rsc")) return true;
+  return false;
+}
+
 async function userId(req: NextRequest): Promise<string | null> {
   const token = req.cookies.get("qp_session")?.value;
   if (!token) return null;
@@ -66,6 +89,9 @@ function tick(key: string, now: number): number {
 }
 
 export async function proxy(req: NextRequest) {
+  // Không tính prefetch/RSC vào bộ đếm chống-flood (xem isPrefetchOrRsc).
+  if (isPrefetchOrRsc(req)) return NextResponse.next();
+
   const now = Date.now();
   const uid = await userId(req);
   // Đếm theo IP và theo user (nếu có) — vượt ở key nào cũng chặn.

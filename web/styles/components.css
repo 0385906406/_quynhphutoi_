@@ -231,6 +231,9 @@
 .qp-login__arrow { font-family: var(--font-mono-sans); display: inline-block; transition: transform var(--duration-default) var(--ease-soft); }
 .qp-login:hover .qp-login__arrow { transform: translateX(3px); }
 
+/* Mục Đăng nhập trong drawer điện thoại — ẩn mặc định, chỉ bật ở ≤767px (xem media query) */
+.qp-nav__login { display: none; }
+
 /* ===== Tài khoản đã đăng nhập (nút + dropdown) ===== */
 .qp-account { position: relative; flex-shrink: 0; }
 .qp-account__btn {
@@ -417,6 +420,17 @@
 }
 @media (max-width: 767px) {
   .qp-login { display: none; }
+  /* Bù lại nút Đăng nhập đã ẩn ở thanh trên — hiện mục Đăng nhập trong drawer */
+  .qp-nav__login {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 8px; padding: 14px 12px; width: 100%;
+    border-radius: var(--radius-md);
+    background: var(--color-teal); color: #fff;
+    font: 700 15px/1 var(--font-primary);
+    transition: background var(--duration-fast) ease;
+  }
+  .qp-nav__login:hover { background: var(--color-teal-dark); }
+  .qp-nav__login:hover .qp-login__arrow { transform: translateX(3px); }
   /* Giữ nút tìm kiếm trên điện thoại; ghim dropdown full màn dưới topbar */
   .qp-search-pop.is-global { position: fixed; left: 8px; right: 8px; top: calc(var(--topbar-height) + 6px); width: auto; max-width: none; }
 }
