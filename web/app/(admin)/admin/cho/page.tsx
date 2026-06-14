@@ -1,0 +1,21 @@
+import type { Metadata } from "next";
+import { listMarket, toMarketRow } from "@/lib/market";
+import { MarketManager } from "@/components/admin/MarketManager";
+
+export const metadata: Metadata = { title: "Chợ & Mua bán — Quản trị", robots: { index: false, follow: false } };
+export const dynamic = "force-dynamic";
+
+export default async function AdminMarketPage() {
+  const docs = await listMarket({});
+  const rows = docs.map(toMarketRow);
+  return (
+    <>
+      <div className="qp-admin-head">
+        <span className="qp-admin-head__eyebrow">Nội dung</span>
+        <h1 className="type-h1">Chợ & Mua bán</h1>
+        <p className="qp-admin-head__desc">Quản lý chợ phiên, đặc sản địa phương và rao vặt trên địa bàn huyện — thêm, sửa, xoá và ẩn/hiện.</p>
+      </div>
+      <MarketManager initial={rows} />
+    </>
+  );
+}

@@ -1,0 +1,252 @@
+/* ============================================================
+   Trang đăng nhập — PORT NGUYÊN BẢN wonmedia-login.html
+   Giữ y hệt thiết kế gốc. Toàn bộ scope dưới .wm-login để không
+   ảnh hưởng các trang khác trong project.
+   ============================================================ */
+
+:root {
+  --g1: #1a4d2e; --g2: #2d7a45; --g3: #3fa85e; --g4: #5ec47a;
+  --wm-white: #ffffff; --wm-bg: #edf7f1;
+}
+
+.wm-login *, .wm-login *::before, .wm-login *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+}
+
+.wm-login {
+  font-family: 'DM Sans', sans-serif;
+  background: radial-gradient(ellipse at 30% 50%, #d8f0e2 0%, #edf7f1 60%);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+/* CARD */
+.wm-login .card {
+  position: relative;
+  width: 940px; height: 590px;
+  background: var(--wm-white);
+  border-radius: 30px;
+  box-shadow: 0 40px 100px rgba(30,80,50,0.15), 0 8px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+  display: flex;
+  animation: cardIn .9s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(22px) scale(.97); }
+  to   { opacity:1; transform:none; }
+}
+
+/* LEAF LAYER */
+.wm-login .leaf-layer {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 2;
+  overflow: visible;
+}
+
+/* ====== GIÓ THỔI QUA LÁ (nhẹ nhàng, liên tục) ====== */
+.wm-login #leafGroup {
+  transform-origin: 155px 72px;
+  transform: rotate(-32deg) translate(-55px, -38px);
+  animation: wmWind 8s ease-in-out infinite;
+}
+@keyframes wmWind {
+  0%, 100% { transform: rotate(-32deg)   translate(-55px,-38px); }
+  20%      { transform: rotate(-30.4deg) translate(-52px,-35px) skewX(.5deg); }
+  45%      { transform: rotate(-33.4deg) translate(-57px,-41px) skewX(-.45deg); }
+  62%      { transform: rotate(-31deg)   translate(-53px,-36px) skewX(.3deg); }
+  80%      { transform: rotate(-32.8deg) translate(-56px,-40px) skewX(-.2deg); }
+}
+
+/* Sheen */
+.wm-login #leafSheen { animation: sheenMove 5.5s ease-in-out infinite; }
+@keyframes sheenMove {
+  0%,100% { opacity:0; transform:translateX(-140px); }
+  28%     { opacity:1; transform:translateX(20px); }
+  55%     { opacity:.5; transform:translateX(160px); }
+  75%     { opacity:0; transform:translateX(280px); }
+}
+
+/* Vein draw animations */
+.wm-login .vm  { stroke-dasharray:650; stroke-dashoffset:650; animation:dv 2s ease forwards; }
+.wm-login .vp  { stroke-dasharray:220; stroke-dashoffset:220; animation:dv 1.3s ease forwards; }
+.wm-login .vs  { stroke-dasharray:130; stroke-dashoffset:130; animation:dv 1s ease forwards; }
+.wm-login .vt  { stroke-dasharray:80;  stroke-dashoffset:80;  animation:dv .8s ease forwards; }
+@keyframes dv { to { stroke-dashoffset:0; } }
+.wm-login .d0{animation-delay:.3s}.wm-login .d1{animation-delay:.5s}.wm-login .d2{animation-delay:.65s}
+.wm-login .d3{animation-delay:.75s}.wm-login .d4{animation-delay:.85s}.wm-login .d5{animation-delay:.95s}
+.wm-login .d6{animation-delay:1.05s}.wm-login .d7{animation-delay:1.12s}.wm-login .d8{animation-delay:1.18s}
+.wm-login .d9{animation-delay:1.24s}.wm-login .d10{animation-delay:1.30s}.wm-login .d11{animation-delay:1.36s}
+.wm-login .d12{animation-delay:1.42s}.wm-login .d13{animation-delay:1.48s}.wm-login .d14{animation-delay:1.54s}
+
+/* Chữ trên lá — opacity do .wm-leaf-scene điều khiển theo vòng lặp */
+.wm-login .leaf-text-group { opacity: 1; }
+
+/* Tôn trọng người dùng tắt hiệu ứng: hiện lá tĩnh */
+@media (prefers-reduced-motion: reduce) {
+  .wm-login .card,
+  .wm-login #leafGroup,
+  .wm-login #leafSheen { animation: none; }
+  .wm-login #leafGroup { transform: rotate(-32deg) translate(-55px,-38px); }
+}
+
+/* FORM PANEL */
+.wm-login .form-panel {
+  position: relative; z-index: 10;
+  margin-left: auto;
+  width: 400px; height: 100%;
+  padding: 50px 48px 44px 36px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* Brand corner */
+.wm-login .brand-corner {
+  position: absolute; top: 28px; right: 38px;
+  display: flex; align-items: center; gap: 8px; z-index: 20;
+  cursor: pointer; transition: opacity .2s;
+}
+.wm-login .brand-corner:hover { opacity: .8; }
+.wm-login .brand-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  position: relative; overflow: hidden; flex-shrink: 0;
+  background: #fff;
+}
+.wm-login .brand-icon img { object-fit: cover; }
+.wm-login .brand-corner-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--g1); letter-spacing:.02em;
+}
+
+.wm-login .form-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.95rem; font-weight: 700;
+  color: var(--g1); margin-bottom: 4px; line-height:1.1;
+}
+.wm-login .form-sub { font-size:.8rem; color:#7a9e87; margin-bottom:26px; font-weight:300; }
+
+.wm-login .field-group { margin-bottom:15px; }
+.wm-login .field-label {
+  display:block; font-size:.7rem; font-weight:500;
+  color:var(--g2); letter-spacing:.08em; text-transform:uppercase; margin-bottom:5px;
+}
+.wm-login .input-wrap { position:relative; }
+.wm-login .input-wrap .ico {
+  position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  width:15px; height:15px; color:#b0cebb;
+  pointer-events:none; transition:color .2s;
+}
+.wm-login input[type="text"], .wm-login input[type="email"], .wm-login input[type="password"] {
+  width:100%; padding:10px 12px 10px 40px;
+  border:1.5px solid #d8eede; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:.88rem; color:#1a3d28;
+  background:rgba(240,250,244,.7); outline:none; backdrop-filter:blur(2px);
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.wm-login input:focus { border-color:var(--g3); background:#fff; box-shadow:0 0 0 3px rgba(63,168,94,.13); }
+.wm-login .input-wrap:focus-within .ico { color:var(--g3); }
+
+.wm-login .row-extra {
+  display:flex; justify-content:space-between; align-items:center;
+  margin:-1px 0 18px;
+}
+.wm-login .remember { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#5a8068; cursor:pointer; user-select:none; }
+.wm-login .remember input { width:14px;height:14px;accent-color:var(--g2);padding:0;border:none;background:none;box-shadow:none; }
+.wm-login .forgot { font-size:.78rem;color:var(--g3);text-decoration:none;font-weight:500;transition:color .2s; }
+.wm-login .forgot:hover { color:var(--g1); }
+
+.wm-login .btn-login {
+  width:100%; padding:12px;
+  background:linear-gradient(135deg,var(--g1) 0%,var(--g3) 100%);
+  color:#fff; border:none; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:.92rem; font-weight:500;
+  letter-spacing:.05em; cursor:pointer; position:relative; overflow:hidden;
+  box-shadow:0 6px 22px rgba(30,80,50,.28);
+  transition:transform .15s, box-shadow .2s;
+}
+.wm-login .btn-login:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(30,80,50,.36); }
+.wm-login .btn-login:active { transform:translateY(0); }
+.wm-login .btn-login:disabled { cursor:progress; opacity:.85; }
+.wm-login .btn-login::after { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18) 0%,transparent 60%);pointer-events:none; }
+
+.wm-login .auth-error {
+  margin:-6px 0 12px; font-size:.78rem; color:#c0392b;
+}
+.wm-login .auth-success {
+  margin:-6px 0 12px; padding:8px 11px;
+  font-size:.78rem; color:#1f6b3a; line-height:1.45;
+  background:rgba(63,168,94,.1); border-radius:8px;
+}
+
+/* Trang đăng ký nhiều trường hơn → card cao & các trường thoáng, không dít nhau */
+.wm-login .card--register { height: auto; min-height: 660px; }
+.wm-login .card--register .form-panel {
+  justify-content: flex-start;   /* bám từ trên xuống, không căn giữa */
+  padding-top: 74px;             /* chừa chỗ cho brand-corner ở góc, tránh dính tiêu đề */
+  padding-bottom: 40px;
+}
+.wm-login .card--register .form-title { margin-bottom: 6px; }
+.wm-login .card--register .form-sub { margin-bottom: 26px; }
+.wm-login .card--register .field-group { margin-bottom: 18px; }
+.wm-login .card--register .row-extra { margin: 4px 0 22px; }
+
+.wm-login .divider { display:flex;align-items:center;gap:10px;margin:14px 0; }
+.wm-login .divider hr { flex:1;border:none;border-top:1px solid #e0ede6; }
+.wm-login .divider span { font-size:.72rem;color:#a8c4b0;white-space:nowrap; }
+
+.wm-login .signup-row { text-align:center;font-size:.8rem;color:#7a9e87; }
+.wm-login .signup-row a { color:var(--g2);font-weight:500;text-decoration:none;transition:color .2s; }
+.wm-login .signup-row a:hover { color:var(--g1); }
+
+/* ============================================================
+   MOBILE / GIAO DIỆN ĐIỆN THOẠI
+   - Card co về 1 cột, full chiều rộng, chừa đệm 2 bên.
+   - Lá làm nền mờ; chữ tiêu đề đè lên lá đổi sang đen + quầng
+     sáng trắng cho dễ đọc.
+   ============================================================ */
+@media (max-width: 768px) {
+  .wm-login {
+    padding: 22px 16px;            /* đệm 2 bên: card không sát mép màn hình */
+    align-items: center;
+  }
+  .wm-login .card {
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    border-radius: 26px;
+  }
+
+  /* Lá mờ đi làm nền trang trí */
+  .wm-login .leaf-layer { opacity: .5; }
+
+  .wm-login .brand-corner { top: 20px; right: 22px; }
+
+  .wm-login .form-panel {
+    width: 100%;
+    margin-left: 0;
+    padding: 86px 24px 34px;       /* 24px đệm trái–phải cho form */
+    justify-content: flex-start;
+  }
+
+  /* Chữ tiêu đề đè lên lá → đen + quầng sáng trắng cho dễ nhìn */
+  .wm-login .form-title {
+    font-size: 2.05rem;
+    color: #0c2316;
+    text-shadow: 0 1px 12px rgba(255,255,255,.92), 0 0 3px rgba(255,255,255,.85);
+  }
+  .wm-login .form-sub {
+    color: #244033;
+    text-shadow: 0 1px 8px rgba(255,255,255,.85);
+  }
+}
+
+/* Điện thoại nhỏ */
+@media (max-width: 400px) {
+  .wm-login { padding: 16px 12px; }
+  .wm-login .form-panel { padding: 78px 18px 30px; }
+  .wm-login .form-title { font-size: 1.85rem; }
+}

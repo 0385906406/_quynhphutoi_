@@ -1,0 +1,221 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { NEWS, getArticle, relatedArticles, articleBody, articleViews, fmtViews, type Article } from "@/lib/news";
+import { getArticleBySlug, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, type ArticleBlock } from "@/lib/articles";
+import { getSession } from "@/lib/auth";
+import { newsLikeInfo, listNewsComments } from "@/lib/news-social";
+import { PostInteractions } from "@/components/lostfound/PostInteractions";
+import { CommentsSection, type CommentItem } from "@/components/lostfound/CommentsSection";
+import { NewsCard } from "@/components/news/NewsCard";
+
+export const dynamic = "force-dynamic";
+
+export function generateStaticParams() {
+  return NEWS.map((a) => ({ slug: a.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const db = await getArticleBySlug(slug);
+  if (db && db.status === "published") return buildArticleMetadata(db); // SEO đầy đủ: canonical, OG, robots…
+  const a = getArticle(slug);
+  return { title: a?.title ?? "Bài viết", description: a?.excerpt };
+}
+
+function badgeClass(cat: string) {
+  if (cat === "Thông báo") return " is-navy";
+  if (cat === "Kinh tế") return " is-policy";
+  if (cat === "Giáo dục") return " is-warning";
+  return "";
+}
+
+// View model thống nhất cho cả 2 nguồn: DB articles (admin tạo) và NEWS tĩnh (demo).
+type ArticleView = {
+  title: string; category: string; image: string; date: string; readTime: string;
+  author: string; tags: string[]; viewsText: string;
+};
+
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+
+  const db = await getArticleBySlug(slug);
+  const useDb = !!db && db.status === "published";
+
+  let view: ArticleView;
+  let body: ArticleBlock[];
+  let related: Article[];
+
+  if (useDb && db) {
+    await incrementViews(slug).catch(() => {});
+    const dd = db.publishedAt ?? db.createdAt;
+    view = {
+      title: db.title, category: db.category, image: db.coverImage,
+      date: dd ? `${String(dd.getDate()).padStart(2, "0")}/${String(dd.getMonth() + 1).padStart(2, "0")}/${dd.getFullYear()}` : "",
+      readTime: `${db.readingMinutes} phút đọc`, author: db.author?.name ?? "Ban biên tập",
+      tags: db.tags ?? [], viewsText: fmtViews((db.views ?? 0) + 1),
+    };
+    body = db.body ?? [];
+    related = (await relatedDbArticles(slug, 4)).map(toNewsCardArticle);
+  } else {
+    const a = getArticle(slug);
+    if (!a) notFound();
+    view = { title: a.title, category: a.category, image: a.image, date: a.date, readTime: a.readTime, author: a.author, tags: a.tags, viewsText: fmtViews(articleViews(a)) };
+    body = articleBody(a) as ArticleBlock[];
+    related = relatedArticles(slug, 4);
+  }
+
+  const headings = body
+    .map((b, i) => (b.type === "h2" ? { id: `sec-${i}`, text: b.text } : null))
+    .filter((h): h is { id: string; text: string } => h !== null);
+  const initials = view.author.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const a = view; // các chỗ bên dưới dùng `a.*` → trỏ tới view model
+
+  // Tương tác: phiên đăng nhập + like + bình luận.
+  const session = await getSession();
+  const [{ count: likeCount, liked }, commentDocs] = await Promise.all([
+    newsLikeInfo(slug, session?.id),
+    listNewsComments(slug),
+  ]);
+  const comments: CommentItem[] = commentDocs.map((c) => ({
+    id: c._id!.toString(),
+    userName: c.userName,
+    content: c.content,
+    createdAt: c.createdAt.toISOString(),
+    mine: !!session && session.id === c.userId.toString(),
+  }));
+
+  return (
+    <article>
+      {/* Dữ liệu có cấu trúc (SEO) cho bài viết DB */}
+      {useDb && db && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildArticleJsonLd(db)) }} />
+      )}
+      {/* Hero đồng bộ với các trang chi tiết khác */}
+      <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="art-title">
+        <span className="qp-pagehero__blob is-teal" aria-hidden />
+        <span className="qp-pagehero__blob is-indigo" aria-hidden />
+        <span className="qp-pagehero__blob is-yellow" aria-hidden />
+        <span className="qp-lf-hero__art" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h13a1 1 0 0 1 1 1v14a2 2 0 0 0 2-2V8h-3" /><path d="M4 4a1 1 0 0 0-1 1v13a2 2 0 0 0 2 2h12" /><path d="M7 8h7M7 12h7M7 16h4" /></svg>
+        </span>
+        <div className="container-wide qp-pagehero__inner">
+          <nav className="qp-breadcrumb" aria-label="Breadcrumb">
+            <Link href="/">Trang chủ</Link>
+            <span className="qp-breadcrumb__sep">›</span>
+            <Link href="/tin-tuc">Tin tức</Link>
+            <span className="qp-breadcrumb__sep">›</span>
+            <span className="qp-breadcrumb__current">{a.category}</span>
+          </nav>
+          <h1 id="art-title" className="type-h1" style={{ margin: "var(--space-3) 0 0" }}>{a.title}</h1>
+        </div>
+      </section>
+
+      <div className="container-wide qp-lf-body">
+        <div className="qp-article-layout is-lf">
+          <div className="qp-lf-main">
+            <figure className="qp-article-hero">
+              <Image src={a.image} alt="" fill sizes="(max-width:900px) 100vw, 1000px" priority />
+            </figure>
+
+            <div className="qp-prose qp-prose--wide">
+              {body.map((b, i) => {
+                switch (b.type) {
+                  case "h2": return <h2 id={`sec-${i}`} key={i}>{b.text}</h2>;
+                  case "h3": return <h3 key={i}>{b.text}</h3>;
+                  case "quote": return <blockquote key={i}>{b.text}</blockquote>;
+                  case "list": return b.ordered
+                    ? <ol key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ol>
+                    : <ul key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ul>;
+                  case "image": return (
+                    <figure key={i}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={b.src} alt={b.alt ?? ""} />
+                      {b.caption ? <figcaption>{b.caption}</figcaption> : null}
+                    </figure>
+                  );
+                  case "html": return <div key={i} dangerouslySetInnerHTML={{ __html: b.html }} />;
+                  default: return <p key={i}>{b.text}</p>;
+                }
+              })}
+
+              <div className="qp-tag-row mt-8">
+                {a.tags.map((t) => <span className="qp-tag" key={t}>#{t}</span>)}
+              </div>
+            </div>
+
+            <PostInteractions
+              slug={slug}
+              title={a.title}
+              initialLiked={liked}
+              initialLikeCount={likeCount}
+              commentCount={comments.length}
+              isLoggedIn={!!session}
+              apiBase="/api/tin-tuc"
+            />
+          </div>
+
+          <aside className="qp-lf-aside">
+            <div className="qp-lf-infocard">
+              <div className="qp-author">
+                <span className="qp-avatar-initials" aria-hidden>{initials}</span>
+                <div>
+                  <div className="qp-author__name">{a.author}</div>
+                  <div className="qp-author__meta">Tác giả</div>
+                </div>
+              </div>
+              <div className="qp-lf-spec" style={{ marginTop: 14 }}>
+                <div className="qp-lf-spec__row"><span>Chuyên mục</span><b><span className={`qp-category-badge${badgeClass(a.category)}`}>{a.category}</span></b></div>
+                <div className="qp-lf-spec__row"><span>Ngày đăng</span><b>{a.date}</b></div>
+                <div className="qp-lf-spec__row"><span>Thời gian đọc</span><b>{a.readTime}</b></div>
+                <div className="qp-lf-spec__row"><span>Lượt đọc</span><b>{a.viewsText}</b></div>
+              </div>
+            </div>
+
+            {headings.length > 0 && (
+              <div className="qp-lf-infocard">
+                <div className="qp-lf-infocard__title">Mục lục</div>
+                <nav className="qp-toc qp-toc--static">
+                  {headings.map((h) => <a href={`#${h.id}`} key={h.id}>{h.text}</a>)}
+                </nav>
+              </div>
+            )}
+
+            <div className="qp-lf-infocard qp-lf-infocard--cta">
+              <div className="qp-lf-infocard__title">Theo dõi tin huyện nhà</div>
+              <p className="type-body-small" style={{ color: "var(--on-dark-body, rgba(255,255,255,.85))", margin: "0 0 14px" }}>
+                Tin tức, thông báo và việc làm mới — cập nhật liên tục từ Cổng thông tin Quỳnh Phụ.
+              </p>
+              <Link href="/tin-tuc" className="qp-btn-primary qp-btn-block">Xem tất cả tin →</Link>
+            </div>
+          </aside>
+        </div>
+
+        {/* Bình luận */}
+        <CommentsSection slug={slug} initial={comments} isLoggedIn={!!session} currentUserName={session?.name} apiBase="/api/tin-tuc" />
+
+        {/* Bài liên quan */}
+        <div className="qp-lf-related">
+          <header className="qp-newsgrid-head">
+            <span className="type-tag qp-sechead__eyebrow">Đọc thêm</span>
+            <h2 className="type-h2">Bài liên quan</h2>
+          </header>
+          <div className="qp-grid-news">
+            {related.map((r) => <NewsCard key={r.id} a={r} />)}
+          </div>
+        </div>
+
+        {/* Newsletter */}
+        <div className="qp-newsletter" style={{ marginTop: "var(--space-10)" }}>
+          <h2 className="type-h2">Nhận tin huyện nhà qua email</h2>
+          <p className="type-body">Tin tức, thông báo và việc làm mới — gửi gọn vào hộp thư của bạn.</p>
+          <form className="qp-newsletter__form" action="#" method="post">
+            <input type="email" placeholder="Email của bạn" aria-label="Email" required />
+            <button className="qp-btn-secondary on-dark" type="submit">Đăng ký <span className="qp-arrow">→</span></button>
+          </form>
+        </div>
+      </div>
+    </article>
+  );
+}

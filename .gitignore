@@ -1,0 +1,18 @@
+# Cấu hình agent / công cụ cục bộ
+.claude/
+.tmp-check.*
+
+# Phụ thuộc & build (web/ cũng có .gitignore riêng)
+node_modules/
+.next/
+out/
+build/
+
+# Biến môi trường & bí mật — TUYỆT ĐỐI không commit
+.env
+.env.*
+
+# Khác
+.DS_Store
+*.tsbuildinfo
+.vercel

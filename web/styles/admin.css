@@ -1,0 +1,287 @@
+/* ============================================================
+   Khu vực Quản trị — shell sidebar (SATI tokens, KHÔNG Tailwind)
+   Chỉ dùng biến trong tokens.css. Vàng chỉ dùng cho line/dot.
+   ============================================================ */
+
+.qp-admin-shell {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-gray-light);
+}
+
+/* ---------- Sidebar ---------- */
+.qp-admin-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  background: var(--gradient-g3);
+  color: var(--on-dark-body);
+  padding: var(--space-5) var(--space-4) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.qp-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+  text-decoration: none;
+}
+.qp-admin-brand__mark {
+  width: 38px; height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-g2);
+  display: grid; place-items: center;
+  color: #fff; font-weight: 800;
+  font-family: var(--font-mono-sans);
+  letter-spacing: .5px;
+}
+.qp-admin-brand__name { font-weight: 700; color: #fff; line-height: 1.15; }
+.qp-admin-brand__sub { font-size: 11.5px; color: var(--on-dark-caption); }
+
+.qp-admin-nav { display: flex; flex-direction: column; gap: var(--space-5); }
+.qp-admin-nav__group { display: flex; flex-direction: column; gap: 3px; }
+.qp-admin-nav__title {
+  font-family: var(--font-monospace);
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--on-dark-caption); padding: 0 8px; margin-bottom: 4px;
+}
+.qp-admin-nav__link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  color: var(--on-dark-body); text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  border-left: 2px solid transparent;
+  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast);
+}
+.qp-admin-nav__link:hover { background: rgba(255,255,255,.08); color: #fff; }
+.qp-admin-nav__link.is-active {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border-left-color: var(--color-yellow); /* vàng chỉ dùng làm indicator */
+}
+.qp-admin-nav__link svg { width: 18px; height: 18px; flex: none; }
+.qp-admin-nav__count {
+  margin-left: auto;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  display: inline-grid; place-items: center;
+  font-size: 11px; font-weight: 700;
+  border-radius: var(--radius-pill);
+  background: var(--color-warning); color: #fff;
+}
+
+/* ---------- Topbar trong vùng nội dung ---------- */
+.qp-admin-topbar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  background: #fff;
+  border-bottom: 1px solid var(--color-gray-border);
+  padding: 12px var(--space-8);
+}
+.qp-admin-topbar__title { font-weight: 700; color: var(--color-navy-deep); }
+.qp-admin-topbar__right { display: flex; align-items: center; gap: var(--space-3); }
+.qp-admin-topbar__user { font-size: 13px; color: var(--color-gray-text); }
+.qp-admin-topbar__user b { color: var(--color-navy); }
+
+.qp-admin-main { display: flex; flex-direction: column; min-width: 0; }
+.qp-admin-content { padding: var(--space-8); max-width: var(--container-wide-max); width: 100%; }
+
+/* ---------- Header trang admin ---------- */
+.qp-admin-head { margin-bottom: var(--space-6); }
+.qp-admin-head__eyebrow {
+  font-family: var(--font-monospace);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--color-teal-dark);
+}
+.qp-admin-head h1 { color: var(--color-navy-deep); margin: 4px 0 6px; }
+.qp-admin-head__desc { color: var(--color-gray-text); font-size: 14px; max-width: 640px; }
+
+/* ---------- Toolbar (search + filter + nút thêm) ---------- */
+.qp-admin-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.qp-admin-toolbar__search { flex: 1 1 220px; max-width: 360px; }
+.qp-admin-toolbar__spacer { flex: 1; }
+
+/* ---------- Nút thao tác trong bảng ---------- */
+/* Kiểu link mặc định (dùng khi nằm ngoài cụm .qp-admin-actions, vd tiêu đề bấm được) */
+.qp-admin-link-btn {
+  background: none; border: 0; cursor: pointer; padding: 2px 4px;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--color-teal-dark);
+}
+.qp-admin-link-btn:hover { text-decoration: underline; }
+.qp-admin-link-btn.is-danger { color: var(--color-error); }
+
+/* Căn giữa dọc mọi ô trong bảng admin để nút thẳng hàng với nội dung nhiều dòng */
+.qp-acc-page .qp-table td { vertical-align: middle; }
+
+/* Cụm nút thao tác — ĐỒNG BỘ 1 giao diện: nút nhỏ viền, bo góc, hover nền nhạt.
+   Giữ ô là table-cell (KHÔNG flex) để căn giữa dọc hoạt động; nút là inline-flex cách nhau bằng margin. */
+.qp-admin-actions { white-space: nowrap; text-align: right; vertical-align: middle; }
+.qp-admin-actions > button,
+.qp-admin-actions > a {
+  display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; margin-left: 6px;
+  background: #fff; border: 1px solid var(--color-gray-border); border-radius: var(--radius-sm);
+  padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1;
+  color: var(--color-navy); text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+}
+.qp-admin-actions > button:first-child,
+.qp-admin-actions > a:first-child { margin-left: 0; }
+.qp-admin-actions > button:hover,
+.qp-admin-actions > a:hover {
+  background: var(--color-navy-pale); border-color: var(--color-teal); color: var(--color-navy-deep); text-decoration: none;
+}
+.qp-admin-actions > .is-primary { background: var(--color-teal-pale); border-color: var(--color-teal); color: var(--color-teal-dark); }
+.qp-admin-actions > .is-primary:hover { background: var(--color-teal); color: #fff; border-color: var(--color-teal); }
+.qp-admin-actions > .is-danger { color: var(--color-error); }
+.qp-admin-actions > .is-danger:hover { background: #FDECEC; border-color: var(--color-error); color: var(--color-error); }
+.qp-admin-actions > button:disabled { opacity: .45; cursor: not-allowed; }
+.qp-admin-actions > button:disabled:hover { background: #fff; border-color: var(--color-gray-border); }
+
+/* Dropdown gom thao tác từng dòng */
+.qp-rowactions { width: auto; min-width: 122px; padding-top: 6px; padding-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--color-navy); }
+
+/* Trang Cài đặt — full trang: tab dọc trái + nội dung phải */
+.qp-settings { display: grid; grid-template-columns: 240px 1fr; gap: var(--space-5); align-items: start; width: 100%; }
+.qp-settings__nav { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 80px; }
+.qp-settings__tab {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid transparent;
+  background: none; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600; color: var(--color-gray-text);
+}
+.qp-settings__tab:hover { background: var(--color-navy-pale); }
+.qp-settings__tab.is-active { background: #fff; border-color: var(--color-gray-border); border-left: 3px solid var(--color-teal); color: var(--color-navy); box-shadow: var(--shadow-sm); }
+.qp-settings__tab span[aria-hidden] { font-size: 16px; line-height: 1; }
+.qp-settings__panel { min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+@media (max-width: 860px) {
+  .qp-settings { grid-template-columns: 1fr; }
+  .qp-settings__nav { position: static; flex-direction: row; flex-wrap: wrap; }
+}
+
+/* Tiêu đề mục trong panel */
+.qp-set-section__title { font-weight: 700; color: var(--color-navy-deep); font-size: 15px; }
+.qp-set-section__desc { font-size: 12.5px; color: var(--color-gray-text); margin: 2px 0 16px; }
+
+/* Hàng có công tắc gạt */
+.qp-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 0; border-top: 1px solid var(--color-gray-border); }
+.qp-switch-row:first-of-type { border-top: 0; }
+.qp-switch-row__text { display: flex; flex-direction: column; gap: 2px; }
+.qp-switch-row__text b { color: var(--color-navy-deep); font-size: 14px; font-weight: 600; }
+.qp-switch-row__text small { font-size: 12.5px; color: var(--color-gray-text); }
+
+/* Công tắc gạt (toggle) */
+.qp-switch { position: relative; flex: none; width: 46px; height: 26px; }
+.qp-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.qp-switch__track { position: absolute; inset: 0; background: var(--color-gray-border); border-radius: var(--radius-pill); transition: background var(--duration-fast); }
+.qp-switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); transition: transform var(--duration-fast) var(--ease-soft); }
+.qp-switch input:checked + .qp-switch__track { background: var(--color-teal); }
+.qp-switch input:checked + .qp-switch__track::after { transform: translateX(20px); }
+.qp-switch input:focus-visible + .qp-switch__track { outline: 2px solid var(--color-indigo); outline-offset: 2px; }
+.qp-switch.is-warn input:checked + .qp-switch__track { background: var(--color-warning); }
+
+/* ---------- Modal form admin (tái dùng qp-modal nhưng rộng hơn) ---------- */
+.qp-admin-modal { width: min(720px, 100%); }
+
+/* Form sửa tin: khoảng cách đều giữa các trường + tiêu đề mục tách nhóm rõ */
+.qp-editform .qp-form-group { margin-bottom: 14px; }
+.qp-editform .qp-acc-grid2 { margin-bottom: 14px; }
+.qp-editform .qp-acc-grid2 > .qp-form-group { margin-bottom: 0; }
+.qp-editform .qp-admin-section-title { margin: var(--space-5) 0 10px; padding-top: var(--space-4); border-top: 1px solid var(--color-gray-border); }
+.qp-editform .qp-admin-section-title:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+/* Nhóm công tắc Đã duyệt / Nổi bật trong form sửa tin */
+.qp-toggle-card { border: 1px solid var(--color-gray-border); border-radius: var(--radius-card); padding: 0 14px; background: var(--color-gray-light); }
+
+/* ---------- Chọn số dòng/trang ---------- */
+.qp-admin-pagesize { display: inline-flex; align-items: center; gap: 8px; }
+.qp-admin-pagesize .qp-select { width: 78px; }
+
+/* ---------- Khối chi tiết trong modal kiểm duyệt ---------- */
+.qp-admin-detail__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: var(--space-4); font-size: 13px; color: var(--color-gray-text); }
+.qp-admin-detail__meta b { color: var(--color-navy-deep); }
+.qp-admin-detail__imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin: var(--space-3) 0; }
+.qp-admin-detail__imgs img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-gray-border); }
+
+/* Bảng thông số chi tiết (label · value) trong modal */
+.qp-admin-spec { display: grid; grid-template-columns: 132px 1fr; gap: 0; border: 1px solid var(--color-gray-border); border-radius: var(--radius-card); overflow: hidden; margin: var(--space-3) 0; }
+.qp-admin-spec__k, .qp-admin-spec__v { padding: 9px 12px; font-size: 13.5px; border-top: 1px solid var(--color-gray-border); }
+.qp-admin-spec__k:first-of-type, .qp-admin-spec__v:first-of-type { border-top: 0; }
+.qp-admin-spec__k { background: var(--color-navy-pale); color: var(--color-gray-text); font-weight: 600; }
+.qp-admin-spec__v { color: var(--color-navy-deep); word-break: break-word; }
+.qp-admin-section-title { font-family: var(--font-monospace); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-teal-dark); margin: var(--space-4) 0 6px; }
+
+/* Ảnh thumbnail trong bảng */
+.qp-admin-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-gray-border); background: var(--color-navy-pale); }
+.qp-admin-thumb--ph { display: inline-grid; place-items: center; color: var(--color-gray-border); }
+
+/* Dải thống kê nhỏ đầu trang kiểm duyệt */
+.qp-admin-statline { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.qp-admin-statline__item { display: flex; align-items: baseline; gap: 6px; padding: 8px 14px; background: #fff; border: 1px solid var(--color-gray-border); border-radius: var(--radius-card); }
+.qp-admin-statline__num { font-size: 18px; font-weight: 800; color: var(--color-navy); }
+.qp-admin-statline__num.is-warn { color: var(--color-warning); }
+.qp-admin-statline__lbl { font-size: 12.5px; color: var(--color-gray-text); }
+
+/* ========== DASHBOARD — biểu đồ & thẻ thống kê ========== */
+.qp-dash-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin-bottom: var(--space-6); }
+.qp-dash-grid .span-2 { grid-column: 1 / -1; }
+@media (max-width: 900px) { .qp-dash-grid { grid-template-columns: 1fr; } }
+
+.qp-chart-card { background: #fff; border: 1px solid var(--color-gray-border); border-radius: var(--radius-card); padding: var(--space-5); box-shadow: var(--shadow-sm); }
+.qp-chart-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: var(--space-4); }
+.qp-chart-card__title { font-weight: 700; color: var(--color-navy-deep); font-size: 15px; }
+.qp-chart-card__hint { font-size: 12px; color: var(--color-gray-text); }
+
+/* Thanh ngang */
+.qp-barlist { display: flex; flex-direction: column; gap: 12px; }
+.qp-barlist__row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 10px; }
+.qp-barlist__label { font-size: 13px; color: var(--color-navy-deep); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qp-barlist__track { height: 10px; background: var(--color-navy-pale); border-radius: var(--radius-pill); overflow: hidden; }
+.qp-barlist__fill { display: block; height: 100%; border-radius: var(--radius-pill); min-width: 3px; transition: width var(--duration-default) var(--ease-soft); }
+.qp-barlist__val { font-size: 13px; font-weight: 700; color: var(--color-navy); font-variant-numeric: tabular-nums; }
+
+/* Donut + chú giải */
+.qp-donut { display: flex; align-items: center; gap: var(--space-5); flex-wrap: wrap; }
+.qp-donut__num { font-size: 22px; font-weight: 800; fill: var(--color-navy-deep); font-family: var(--font-mono-sans); }
+.qp-donut__cap { font-size: 10px; fill: var(--color-gray-text); text-transform: uppercase; letter-spacing: 1px; }
+.qp-chart-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 150px; }
+.qp-chart-legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-gray-text); }
+.qp-chart-legend__dot { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.qp-chart-legend__label { flex: 1; }
+.qp-chart-legend b { color: var(--color-navy-deep); }
+
+/* Trend (đường + vùng) */
+.qp-trend { width: 100%; height: auto; display: block; }
+.qp-trend__axis { font-size: 10px; fill: var(--color-gray-text); font-family: var(--font-monospace); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .qp-admin-shell { grid-template-columns: 1fr; }
+  .qp-admin-sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 50;
+    width: 264px; transform: translateX(-100%);
+    transition: transform var(--duration-default) var(--ease-soft);
+    box-shadow: var(--shadow-lift);
+  }
+  .qp-admin-sidebar.is-open { transform: translateX(0); }
+  .qp-admin-backdrop {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(6,35,64,.45); border: 0;
+  }
+  .qp-admin-burger {
+    display: inline-grid; place-items: center;
+    width: 40px; height: 40px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-gray-border); background: #fff; cursor: pointer;
+  }
+  .qp-admin-content { padding: var(--space-5) var(--space-4); }
+}
+@media (min-width: 1025px) {
+  .qp-admin-burger, .qp-admin-backdrop { display: none; }
+}
