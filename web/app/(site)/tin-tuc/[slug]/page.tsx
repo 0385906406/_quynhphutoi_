@@ -12,10 +12,15 @@ import { NewsCard } from "@/components/news/NewsCard";
 
 export const dynamic = "force-dynamic";
 
+// Bài hiển thị công khai: đã xuất bản + đã duyệt + đang bật.
+function isPublic(db: { status: string; approved?: boolean; active?: boolean } | null) {
+  return !!db && db.status === "published" && db.approved !== false && db.active !== false;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const db = await getArticleBySlug(slug);
-  if (db && db.status === "published") return buildArticleMetadata(db); // SEO đầy đủ: canonical, OG, robots…
+  if (isPublic(db) && db) return buildArticleMetadata(db); // SEO đầy đủ: canonical, OG, robots…
   return { title: "Bài viết", robots: { index: false, follow: false } };
 }
 
@@ -36,9 +41,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
 
   const db = await getArticleBySlug(slug);
-  if (!db || db.status !== "published") notFound();
+  if (!db) notFound();
 
-  await incrementViews(slug).catch(() => {});
+  // Phiên đăng nhập (dùng cho cả kiểm tra quyền xem trước + like/bình luận).
+  const session = await getSession();
+  const pub = isPublic(db);
+  const isOwner = !!session && db.postedBy?.toString() === session.id;
+  // Bài chưa duyệt: chỉ chủ bài xem trước được; người ngoài → 404.
+  if (!pub && !isOwner) notFound();
+  const previewPending = !pub;
+
+  if (pub) await incrementViews(slug).catch(() => {});
   const dd = db.publishedAt ?? db.createdAt;
   const view: ArticleView = {
     title: db.title, category: db.category, image: db.coverImage,
@@ -55,8 +68,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const initials = view.author.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   const a = view; // các chỗ bên dưới dùng `a.*` → trỏ tới view model
 
-  // Tương tác: phiên đăng nhập + like + bình luận.
-  const session = await getSession();
+  // Tương tác: like + bình luận (session đã lấy ở trên).
   const [{ count: likeCount, liked }, commentDocs] = await Promise.all([
     newsLikeInfo(slug, session?.id),
     listNewsComments(slug),
@@ -71,8 +83,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   return (
     <article>
-      {/* Dữ liệu có cấu trúc (SEO) cho bài viết */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildArticleJsonLd(db)) }} />
+      {/* Dữ liệu có cấu trúc (SEO) — chỉ chèn khi bài đã công khai */}
+      {pub && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildArticleJsonLd(db)) }} />}
+      {previewPending && (
+        <div className="container-wide" style={{ marginTop: "var(--space-4)" }}>
+          <div className="qp-alert is-warning" role="status">
+            <div className="qp-alert__body"><strong>Bài đang chờ duyệt.</strong> Chỉ bạn xem được bản xem trước này; bài sẽ hiển thị công khai sau khi ban quản trị duyệt.</div>
+          </div>
+        </div>
+      )}
       {/* Hero đồng bộ với các trang chi tiết khác */}
       <section className="qp-pagehero qp-lf-hero is-nhat-duoc" aria-labelledby="art-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />

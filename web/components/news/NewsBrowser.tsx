@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pagination } from "@/components/common/Pagination";
 import Image from "next/image";
 import { fmtViews, dateKey, type Article } from "@/lib/news";
 import { NewsCard } from "./NewsCard";
+import { ArticleSubmitModal } from "./ArticleSubmitModal";
 
 const PAGE_SIZE = 8;
 const SORTS = [
@@ -65,12 +67,18 @@ function PopularItem({ a, rank }: { a: Article; rank: number }) {
   );
 }
 
-export function NewsBrowser({ items = [], featured: featuredItems, popular: popularItems }:
-  { items?: Article[]; featured?: Article[]; popular?: Article[] }) {
+export function NewsBrowser({ items = [], featured: featuredItems, popular: popularItems,
+  isLoggedIn = false, pendingItems = [] }:
+  { items?: Article[]; featured?: Article[]; popular?: Article[];
+    isLoggedIn?: boolean; pendingItems?: Article[] }) {
   const [category, setCategory] = useState("Tất cả");
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"all" | "cho-duyet">("all");
+  const [postOpen, setPostOpen] = useState(false);
+  const router = useRouter();
+  const isPending = view === "cho-duyet";
 
   const CATEGORIES = useMemo(() => ["Tất cả", ...Array.from(new Set(items.map((a) => a.category)))], [items]);
 
@@ -111,6 +119,39 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
 
   return (
     <>
+      {/* Tabs + nút gửi bài */}
+      <div className="qp-lf-head">
+        <div className="qp-tabs" role="tablist" aria-label="Lọc tin tức">
+          <button type="button" role="tab" aria-selected={view === "all"} className={`qp-tab${view === "all" ? " is-active" : ""}`} onClick={() => { setView("all"); reset(); }}>
+            Tất cả tin <span className="qp-tab__count">{items.length}</span>
+          </button>
+          {isLoggedIn && (
+            <button type="button" role="tab" aria-selected={isPending} className={`qp-tab qp-tab--pending${isPending ? " is-active" : ""}`} onClick={() => { setView("cho-duyet"); reset(); }}>
+              ⏳ Chờ duyệt <span className="qp-tab__count">{pendingItems.length}</span>
+            </button>
+          )}
+        </div>
+        <button type="button" className="qp-btn-primary qp-lf-post-btn" onClick={() => setPostOpen(true)}>+ Gửi bài viết</button>
+      </div>
+
+      {isPending ? (
+        <>
+          <div className="qp-newsgrid-head">
+            <span className="type-tag qp-sechead__eyebrow">Bài của bạn</span>
+            <h2 className="type-h2">{pendingItems.length} bài chờ duyệt</h2>
+          </div>
+          <p className="qp-lf-pending-note">Đây là các bài bạn vừa gửi, đang chờ duyệt. Sau khi được duyệt sẽ hiển thị công khai.</p>
+          {pendingItems.length === 0 ? (
+            <div className="qp-empty">
+              <div className="qp-empty__title">Bạn chưa có bài chờ duyệt</div>
+              <p className="type-body-small">Bấm “+ Gửi bài viết” để gửi bài.</p>
+            </div>
+          ) : (
+            <div className="qp-grid-news">{pendingItems.map((a) => <NewsCard key={a.id} a={a} />)}</div>
+          )}
+        </>
+      ) : (
+      <>
       {/* Toolbar */}
       <form className="qp-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
         <div className="qp-toolbar__search">
@@ -181,6 +222,10 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
       )}
 
       <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      </>
+      )}
+
+      {postOpen && <ArticleSubmitModal open onClose={() => setPostOpen(false)} isLoggedIn={isLoggedIn} onSuccess={() => router.refresh()} />}
     </>
   );
 }

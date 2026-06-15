@@ -108,6 +108,7 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
               <Toggle k="jobsPostEnabled" label="Cho phép đăng Việc làm" />
               <Toggle k="lostfoundPostEnabled" label="Cho phép đăng Tìm đồ rơi" />
               <Toggle k="classifiedsPostEnabled" label="Cho phép đăng Mua bán" />
+              <Toggle k="newsPostEnabled" label="Cho phép gửi bài Tin tức" desc="Người dùng gửi bài viết; hiển thị sau khi admin duyệt." />
             </Card>
           </>
         )}

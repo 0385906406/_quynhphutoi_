@@ -13,6 +13,7 @@ export type AppSettings = {
   jobsPostEnabled: boolean;        // cho phép đăng tin Việc làm
   lostfoundPostEnabled: boolean;   // cho phép đăng tin Tìm đồ rơi
   classifiedsPostEnabled: boolean; // cho phép đăng tin Mua bán
+  newsPostEnabled: boolean;        // cho phép người dùng gửi bài Tin tức
 
   // --- Bình luận & tương tác ---
   commentsEnabled: boolean;
@@ -51,6 +52,7 @@ const DEFAULTS: AppSettings = {
   jobsPostEnabled: true,
   lostfoundPostEnabled: true,
   classifiedsPostEnabled: true,
+  newsPostEnabled: true,
 
   commentsEnabled: true,
   commentMaxLength: 1000,
@@ -111,6 +113,7 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     jobsPostEnabled: bool(patch.jobsPostEnabled, c.jobsPostEnabled),
     lostfoundPostEnabled: bool(patch.lostfoundPostEnabled, c.lostfoundPostEnabled),
     classifiedsPostEnabled: bool(patch.classifiedsPostEnabled, c.classifiedsPostEnabled),
+    newsPostEnabled: bool(patch.newsPostEnabled, c.newsPostEnabled),
 
     commentsEnabled: bool(patch.commentsEnabled, c.commentsEnabled),
     commentMaxLength: int(patch.commentMaxLength ?? c.commentMaxLength, 50, 5000, c.commentMaxLength),

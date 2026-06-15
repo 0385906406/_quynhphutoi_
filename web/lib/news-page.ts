@@ -134,7 +134,7 @@ export async function searchNewsCandidates(q: string, limit = 20): Promise<NewsC
   if (!kw) return [];
   const rx = new RegExp(escapeRegex(kw), "i");
   return (await articles())
-    .find({ status: "published", title: rx })
+    .find({ status: "published", approved: { $ne: false }, active: { $ne: false }, title: rx })
     .sort({ publishedAt: -1 })
     .limit(limit)
     .project<NewsCandidate>({ _id: 0, slug: 1, title: 1 })

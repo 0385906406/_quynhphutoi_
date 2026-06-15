@@ -1,8 +1,9 @@
 import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
-import { listArticles, toNewsCardArticle } from "@/lib/articles";
+import { listArticles, listMyArticles, toNewsCardArticle } from "@/lib/articles";
 import { getNewsPageConfig, resolveNewsBlocks } from "@/lib/news-page";
+import { getSession } from "@/lib/auth";
 import type { Article } from "@/lib/news";
 
 export const metadata = buildMetadata({
@@ -14,12 +15,19 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function TinTucPage() {
-  // Chỉ hiển thị bài viết admin đã xuất bản (DB) — không còn dữ liệu mẫu.
-  const [dbDocs, newsConfig] = await Promise.all([
+  // Chỉ hiển thị bài đã xuất bản + đã duyệt (DB) — bài người dùng chờ duyệt không lọt ra đây.
+  const [dbDocs, newsConfig, session] = await Promise.all([
     listArticles({ status: "published", limit: 60 }).catch(() => []),
     getNewsPageConfig().catch(() => null),
+    getSession().catch(() => null),
   ]);
   const items: Article[] = dbDocs.map(toNewsCardArticle);
+  // Bài người dùng đang chờ duyệt (chỉ của chính họ) — hiển thị ở tab "Chờ duyệt".
+  const pendingItems: Article[] = session
+    ? (await listMyArticles(session.id).catch(() => []))
+        .filter((d) => d.approved === false && d.active !== false)
+        .map(toNewsCardArticle)
+    : [];
   // Vùng nổi bật & khối "Đọc nhiều" theo cấu hình admin (mặc định nếu chưa cấu hình).
   const blocks = newsConfig
     ? resolveNewsBlocks(newsConfig, items)
@@ -49,7 +57,7 @@ export default async function TinTucPage() {
 
       <section className="qp-newsmain">
         <div className="container-wide">
-          <NewsBrowser items={items} featured={blocks.featured} popular={blocks.popular} />
+          <NewsBrowser items={items} featured={blocks.featured} popular={blocks.popular} isLoggedIn={!!session} pendingItems={pendingItems} />
         </div>
       </section>
     </>

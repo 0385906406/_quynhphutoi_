@@ -1,8 +1,9 @@
 // Admin: cập nhật (PATCH) & xoá (DELETE) một bài viết.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
-import { updateArticle, deleteArticle, type ArticleInput, type ArticleStatus } from "@/lib/articles";
+import { updateArticle, deleteArticle, getArticleBySlug, type ArticleInput, type ArticleStatus } from "@/lib/articles";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { notifyUser } from "@/lib/notifications";
 
 const STATUSES: ArticleStatus[] = ["draft", "published"];
 
@@ -40,7 +41,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
   const g = await requireAdmin();
   if (g instanceof NextResponse) return g;
   const { slug } = await params;
+  // Lấy trước để báo cho người gửi nếu đây là bài người dùng đang chờ duyệt.
+  const article = await getArticleBySlug(slug);
   const n = await deleteArticle(slug);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  if (article?.postedBy && article.approved === false) {
+    await notifyUser(article.postedBy, { type: "post_rejected", title: `Bài viết “${article.title}” của bạn chưa được duyệt`, href: "/tai-khoan/bai-dang", module: "tin-tuc" });
+  }
   return NextResponse.json({ ok: true });
 }

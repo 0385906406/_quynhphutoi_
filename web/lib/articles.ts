@@ -58,6 +58,12 @@ export type ArticleDoc = {
   featured: boolean;
   status: ArticleStatus;
   seo: ArticleSeo;
+  // Bài do NGƯỜI DÙNG gửi (giống việc làm/mua bán): có người gửi + cờ duyệt.
+  // Bài admin tạo: không có postedBy, approved/active mặc định true.
+  postedBy?: ObjectId;       // chủ bài (người dùng gửi)
+  postedByName?: string;
+  approved?: boolean;        // false = chờ admin duyệt; thiếu/true = đã duyệt
+  active?: boolean;          // false = đã ẩn/gỡ; thiếu/true = đang hiển thị
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +80,9 @@ export async function articles() {
     col.createIndex({ status: 1, publishedAt: -1 }),
     col.createIndex({ categorySlug: 1, publishedAt: -1 }),
     col.createIndex({ featured: 1, publishedAt: -1 }),
+    // Bài người dùng: theo chủ bài & hàng chờ duyệt.
+    col.createIndex({ postedBy: 1, createdAt: -1 }),
+    col.createIndex({ approved: 1, active: 1, createdAt: 1 }),
     // Tìm kiếm tiếng Việt cơ bản trên tiêu đề / tóm tắt / thẻ.
     col.createIndex({ title: "text", excerpt: "text", tags: "text" }, { default_language: "none" }),
   ]));
@@ -90,14 +99,20 @@ export type ListOpts = {
   status?: ArticleStatus;   // mặc định "published"
   search?: string;
   featured?: boolean;
+  approvedOnly?: boolean;   // mặc định true: chỉ bài đã duyệt + đang hiển thị
   limit?: number;
   skip?: number;
   sort?: "newest" | "oldest" | "popular";
 };
 
+// Điều kiện bài hiển thị công khai: đã duyệt (approved != false) & đang bật (active != false).
+// Dùng $ne:false để bài admin cũ (thiếu field) vẫn coi như công khai — không cần migrate.
+const PUBLIC_GATE = { approved: { $ne: false as const }, active: { $ne: false as const } };
+
 export async function listArticles(opts: ListOpts = {}) {
   const col = await articles();
   const filter: Filter<ArticleDoc> = { status: opts.status ?? "published" };
+  if (opts.approvedOnly !== false) Object.assign(filter, PUBLIC_GATE);
   if (opts.category) filter.categorySlug = opts.category;
   if (typeof opts.featured === "boolean") filter.featured = opts.featured;
   if (opts.search?.trim()) filter.$text = { $search: opts.search.trim() };
@@ -116,6 +131,7 @@ export async function listArticles(opts: ListOpts = {}) {
 export async function countArticles(opts: ListOpts = {}) {
   const col = await articles();
   const filter: Filter<ArticleDoc> = { status: opts.status ?? "published" };
+  if (opts.approvedOnly !== false) Object.assign(filter, PUBLIC_GATE);
   if (opts.category) filter.categorySlug = opts.category;
   if (opts.search?.trim()) filter.$text = { $search: opts.search.trim() };
   return col.countDocuments(filter);
@@ -127,12 +143,12 @@ export async function relatedArticles(slug: string, n = 3) {
   const cur = await col.findOne({ slug });
   if (!cur) return [];
   const same = await col
-    .find({ slug: { $ne: slug }, categorySlug: cur.categorySlug, status: "published" })
+    .find({ slug: { $ne: slug }, categorySlug: cur.categorySlug, status: "published", ...PUBLIC_GATE })
     .sort({ publishedAt: -1 }).limit(n).toArray();
   if (same.length >= n) return same;
   const fillIds = same.map((a) => a._id);
   const rest = await col
-    .find({ slug: { $ne: slug }, _id: { $nin: fillIds }, status: "published" })
+    .find({ slug: { $ne: slug }, _id: { $nin: fillIds }, status: "published", ...PUBLIC_GATE })
     .sort({ publishedAt: -1 }).limit(n - same.length).toArray();
   return [...same, ...rest];
 }
@@ -243,6 +259,11 @@ export type ArticleInput = {
   featured?: boolean;
   status?: ArticleStatus;
   seo?: ArticleSeo;
+  // Khi bài do người dùng gửi (không bắt buộc với admin):
+  postedBy?: string;         // _id người gửi
+  postedByName?: string;
+  approved?: boolean;        // mặc định true (admin); route đăng tin truyền false để chờ duyệt
+  active?: boolean;          // mặc định true
 };
 
 export async function createArticle(input: ArticleInput) {
@@ -257,6 +278,10 @@ export async function createArticle(input: ArticleInput) {
     tags: input.tags ?? [], coverImage: input.coverImage, coverAlt: input.coverAlt,
     author: input.author, body, readingMinutes: estimateReadingMinutes(body), views: 0,
     featured: input.featured ?? false, status, seo: input.seo ?? {},
+    postedBy: input.postedBy ? new ObjectId(input.postedBy) : undefined,
+    postedByName: input.postedByName,
+    approved: input.approved ?? true,
+    active: input.active ?? true,
     publishedAt: status === "published" ? now : null, createdAt: now, updatedAt: now,
   };
   const { insertedId } = await col.insertOne(doc);
@@ -293,6 +318,37 @@ export async function deleteArticle(slug: string) {
   return res.deletedCount;
 }
 
+// ---- Bài do người dùng gửi (chờ duyệt) ----
+const toId = (v: ObjectId | string): ObjectId => (typeof v === "string" ? new ObjectId(v) : v);
+
+// Bài của 1 người dùng (mọi trạng thái) — cho trang "Bài đăng của tôi".
+export async function listMyArticles(userId: ObjectId | string) {
+  return (await articles()).find({ postedBy: toId(userId) }).sort({ createdAt: -1 }).toArray();
+}
+
+// Hàng chờ duyệt (bài người dùng) cho admin.
+export async function listPendingArticles(opts: { limit?: number } = {}) {
+  const col = await articles();
+  const cur = col.find({ approved: false, active: { $ne: false } }).sort({ createdAt: 1 });
+  if (opts.limit) cur.limit(opts.limit);
+  return cur.toArray();
+}
+
+export async function countPendingArticles() {
+  return (await articles()).countDocuments({ approved: false, active: { $ne: false } });
+}
+
+// Duyệt / bỏ duyệt 1 bài. Khi duyệt mà chưa có ngày xuất bản → đặt ngay.
+export async function approveArticle(slug: string, approved = true) {
+  const col = await articles();
+  const set: Record<string, unknown> = { approved, updatedAt: new Date() };
+  if (approved) {
+    const cur = await col.findOne({ slug });
+    if (cur && !cur.publishedAt) set.publishedAt = new Date();
+  }
+  await col.updateOne({ slug }, { $set: set });
+}
+
 // Liệt kê toàn bộ (cả draft) cho admin.
 export async function listAllArticles(opts: { search?: string; status?: ArticleStatus } = {}) {
   const col = await articles();
@@ -309,6 +365,7 @@ export type ArticleRow = {
   authorName: string; authorTitle: string; authorAvatar: string;
   bodyHtml: string; featured: boolean; status: ArticleStatus;
   seo: ArticleSeo; views: number; publishedAt: string | null;
+  approved: boolean; pending: boolean; postedByName: string;   // bài người dùng gửi
 };
 // Map sang shape Article tĩnh (lib/news.ts) để tái dùng NewsCard / NewsBrowser ở trang public.
 export function toNewsCardArticle(d: ArticleDoc): import("@/lib/news").Article {
@@ -330,6 +387,7 @@ export function toArticleRow(d: ArticleDoc): ArticleRow {
     bodyHtml: blocksToHtml(d.body ?? []), featured: d.featured, status: d.status,
     seo: d.seo ?? {}, views: d.views ?? 0,
     publishedAt: d.publishedAt ? d.publishedAt.toISOString() : null,
+    approved: d.approved !== false, pending: d.approved === false, postedByName: d.postedByName ?? "",
   };
 }
 

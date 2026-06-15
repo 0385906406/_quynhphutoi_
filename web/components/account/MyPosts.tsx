@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/datetime";
 
 const TABS = [
   { key: "all", label: "Tất cả" },
+  { key: "tin-tuc", label: "Tin tức" },
   { key: "tim-do-roi", label: "Tìm đồ rơi" },
   { key: "viec-lam", label: "Việc làm" },
   { key: "mua-ban", label: "Mua bán" },
@@ -23,7 +24,7 @@ export function MyPosts({ items }: { items: MyPost[] }) {
   const [page, setPage] = useState(1);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: items.length, "tim-do-roi": 0, "viec-lam": 0, "mua-ban": 0 };
+    const c: Record<string, number> = { all: items.length, "tin-tuc": 0, "tim-do-roi": 0, "viec-lam": 0, "mua-ban": 0 };
     for (const p of items) c[p.section]++;
     return c;
   }, [items]);
@@ -59,7 +60,7 @@ export function MyPosts({ items }: { items: MyPost[] }) {
         <div className="qp-empty">
           <div className="qp-empty__title">Không có bài đăng nào</div>
           <p className="type-body-small">
-            {pendingOnly ? "Bạn không có bài đang chờ duyệt." : <>Đăng tin tại <Link href="/tim-do-roi">Tìm đồ rơi</Link>, <Link href="/viec-lam">Việc làm</Link> hoặc <Link href="/mua-ban">Mua bán</Link>.</>}
+            {pendingOnly ? "Bạn không có bài đang chờ duyệt." : <>Đăng tin tại <Link href="/tin-tuc">Tin tức</Link>, <Link href="/tim-do-roi">Tìm đồ rơi</Link>, <Link href="/viec-lam">Việc làm</Link> hoặc <Link href="/mua-ban">Mua bán</Link>.</>}
           </p>
         </div>
       ) : (

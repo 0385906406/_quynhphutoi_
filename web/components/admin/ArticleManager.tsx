@@ -48,9 +48,19 @@ export function ArticleManager({ initial }: { initial: ArticleRow[] }) {
   const filtered = useMemo(() => {
     const kw = q.trim().toLowerCase();
     return rows.filter((r) =>
-      (!fStatus || r.status === fStatus) &&
+      (!fStatus || (fStatus === "pending" ? r.pending : (!r.pending && r.status === fStatus))) &&
       (!kw || r.title.toLowerCase().includes(kw)));
   }, [rows, q, fStatus]);
+
+  async function approve(r: ArticleRow) {
+    const res = await fetch(`/api/admin/articles/${r.slug}/approve`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approved: true }),
+    });
+    if (res.ok) {
+      setRows((cur) => cur.map((x) => (x.slug === r.slug ? { ...x, approved: true, pending: false, status: "published" } : x)));
+      toast.success("Đã duyệt bài viết.");
+    } else { toast.error("Duyệt thất bại."); }
+  }
 
   const pg = usePagination(filtered, 20);
 
@@ -107,6 +117,7 @@ export function ArticleManager({ initial }: { initial: ArticleRow[] }) {
         <input className="qp-input qp-admin-toolbar__search" placeholder="Tìm theo tiêu đề…" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="qp-select" style={{ maxWidth: 200 }} value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="">Tất cả trạng thái</option>
+          <option value="pending">Chờ duyệt</option>
           <option value="published">Đã xuất bản</option>
           <option value="draft">Bản nháp</option>
         </select>
@@ -203,15 +214,23 @@ export function ArticleManager({ initial }: { initial: ArticleRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}</td>
+                  <td>
+                    <b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
+                    {r.pending && r.postedByName ? <div className="type-body-small text-muted">Người gửi: {r.postedByName}</div> : null}
+                  </td>
                   <td>{r.category}</td>
-                  <td><span className={`qp-acc-badge is-${r.status === "published" ? "active" : "pending"}`}>{r.status === "published" ? "Đã xuất bản" : "Nháp"}</span></td>
+                  <td>
+                    {r.pending
+                      ? <span className="qp-acc-badge is-pending">Chờ duyệt</span>
+                      : <span className={`qp-acc-badge is-${r.status === "published" ? "active" : "pending"}`}>{r.status === "published" ? "Đã xuất bản" : "Nháp"}</span>}
+                  </td>
                   <td>{r.views}</td>
                   <td className="qp-admin-actions">
                     <RowActions actions={[
-                      { value: "view", label: "Xem", hidden: r.status !== "published", run: () => window.open(`/tin-tuc/${r.slug}`, "_blank") },
+                      { value: "approve", label: "Duyệt", hidden: !r.pending, run: () => approve(r) },
+                      { value: "view", label: "Xem", hidden: r.status !== "published" || r.pending, run: () => window.open(`/tin-tuc/${r.slug}`, "_blank") },
                       { value: "edit", label: "Sửa", run: () => startEdit(r) },
-                      { value: "delete", label: "Xoá", run: () => remove(r) },
+                      { value: "delete", label: r.pending ? "Từ chối" : "Xoá", run: () => remove(r) },
                     ]} />
                   </td>
                 </tr>

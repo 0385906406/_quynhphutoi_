@@ -124,7 +124,8 @@ async function pickDocs<T extends Document & { slug: string; createdAt: Date }>(
 // Tin tức: trả Article[] (dùng lại NewsCard). Sắp theo publishedAt cho mode latest.
 async function resolveNews(cfg: HomeSectionConfig): Promise<Article[]> {
   const c = await articles();
-  const base: Filter<ArticleDoc> = { status: "published" };
+  // Chỉ bài đã xuất bản & đã duyệt & đang hiển thị (loại bài người dùng đang chờ duyệt).
+  const base: Filter<ArticleDoc> = { status: "published", approved: { $ne: false }, active: { $ne: false } };
   let docs: ArticleDoc[];
   if (cfg.mode === "manual") {
     if (cfg.manualSlugs.length === 0) return [];
@@ -198,7 +199,7 @@ export type HomeCandidate = { slug: string; title: string };
 
 export async function listHomeCandidates(): Promise<Record<HomeSectionKey, HomeCandidate[]>> {
   const [a, j, l, c] = await Promise.all([
-    (await articles()).find({ status: "published" }).sort({ publishedAt: -1 }).limit(100).project<HomeCandidate>({ _id: 0, slug: 1, title: 1 }).toArray(),
+    (await articles()).find({ status: "published", approved: { $ne: false }, active: { $ne: false } }).sort({ publishedAt: -1 }).limit(100).project<HomeCandidate>({ _id: 0, slug: 1, title: 1 }).toArray(),
     (await jobs()).find({ approved: true, active: true }).sort({ createdAt: -1 }).limit(100).project<HomeCandidate>({ _id: 0, slug: 1, title: 1 }).toArray(),
     (await lostFound()).find({ approved: true, active: true }).sort({ createdAt: -1 }).limit(100).project<HomeCandidate>({ _id: 0, slug: 1, title: 1 }).toArray(),
     (await classifieds()).find({ approved: true, active: true }).sort({ createdAt: -1 }).limit(100).project<HomeCandidate>({ _id: 0, slug: 1, title: 1 }).toArray(),
