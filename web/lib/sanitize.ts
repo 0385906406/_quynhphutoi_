@@ -1,9 +1,11 @@
 // Làm sạch HTML từ rich text editor (Tiptap) trước khi lưu — chống XSS.
-// Theo cách dự án innovation: isomorphic-dompurify với allowlist + hook.
-import DOMPurify from "isomorphic-dompurify";
+// Dùng sanitize-html (thuần JS, htmlparser2) — CỐ Ý KHÔNG dùng isomorphic-dompurify
+// vì nó kéo theo jsdom → html-encoding-sniffer require ESM @exodus/bytes → ERR_REQUIRE_ESM
+// làm crash route trên Vercel (xem lib/strip-html.ts). sanitize-html không phụ thuộc jsdom.
+import sanitizeHtmlLib from "sanitize-html";
 
 // Thẻ định dạng phong phú khớp toolbar editor (heading, bảng, ảnh, YouTube,
-// task list, details, sub/sup, màu…). Iframe chỉ cho YouTube (lọc ở hook).
+// task list, details, sub/sup, màu…). Iframe chỉ cho YouTube (lọc theo hostname).
 const ALLOWED_TAGS = [
   "p", "br", "span", "div", "strong", "b", "em", "i", "u", "s", "strike", "mark", "sub", "sup",
   "h1", "h2", "h3", "h4", "ul", "ol", "li", "label", "input",
@@ -11,43 +13,40 @@ const ALLOWED_TAGS = [
   "table", "thead", "tbody", "tr", "th", "td", "colgroup", "col",
   "details", "summary",
 ];
-const ALLOWED_ATTR = [
-  "href", "target", "rel", "src", "alt", "title", "width", "height", "loading", "class", "style",
-  "data-type", "data-checked", "colspan", "rowspan", "start", "type", "checked", "disabled",
-  "allow", "allowfullscreen", "frameborder",
-];
 
-// Hook chạy 1 lần: iframe ngoài YouTube → xoá; input task-list → ép disabled.
-let hooked = false;
-function ensureHook() {
-  if (hooked) return;
-  DOMPurify.addHook("uponSanitizeElement", (node, data) => {
-    const el = node as unknown as Element;
-    if (data.tagName === "iframe") {
-      const src = el.getAttribute?.("src") || "";
-      const ok = /^https:\/\/(www\.)?(youtube(-nocookie)?\.com|youtu\.be)\//i.test(src);
-      if (!ok) el.parentNode?.removeChild(el);
-    }
-    if (data.tagName === "input") {
-      el.setAttribute?.("disabled", "disabled");
-    }
-  });
-  hooked = true;
-}
+// Chỉ cho nhúng iframe từ YouTube (kèm bản nocookie & link rút gọn youtu.be).
+const YT_HOSTS = ["youtube.com", "www.youtube.com", "youtube-nocookie.com", "www.youtube-nocookie.com", "youtu.be"];
 
 export function sanitizeHtml(html: string): string {
   if (!html) return "";
-  ensureHook();
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-    ADD_TAGS: ["iframe"],
+  return sanitizeHtmlLib(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {
+      "*": ["class", "style", "title", "data-type", "data-checked"],
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
+      iframe: ["src", "width", "height", "allow", "allowfullscreen", "frameborder"],
+      input: ["type", "checked", "disabled"],
+      ol: ["start"],
+      td: ["colspan", "rowspan"],
+      th: ["colspan", "rowspan"],
+      col: ["span", "width"],
+      colgroup: ["span"],
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: { img: ["http", "https", "data"] },
+    // Chỉ giữ iframe có hostname thuộc YouTube; còn lại bị loại bỏ.
+    allowedIframeHostnames: YT_HOSTS,
+    allowIframeRelativeUrls: false,
+    transformTags: {
+      // input task-list → ép disabled (chỉ để hiển thị, không cho tương tác).
+      input: (tagName, attribs) => ({ tagName, attribs: { ...attribs, disabled: "disabled" } }),
+    },
+    // iframe ngoài YouTube đã bị gỡ src ở trên → loại bỏ luôn thẻ rỗng còn lại.
+    exclusiveFilter: (frame) => frame.tag === "iframe" && !frame.attribs.src,
   }).trim();
 }
 
-// stripHtml ĐÃ CHUYỂN sang lib/strip-html.ts (regex thuần, không kéo jsdom).
-// Re-export để các import cũ `from "@/lib/sanitize"` không gãy — NHƯNG lưu ý:
-// import từ đây vẫn nạp isomorphic-dompurify ở trên. Đường chỉ-đọc nên import
-// trực tiếp từ "@/lib/strip-html" để tránh jsdom (xem ERR_REQUIRE_ESM trên Vercel).
+// stripHtml ĐÃ CHUYỂN sang lib/strip-html.ts (regex thuần). Re-export để các import
+// cũ `from "@/lib/sanitize"` không gãy. File này KHÔNG còn kéo jsdom nữa.
 export { stripHtml } from "./strip-html";
