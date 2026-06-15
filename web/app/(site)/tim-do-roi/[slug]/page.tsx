@@ -16,6 +16,7 @@ import { formatDate } from "@/lib/datetime";
 import { buildMetadata, jsonLdLostFound, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -157,6 +158,8 @@ export default async function LostFoundDetailPage({ params }: { params: Promise<
                 <MapEmbed url={post.location.mapUrl} address={post.location.address} />
               </div>
             )}
+
+            <AffiliateCTA />
 
             <PostInteractions slug={post.slug} title={post.title} initialLiked={liked}
               initialLikeCount={likeCount} commentCount={commentItems.length} isLoggedIn={!!user} />

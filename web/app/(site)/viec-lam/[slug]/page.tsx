@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/datetime";
 import { buildMetadata, jsonLdJob, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
               </div>
             )}
             <JobActions slug={job.slug} title={job.title} isOwner={isOwner} status={job.status} />
+            <AffiliateCTA />
             <DetailSocial type="viec-lam" slug={slug} title={job.title} />
           </div>
 

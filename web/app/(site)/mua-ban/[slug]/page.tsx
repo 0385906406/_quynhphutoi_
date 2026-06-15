@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/datetime";
 import { buildMetadata, jsonLdClassified, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -126,6 +127,7 @@ export default async function ClassifiedDetailPage({ params }: { params: Promise
               </div>
             )}
             <ClassifiedActions slug={a.slug} title={a.title} isOwner={isOwner} status={a.status} />
+            <AffiliateCTA />
             <DetailSocial type="mua-ban" slug={slug} title={a.title} />
           </div>
 
