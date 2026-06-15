@@ -3,11 +3,13 @@
 // Form đăng ký — gọi API /api/auth/register (MongoDB), gửi email xác nhận.
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CharCount } from "@/components/common/CharCount";
 import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
 import { useToast } from "@/components/common/Toast";
 
 export function RegisterForm() {
+  const router = useRouter();
   const { toast } = useToast();
   const captcha = useRef<RecaptchaHandle>(null);
   const [name, setName] = useState("");
@@ -54,8 +56,8 @@ export function RegisterForm() {
       return;
     }
 
-    toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.");
-    setLoading(false);
+    toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+    router.push("/dang-nhap");
   }
 
   return (

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createUser, findByEmail } from "@/lib/users";
-import { sendVerifyEmail } from "@/lib/mailer";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
 import { validatePassword } from "@/lib/password";
 import { verifyRecaptcha } from "@/lib/recaptcha";
@@ -31,9 +30,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email này đã được đăng ký." }, { status: 409 });
   }
 
-  const { token } = await createUser(email, name, password);
-  const link = `${process.env.APP_URL}/api/auth/verify?token=${token}`;
-  await sendVerifyEmail(email, name, link);
+  await createUser(email, name, password);
 
+  // Không xác nhận email — tài khoản dùng được ngay, client điều hướng về trang đăng nhập.
   return NextResponse.json({ ok: true });
 }

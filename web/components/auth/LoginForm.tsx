@@ -1,16 +1,14 @@
 "use client";
 
 // Form đăng nhập — gọi API /api/auth/login (MongoDB + JWT cookie).
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
 import { useToast } from "@/components/common/Toast";
 
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
   const verify = useSearchParams().get("verify"); // sau khi bấm link xác nhận email
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,21 +22,13 @@ export function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
-
     setLoading(true);
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, recaptchaToken }),
+      body: JSON.stringify({ email, password }),
     });
     const data = await res.json().catch(() => ({}));
-    captcha.current?.reset();
 
     if (!res.ok) {
       toast.error(data.error || "Đăng nhập thất bại.");
@@ -109,8 +99,6 @@ export function LoginForm() {
           Quên mật khẩu?
         </Link>
       </div>
-
-      <Recaptcha ref={captcha} className="qp-recaptcha" />
 
       <button className="btn-login" type="submit" disabled={loading}>
         {loading ? "Đang đăng nhập…" : "Đăng nhập"}

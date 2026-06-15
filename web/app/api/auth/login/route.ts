@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { findByEmail, checkPassword, normEmail } from "@/lib/users";
 import { createSession } from "@/lib/auth";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
-import { verifyRecaptcha } from "@/lib/recaptcha";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -17,19 +16,9 @@ export async function POST(req: Request) {
     if (!emRl.ok) return tooMany(emRl.retryAfter, "Tài khoản tạm khoá đăng nhập do thử sai nhiều lần. Vui lòng thử lại sau ít phút.");
   }
 
-  if (!(await verifyRecaptcha(body.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
-
   const u = await findByEmail(email || "");
   if (!u || !(await checkPassword(u, password || ""))) {
     return NextResponse.json({ error: "Email hoặc mật khẩu không đúng." }, { status: 401 });
-  }
-  if (!u.verified) {
-    return NextResponse.json(
-      { error: "Tài khoản chưa xác nhận email. Vui lòng kiểm tra hộp thư." },
-      { status: 403 },
-    );
   }
 
   await createSession({ id: String(u._id), email: u.email, name: u.name });

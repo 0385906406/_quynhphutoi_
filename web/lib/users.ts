@@ -102,17 +102,15 @@ export function toUserRow(u: UserDoc): UserRow {
 export async function createUser(email: string, name: string, password: string) {
   const col = await users();
   const passwordHash = await bcrypt.hash(password, 10);
-  const token = randomToken();
-  await col.insertOne({
+  // Bỏ xác nhận email: tài khoản tạo xong dùng được ngay (verified = true).
+  const res = await col.insertOne({
     email: normEmail(email),
     name: name.trim(),
     passwordHash,
-    verified: false,
-    verifyToken: hashToken(token),
-    verifyTokenExp: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24h
+    verified: true,
     createdAt: new Date(),
   });
-  return { token }; // token thô để gắn vào link email
+  return { id: res.insertedId.toString() };
 }
 
 // Bootstrap admin: đảm bảo tài khoản admin tồn tại (tạo mới ĐÃ xác minh, hoặc nâng
