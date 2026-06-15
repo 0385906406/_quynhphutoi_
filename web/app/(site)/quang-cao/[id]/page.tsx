@@ -8,6 +8,7 @@ import { stripHtml } from "@/lib/strip-html";
 import { buildMetadata, jsonLdAd, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,8 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
             )}
           </div>
         )}
+
+        <AffiliateCTA />
 
         {/* Quảng cáo khác */}
         {others.length > 0 && (
