@@ -4,7 +4,7 @@
 // Hệ thống tự chọn ngẫu nhiên 1 link mỗi lượt bấm "Xem thêm" ở cuối bài.
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/common/Toast";
-import { isShopeeUrl, type AffiliateConfig } from "@/lib/affiliate";
+import { isShopeeUrl, type AffiliateConfig } from "@/lib/affiliate-shared";
 
 export function AffiliateManager({ initial }: { initial: AffiliateConfig }) {
   const [enabled, setEnabled] = useState(initial.enabled);
