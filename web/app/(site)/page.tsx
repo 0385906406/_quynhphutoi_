@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
-import { listArticles, toNewsCardArticle, type ArticleDoc } from "@/lib/articles";
+import { listArticles, type ArticleDoc } from "@/lib/articles";
+import { loadHomeSections } from "@/lib/home-sections";
 import { NewsCard } from "@/components/news/NewsCard";
+import { HomeModuleCard } from "@/components/home/HomeModuleCard";
 import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/seo";
 import { JsonLd } from "@/components/common/JsonLd";
 
@@ -28,19 +30,6 @@ const TILES = [
   { href: "/di-tich", title: "Di tích", desc: "Đình, chùa, đền và di tích lịch sử.", icon: "landmark" },
 ];
 
-
-const JOBS = [
-  { title: "Công nhân may (200 vị trí)", company: "Công ty May Quỳnh Côi", nganh: "May mặc", location: "TT Quỳnh Côi", salary: "7–9 triệu", posted: "Hôm nay", isNew: true },
-  { title: "Nhân viên kho – vận hành", company: "CCN An Bài", nganh: "Sản xuất", location: "Xã An Bài", salary: "8–10 triệu", posted: "Hôm qua", isNew: true },
-  { title: "Kế toán bán hàng", company: "Cửa hàng VLXD Đông Hải", nganh: "Văn phòng", location: "Xã Đông Hải", salary: "Thoả thuận", posted: "2 ngày trước", isNew: false },
-];
-
-const LOSTFOUND = [
-  { status: "found", title: "Nhặt được ví da màu nâu", area: "Chợ Đọ", date: "10/06", icon: "search" },
-  { status: "lost", title: "Mất giấy tờ xe máy mang tên N.V.A", area: "Xã Quỳnh Hải", date: "09/06", icon: "alert" },
-  { status: "found", title: "Nhặt được chìa khoá xe + thẻ ATM", area: "TT An Bài", date: "08/06", icon: "search" },
-  { status: "lost", title: "Thất lạc chó cảnh màu vàng", area: "Xã Quỳnh Hồng", date: "07/06", icon: "alert" },
-];
 
 const EVENTS = [
   { day: "12", month: "06", title: "Phiên chợ Quỳnh Côi", place: "TT Quỳnh Côi", time: "Cả ngày", type: "Chợ phiên" },
@@ -134,8 +123,8 @@ function toHeroSlide(d: ArticleDoc): HeroSlide {
 }
 
 export default async function HomePage() {
-  // 4 bài viết mới nhất đã xuất bản (DB) cho section tin tức trang chủ.
-  const latestNews = (await listArticles({ status: "published", limit: 4 }).catch(() => [])).map(toNewsCardArticle);
+  // Các khối trang chủ (Tin tức / Việc làm / Tìm đồ rơi / Mua bán) — đọc theo cấu hình admin.
+  const home = await loadHomeSections();
 
   // Slide hero: ưu tiên bài "Nổi bật"; nếu chưa có bài nào tick → lấy 4 bài mới nhất.
   const featuredDocs = await listArticles({ status: "published", featured: true, limit: 4 }).catch(() => []);
@@ -178,14 +167,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TIN TỨC & THÔNG BÁO — chỉ hiện khi đã có bài xuất bản */}
-      {latestNews.length > 0 && (
+      {/* TIN TỨC & THÔNG BÁO — theo cấu hình admin (Trang chủ) */}
+      {home.news.length > 0 && (
         <section className="section section-alt">
           <div className="container-wide">
             <SectionHead eyebrow="Cập nhật" title="Tin tức & thông báo" href="/tin-tuc" />
-
             <div className="qp-grid-news qp-scroller">
-              {latestNews.map((a) => (
+              {home.news.map((a) => (
                 <NewsCard key={a.id} a={a} />
               ))}
             </div>
@@ -193,61 +181,41 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* VIỆC LÀM MỚI NHẤT */}
-      <section className="section">
-        <div className="container-wide">
-          <SectionHead eyebrow="Tuyển dụng" title="Việc làm mới nhất" href="/viec-lam" />
-          <div className="grid grid-3 qp-scroller">
-            {JOBS.map((j) => (
-              <article className="qp-mesh-card qp-mesh-card--text" key={j.title}>
-                <div className="qp-mesh-card__body">
-                  <div className="row-between">
-                    <span className="qp-category-badge">{j.nganh}</span>
-                    {j.isNew && <span className="qp-badge-g4">Mới</span>}
-                  </div>
-                  <Link className="qp-mesh-card__title" href="/viec-lam">{j.title}</Link>
-                  <p className="type-body-small text-muted">{j.company}</p>
-                  <div className="qp-cardmeta">
-                    <span className="qp-cardmeta__chip"><Icon name="map-pin" size={14} />{j.location}</span>
-                    <span className="qp-cardmeta__chip is-salary">{j.salary}</span>
-                  </div>
-                  <div className="qp-card-foot">
-                    <span className="type-caption text-muted">{j.posted}</span>
-                    <Link className="qp-tile__link" href="/viec-lam">Ứng tuyển <span aria-hidden>→</span></Link>
-                  </div>
-                </div>
-              </article>
-            ))}
+      {/* VIỆC LÀM — theo cấu hình admin */}
+      {home.jobs.length > 0 && (
+        <section className="section">
+          <div className="container-wide">
+            <SectionHead eyebrow="Tuyển dụng" title="Việc làm mới nhất" href="/viec-lam" />
+            <div className="qp-grid-news qp-scroller">
+              {home.jobs.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* TÌM ĐỒ RƠI GẦN ĐÂY */}
-      <section className="section section-alt">
-        <div className="container-wide">
-          <SectionHead eyebrow="Cộng đồng" title="Tìm đồ rơi gần đây" href="/tim-do-roi" />
-          <div className="qp-grid-news qp-scroller">
-            {LOSTFOUND.map((l) => (
-              <article className="qp-newscard" key={l.title}>
-                <Link href="/tim-do-roi" className="qp-newscard__media qp-newscard__media--icon" aria-label={l.title}>
-                  <Icon name={l.icon} size={46} />
-                  <span className={`qp-newscard__badge ${l.status === "lost" ? "is-lost" : "is-found"}`}>
-                    {l.status === "lost" ? "Bị mất" : "Nhặt được"}
-                  </span>
-                </Link>
-                <div className="qp-newscard__body">
-                  <h3 className="qp-newscard__title"><Link href="/tim-do-roi">{l.title}</Link></h3>
-                  <div className="qp-newscard__meta">
-                    <span>{l.area}</span>
-                    <span className="qp-dot-sep" aria-hidden />
-                    <span>{l.date}</span>
-                  </div>
-                </div>
-              </article>
-            ))}
+      {/* TÌM ĐỒ RƠI — theo cấu hình admin */}
+      {home.lostfound.length > 0 && (
+        <section className="section section-alt">
+          <div className="container-wide">
+            <SectionHead eyebrow="Cộng đồng" title="Tìm đồ rơi gần đây" href="/tim-do-roi" />
+            <div className="qp-grid-news qp-scroller">
+              {home.lostfound.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* MUA BÁN — theo cấu hình admin */}
+      {home.classifieds.length > 0 && (
+        <section className="section">
+          <div className="container-wide">
+            <SectionHead eyebrow="Rao vặt" title="Mua bán mới nhất" href="/mua-ban" />
+            <div className="qp-grid-news qp-scroller">
+              {home.classifieds.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* LỊCH SỰ KIỆN & CHỢ PHIÊN */}
       <section className="section">

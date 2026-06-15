@@ -55,14 +55,6 @@ export const NAV_TREE: NavNode[] = [
   { id: "lien-he", label: "Liên hệ", href: "/lien-he" },
 ];
 
-export const TICKER: string[] = [
-  "Tuyển dụng: 12 vị trí mới tại CCN Quỳnh Côi",
-  "Lịch chợ phiên Quỳnh Côi tháng này đã cập nhật",
-  "Thông báo tuyển sinh lớp 10 năm học mới",
-  "Tìm thấy ví da màu nâu khu vực chợ Đọ",
-  "Lịch khám sức khoẻ miễn phí tại trạm y tế các xã",
-];
-
 export const BRAND = {
   mark: "QP",
   logo: "/img/patterns/logo.png",
