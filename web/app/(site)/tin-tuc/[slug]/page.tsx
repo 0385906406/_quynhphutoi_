@@ -9,6 +9,7 @@ import { newsLikeInfo, listNewsComments } from "@/lib/news-social";
 import { PostInteractions } from "@/components/lostfound/PostInteractions";
 import { CommentsSection, type CommentItem } from "@/components/lostfound/CommentsSection";
 import { NewsCard } from "@/components/news/NewsCard";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -144,6 +145,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {a.tags.map((t) => <span className="qp-tag" key={t}>#{t}</span>)}
               </div>
             </div>
+
+            {/* Nút "Xem thêm" affiliate (random link Shopee) — ẩn nếu admin chưa bật */}
+            <AffiliateCTA />
 
             <PostInteractions
               slug={slug}

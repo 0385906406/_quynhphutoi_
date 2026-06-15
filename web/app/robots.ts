@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           "/quen-mat-khau",
           "/dat-lai-mat-khau",
           "/quang-cao",
+          "/di/",
         ],
       },
     ],
