@@ -24,8 +24,8 @@ const DEFAULT_SLIDE: HeroSlide = {
   lead: "Một điểm đến số duy nhất cho người dân Quỳnh Phụ — tra cứu thông báo, việc làm, tin tức và kết nối cộng đồng nhanh chóng, thuận tiện.",
   image: "/img/patterns/slider-default.png",
   imageAlt: "Cổng thông tin xã Quỳnh Phụ",
-  cta: { label: "Khám phá cổng thông tin", href: "/gioi-thieu" },
-  byline: { avatar: "QP", role: "Cổng thông tin huyện", name: "Phục vụ người dân", time: "Trực tuyến 24/7" },
+  cta: { label: "Khám phá cổng thông tin", href: "/tong-quan" },
+  byline: { avatar: "QP", role: "Cổng thông tin xã", name: "Phục vụ người dân", time: "Trực tuyến 24/7" },
 };
 
 const FLOATS = [
