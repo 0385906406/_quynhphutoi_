@@ -2,6 +2,7 @@ import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
 import { listArticles, toNewsCardArticle } from "@/lib/articles";
+import { getNewsPageConfig, resolveNewsBlocks } from "@/lib/news-page";
 import type { Article } from "@/lib/news";
 
 export const metadata = buildMetadata({
@@ -14,8 +15,15 @@ export const dynamic = "force-dynamic";
 
 export default async function TinTucPage() {
   // Chỉ hiển thị bài viết admin đã xuất bản (DB) — không còn dữ liệu mẫu.
-  const dbDocs = await listArticles({ status: "published", limit: 60 }).catch(() => []);
+  const [dbDocs, newsConfig] = await Promise.all([
+    listArticles({ status: "published", limit: 60 }).catch(() => []),
+    getNewsPageConfig().catch(() => null),
+  ]);
   const items: Article[] = dbDocs.map(toNewsCardArticle);
+  // Vùng nổi bật & khối "Đọc nhiều" theo cấu hình admin (mặc định nếu chưa cấu hình).
+  const blocks = newsConfig
+    ? resolveNewsBlocks(newsConfig, items)
+    : { featured: items.slice(0, 4), popular: [...items].sort((a, b) => b.views - a.views).slice(0, 7) };
   return (
     <>
       {/* Page hero sáng (gradient + đốm sáng + cây lúa halftone) */}
@@ -41,7 +49,7 @@ export default async function TinTucPage() {
 
       <section className="qp-newsmain">
         <div className="container-wide">
-          <NewsBrowser items={items} />
+          <NewsBrowser items={items} featured={blocks.featured} popular={blocks.popular} />
         </div>
       </section>
     </>

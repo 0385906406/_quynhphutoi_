@@ -65,7 +65,8 @@ function PopularItem({ a, rank }: { a: Article; rank: number }) {
   );
 }
 
-export function NewsBrowser({ items = [] }: { items?: Article[] }) {
+export function NewsBrowser({ items = [], featured: featuredItems, popular: popularItems }:
+  { items?: Article[]; featured?: Article[]; popular?: Article[] }) {
   const [category, setCategory] = useState("Tất cả");
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
@@ -87,12 +88,21 @@ export function NewsBrowser({ items = [] }: { items?: Article[] }) {
     });
   }, [items, category, sort, query]);
 
-  const defaultMode = category === "Tất cả" && !query.trim() && page === 1;
-  const featured = defaultMode ? sorted[0] : undefined;
-  const levelTwo = defaultMode ? sorted.slice(1, 4) : [];
-  const popular = useMemo(() => [...items].sort((a, b) => b.views - a.views).slice(0, 7), [items]);
+  // Vùng nổi bật & "Đọc nhiều" do admin cấu hình (truyền từ server). Nếu thiếu thì suy diễn tại client.
+  const featuredList = featuredItems ?? sorted.slice(0, 4);
+  const popular = useMemo(
+    () => popularItems ?? [...items].sort((a, b) => b.views - a.views).slice(0, 7),
+    [popularItems, items],
+  );
 
-  const listSource = defaultMode ? sorted.slice(4) : sorted;
+  const defaultMode = category === "Tất cả" && !query.trim() && page === 1;
+  const featured = defaultMode ? featuredList[0] : undefined;
+  const levelTwo = defaultMode ? featuredList.slice(1, 4) : [];
+  const showPopular = defaultMode && popular.length > 0;
+  const showFeaturedZone = defaultMode && (!!featured || showPopular);
+
+  // "Tất cả tin tức" hiển thị ĐẦY ĐỦ mọi bài (không cắt bỏ các bài đã lên vùng nổi bật).
+  const listSource = sorted;
   const totalPages = Math.max(1, Math.ceil(listSource.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageItems = listSource.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
@@ -126,23 +136,27 @@ export function NewsBrowser({ items = [] }: { items?: Article[] }) {
         </label>
       </form>
 
-      {/* Vùng nổi bật (chỉ ở chế độ mặc định) */}
-      {defaultMode && featured && (
+      {/* Vùng nổi bật (chỉ ở chế độ mặc định) — cấu hình từ admin */}
+      {showFeaturedZone && (
         <div className="qp-newszone">
-          <div className="qp-newszone__main">
-            <FeaturedCard a={featured} />
-            {levelTwo.length > 0 && (
-              <div className="qp-grid-l2">
-                {levelTwo.map((a) => <L2Card key={a.id} a={a} />)}
-              </div>
-            )}
-          </div>
-          <aside className="qp-popular" aria-label="Đọc nhiều">
-            <header className="qp-popular__head"><h2 className="type-h3">Đọc nhiều</h2></header>
-            <div className="qp-popular__list">
-              {popular.map((a, i) => <PopularItem key={a.id} a={a} rank={i + 1} />)}
+          {featured && (
+            <div className="qp-newszone__main">
+              <FeaturedCard a={featured} />
+              {levelTwo.length > 0 && (
+                <div className="qp-grid-l2">
+                  {levelTwo.map((a) => <L2Card key={a.id} a={a} />)}
+                </div>
+              )}
             </div>
-          </aside>
+          )}
+          {showPopular && (
+            <aside className="qp-popular" aria-label="Đọc nhiều">
+              <header className="qp-popular__head"><h2 className="type-h3">Đọc nhiều</h2></header>
+              <div className="qp-popular__list">
+                {popular.map((a, i) => <PopularItem key={a.id} a={a} rank={i + 1} />)}
+              </div>
+            </aside>
+          )}
         </div>
       )}
 
