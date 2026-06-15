@@ -1,7 +1,7 @@
 // Admin: danh sách từ cấm (GET) & thêm từ (POST). Tự seed mặc định nếu còn trống.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
-import { listProfanityWords, addProfanityWord, seedProfanityWords, toProfanityRow } from "@/lib/profanity";
+import { listProfanityWords, addProfanityWord, addProfanityWords, splitWordList, seedProfanityWords, toProfanityRow } from "@/lib/profanity";
 
 export async function GET() {
   const g = await requireAdmin();
@@ -19,6 +19,12 @@ export async function POST(req: Request) {
   if (g instanceof NextResponse) return g;
   const b = await req.json().catch(() => ({}));
   try {
+    // Thêm hàng loạt: dán danh sách (ngăn bởi dấu phẩy / xuống dòng).
+    const listSource = Array.isArray(b.texts) ? (b.texts as unknown[]).map(String) : typeof b.bulk === "string" ? splitWordList(b.bulk) : null;
+    if (listSource) {
+      const added = await addProfanityWords(listSource, !!b.accentInsensitive);
+      return NextResponse.json({ ok: true, items: added.map(toProfanityRow), added: added.length });
+    }
     const created = await addProfanityWord({
       text: String(b.text ?? ""),
       accentInsensitive: !!b.accentInsensitive,

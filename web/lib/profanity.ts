@@ -222,6 +222,34 @@ export async function addProfanityWord(input: { text: string; accentInsensitive?
   return { ...doc, _id: insertedId };
 }
 
+// Tách danh sách từ dán vào (ngăn bởi dấu phẩy / xuống dòng / chấm phẩy).
+export function splitWordList(raw: string): string[] {
+  return raw.split(/[\n,;]+/).map((w) => w.trim()).filter(Boolean);
+}
+
+// Thêm nhiều từ một lúc — bỏ qua từ rỗng / quá dài / trùng (cả trùng trong DB lẫn trong batch).
+export async function addProfanityWords(texts: string[], accentInsensitive = false) {
+  const col = await profanityCol();
+  const existing = new Set(
+    (await col.find({}, { projection: { text: 1 } }).toArray()).map((d) => d.text.toLowerCase()),
+  );
+  const now = new Date();
+  const seen = new Set<string>();
+  const docs: ProfanityWordDoc[] = [];
+  for (const raw of texts) {
+    const text = String(raw ?? "").trim();
+    if (!text || text.length > 80) continue;
+    const key = text.toLowerCase();
+    if (existing.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    docs.push({ text, accentInsensitive, enabled: true, createdAt: now, updatedAt: now });
+  }
+  if (docs.length === 0) return [];
+  const res = await col.insertMany(docs);
+  invalidateProfanityCache();
+  return docs.map((d, i) => ({ ...d, _id: res.insertedIds[i] }));
+}
+
 export type ProfanityPatch = Partial<{ text: string; accentInsensitive: boolean; enabled: boolean; note: string }>;
 
 export async function updateProfanityWord(id: string, patch: ProfanityPatch): Promise<number> {
