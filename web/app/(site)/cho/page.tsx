@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listMarket, countByCategory, type MarketDoc } from "@/lib/market";
 import { getAdminUnitsMap } from "@/lib/admin-units";
@@ -42,6 +44,7 @@ export default async function ChoMuaBanPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Chợ", path: "/cho" }])]} />
       <section className="qp-pagehero" aria-labelledby="cmb-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

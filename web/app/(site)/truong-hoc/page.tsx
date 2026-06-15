@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listSchools, countByLevel } from "@/lib/schools";
 import { getAdminUnitsMap } from "@/lib/admin-units";
@@ -69,6 +71,7 @@ export default async function TruongHocPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Trường học", path: "/truong-hoc" }])]} />
       <section className="qp-pagehero" aria-labelledby="th-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
@@ -83,7 +86,7 @@ export default async function TruongHocPage() {
           <span className="type-tag qp-pagehero__eyebrow">Dịch vụ công · Giáo dục</span>
           <h1 id="th-title" className="type-h1">Trường học xã Quỳnh Phụ</h1>
           <p className="qp-pagehero__lead">
-            Danh bạ trường học trên địa bàn huyện — từ mầm non, tiểu học, THCS đến THPT và GDTX,
+            Danh bạ trường học trên địa bàn xã — từ mầm non, tiểu học, THCS đến THPT và GDTX,
             tra cứu theo cấp học và theo xã, thị trấn.
           </p>
           <span className="qp-pagehero__line" aria-hidden />

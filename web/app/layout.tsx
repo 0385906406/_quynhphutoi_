@@ -9,6 +9,7 @@ import "@/styles/components.css";
 import "@/styles/account.css";
 import "@/styles/rich-text-editor.css";
 import { ToastProvider } from "@/components/common/Toast";
+import { Analytics } from "@vercel/analytics/next";
 
 const beVietnam = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -69,7 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: name,
     authors: [{ name }],
     keywords,
-    alternates: { canonical: "/" },
+    alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     manifest: "/manifest.webmanifest",
     icons: { icon: "/img/patterns/logo.png", apple: "/img/patterns/logo.png", shortcut: "/img/patterns/logo.png" },
     ...(verification ? { verification } : {}),
@@ -101,7 +102,7 @@ export default function RootLayout({
   const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   return (
     <html lang="vi" className={fontVars} suppressHydrationWarning>
-      <body suppressHydrationWarning><ToastProvider>{children}</ToastProvider></body>
+      <body suppressHydrationWarning><ToastProvider>{children}</ToastProvider><Analytics /></body>
       {/* reCAPTCHA v2 (ô tick) — chỉ tải khi đã cấu hình site key. Render tường minh ở component. */}
       {recaptchaKey && (
         <Script

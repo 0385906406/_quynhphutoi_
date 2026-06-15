@@ -47,6 +47,7 @@ const GROUPS: Group[] = [
       { href: "/admin/affiliate", label: "Affiliate Shopee", icon: "cart" },
       { href: "/admin/nguoi-dung", label: "Người dùng", icon: "users" },
       { href: "/admin/lien-he", label: "Liên hệ / Phản ánh", icon: "mail" },
+      { href: "/admin/newsletter", label: "Đăng ký nhận tin", icon: "bell" },
       { href: "/admin/quang-cao", label: "Quảng cáo", icon: "megaphone" },
       { href: "/admin/thong-bao", label: "Gửi thông báo", icon: "bell" },
       { href: "/admin/cai-dat", label: "Cài đặt", icon: "gear" },

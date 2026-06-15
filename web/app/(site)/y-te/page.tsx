@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listHealth, countByType, type HealthDoc } from "@/lib/health";
 import { getAdminUnitsMap } from "@/lib/admin-units";
@@ -49,6 +51,7 @@ export default async function YTePage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Y tế", path: "/y-te" }])]} />
       <section className="qp-pagehero" aria-labelledby="yt-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
@@ -63,7 +66,7 @@ export default async function YTePage() {
           <span className="type-tag qp-pagehero__eyebrow">Dịch vụ công · Y tế</span>
           <h1 id="yt-title" className="type-h1">Y tế xã Quỳnh Phụ</h1>
           <p className="qp-pagehero__lead">
-            Danh bạ cơ sở y tế trên địa bàn huyện — bệnh viện, trung tâm y tế, trạm y tế các xã,
+            Danh bạ cơ sở y tế trên địa bàn xã — bệnh viện, trung tâm y tế, trạm y tế các xã,
             phòng khám và nhà thuốc. Tra cứu theo loại cơ sở và theo xã, thị trấn.
           </p>
           <span className="qp-pagehero__line" aria-hidden />

@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listJobs, listMyJobs, countJobs, formatSalary, type JobDoc } from "@/lib/jobs";
 import { getSession } from "@/lib/auth";
@@ -55,6 +57,7 @@ export default async function ViecLamPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Việc làm", path: "/viec-lam" }])]} />
       <section className="qp-pagehero" aria-labelledby="vl-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
@@ -69,7 +72,7 @@ export default async function ViecLamPage() {
           <span className="type-tag qp-pagehero__eyebrow">Tiện ích cộng đồng</span>
           <h1 id="vl-title" className="type-h1">Việc làm Quỳnh Phụ</h1>
           <p className="qp-pagehero__lead">
-            Tin tuyển dụng và việc làm trên địa bàn huyện — từ công nhân, nông nghiệp, dịch vụ đến
+            Tin tuyển dụng và việc làm trên địa bàn xã — từ công nhân, nông nghiệp, dịch vụ đến
             văn phòng. Lọc theo ngành nghề, loại hình và xã, thị trấn.
           </p>
           <span className="qp-pagehero__line" aria-hidden />

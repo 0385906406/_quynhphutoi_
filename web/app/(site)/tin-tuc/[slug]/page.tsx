@@ -10,6 +10,7 @@ import { PostInteractions } from "@/components/lostfound/PostInteractions";
 import { CommentsSection, type CommentItem } from "@/components/lostfound/CommentsSection";
 import { NewsCard } from "@/components/news/NewsCard";
 import { AffiliateCTA } from "@/components/common/AffiliateCTA";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 export const dynamic = "force-dynamic";
 
@@ -117,7 +118,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="qp-article-layout is-lf">
           <div className="qp-lf-main">
             <figure className="qp-article-hero">
-              <Image src={a.image} alt="" fill sizes="(max-width:900px) 100vw, 1000px" priority />
+              <Image src={a.image} alt={a.title} fill sizes="(max-width:900px) 100vw, 1000px" priority />
             </figure>
 
             <div className="qp-prose qp-prose--wide">
@@ -214,10 +215,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="qp-newsletter" style={{ marginTop: "var(--space-10)" }}>
           <h2 className="type-h2">Nhận tin huyện nhà qua email</h2>
           <p className="type-body">Tin tức, thông báo và việc làm mới — gửi gọn vào hộp thư của bạn.</p>
-          <form className="qp-newsletter__form" action="#" method="post">
-            <input type="email" placeholder="Email của bạn" aria-label="Email" required />
-            <button className="qp-btn-secondary on-dark" type="submit">Đăng ký <span className="qp-arrow">→</span></button>
-          </form>
+          <NewsletterForm source="article" />
         </div>
       </div>
     </article>

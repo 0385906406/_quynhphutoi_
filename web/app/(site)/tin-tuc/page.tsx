@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
 import { listArticles, listMyArticles, toNewsCardArticle } from "@/lib/articles";
@@ -37,6 +39,7 @@ export default async function TinTucPage() {
   return (
     <>
       {/* Page hero sáng (gradient + đốm sáng + cây lúa halftone) */}
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Tin tức", path: "/tin-tuc" }])]} />
       <section className="qp-pagehero" aria-labelledby="news-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

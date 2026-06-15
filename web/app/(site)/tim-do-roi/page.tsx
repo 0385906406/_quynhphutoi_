@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listPosts, listMyPosts, type LostFoundDoc } from "@/lib/lostfound";
 import { getSession } from "@/lib/auth";
@@ -96,6 +98,7 @@ export default async function TimDoRoiPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Tìm đồ rơi", path: "/tim-do-roi" }])]} />
       <section className="qp-pagehero" aria-labelledby="lf-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />

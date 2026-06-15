@@ -54,7 +54,11 @@ export async function resolveMapUrl(url: string): Promise<string> {
   if (!isShort) return u;
   try {
     const res = await fetch(u, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(4000) });
-    return res.url || u;
+    const finalUrl = res.url || u;
+    // Chỉ chấp nhận nếu host cuối vẫn thuộc Google (chống goo.gl bị lợi dụng redirect lung tung).
+    const fh = new URL(finalUrl).hostname.toLowerCase();
+    if (fh.includes("google.") || fh === "goo.gl" || fh.endsWith(".goo.gl")) return finalUrl;
+    return u;
   } catch {
     return u;
   }

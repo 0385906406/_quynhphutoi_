@@ -8,6 +8,7 @@ import { HomeModuleCard } from "@/components/home/HomeModuleCard";
 import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/seo";
 import { getPageSeoConfig, type PageSeoConfig } from "@/lib/page-seo";
 import { JsonLd } from "@/components/common/JsonLd";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 // SEO trang chủ — admin chỉnh ở "SEO từng trang" (key "/"); ô trống = mặc định bên dưới.
 // Dùng title tuyệt đối để KHÔNG gắn hậu tố "· Tên site" cho trang gốc.
@@ -38,7 +39,7 @@ const TILES = [
   { href: "/y-te", title: "Y tế", desc: "Bệnh viện, trạm y tế, phòng khám & SĐT.", icon: "health" },
   { href: "/viec-lam", title: "Việc làm", desc: "Tin tuyển dụng địa phương, lọc theo ngành.", icon: "job" },
   { href: "/tim-do-roi", title: "Tìm đồ rơi", desc: "Đăng & tra tin nhặt được / bị mất đồ.", icon: "search" },
-  { href: "/cho-mua-ban", title: "Chợ & Mua bán", desc: "Lịch chợ phiên, đặc sản, tin mua bán.", icon: "market" },
+  { href: "/cho", title: "Chợ & Mua bán", desc: "Lịch chợ phiên, đặc sản, tin mua bán.", icon: "market" },
   { href: "/di-tich", title: "Di tích", desc: "Đình, chùa, đền và di tích lịch sử.", icon: "landmark" },
 ];
 
@@ -232,7 +233,7 @@ export default async function HomePage() {
       {/* LỊCH SỰ KIỆN & CHỢ PHIÊN */}
       <section className="section">
         <div className="container-wide">
-          <SectionHead eyebrow="Sắp diễn ra" title="Lịch sự kiện & chợ phiên" href="/cho-mua-ban" />
+          <SectionHead eyebrow="Sắp diễn ra" title="Lịch sự kiện & chợ phiên" href="/cho" />
           <div className="grid grid-3">
             {EVENTS.map((e) => (
               <article className="qp-event-card" key={e.title}>
@@ -316,12 +317,7 @@ export default async function HomePage() {
           <div className="qp-newsletter">
             <h2 className="type-h2">Nhận tin huyện nhà qua email</h2>
             <p className="type-body">Tin tức, thông báo và việc làm mới — gửi gọn vào hộp thư của bạn.</p>
-            <form className="qp-newsletter__form" action="#" method="post">
-              <input type="email" placeholder="Email của bạn" aria-label="Email" required />
-              <button className="qp-btn-secondary on-dark" type="submit">
-                Đăng ký <span className="qp-arrow">→</span>
-              </button>
-            </form>
+            <NewsletterForm source="home" />
           </div>
         </div>
       </section>

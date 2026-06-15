@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listClassifieds, listMyClassifieds, countClassifieds, CLASSIFIED_CATEGORIES, type ClassifiedDoc } from "@/lib/classifieds";
 import { getSession } from "@/lib/auth";
@@ -43,6 +45,7 @@ export default async function MuaBanPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Mua bán", path: "/mua-ban" }])]} />
       <section className="qp-pagehero" aria-labelledby="mb-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
@@ -69,7 +72,7 @@ export default async function MuaBanPage() {
           <div className="qp-kpi-grid">
             <Kpi value={total} unit="tin" label="Tin đang rao" />
             <Kpi value={categories.length} unit="danh mục" label="Ngành hàng" />
-            <Kpi value={wards.length} unit="xã/TT" label="Phủ khắp huyện" />
+            <Kpi value={wards.length} unit="xã/TT" label="Phủ khắp xã" />
           </div>
         </div>
       </section>

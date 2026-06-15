@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listRelics, countByType, RANKING_LABEL, type RelicDoc } from "@/lib/relics";
 import { getAdminUnitsMap } from "@/lib/admin-units";
@@ -43,6 +45,7 @@ export default async function DiTichPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Di tích", path: "/di-tich" }])]} />
       <section className="qp-pagehero" aria-labelledby="dt-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
@@ -69,7 +72,7 @@ export default async function DiTichPage() {
           <div className="qp-kpi-grid">
             <Kpi value={items.length} unit="di tích" label="Tổng số di tích" />
             <Kpi value={national} unit="di tích" label="Xếp hạng quốc gia" />
-            <Kpi value={wards.length} unit="xã/TT" label="Phủ khắp huyện" />
+            <Kpi value={wards.length} unit="xã/TT" label="Phủ khắp xã" />
           </div>
         </div>
       </section>

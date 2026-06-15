@@ -33,6 +33,14 @@ export function sanitizeHtml(html: string): string {
       col: ["span", "width"],
       colgroup: ["span"],
     },
+    // Chỉ cho phép vài thuộc tính CSS an toàn (căn lề, màu) — chặn CSS tuỳ ý qua style.
+    allowedStyles: {
+      "*": {
+        "text-align": [/^(left|right|center|justify)$/],
+        "color": [/^#(?:[0-9a-fA-F]{3,8})$/, /^rgba?\([\d.,\s%]+\)$/, /^[a-zA-Z]+$/],
+        "background-color": [/^#(?:[0-9a-fA-F]{3,8})$/, /^rgba?\([\d.,\s%]+\)$/, /^[a-zA-Z]+$/],
+      },
+    },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesByTag: { img: ["http", "https", "data"] },
     // Chỉ giữ iframe có hostname thuộc YouTube; còn lại bị loại bỏ.

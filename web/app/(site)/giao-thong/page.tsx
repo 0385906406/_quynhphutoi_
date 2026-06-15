@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/page-seo";
+import { JsonLd } from "@/components/common/JsonLd";
+import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { listTransit, countByType, type TransitDoc } from "@/lib/transit";
 import { TransitBrowser, type TransitItem } from "@/components/transit/TransitBrowser";
@@ -39,6 +41,7 @@ export default async function GiaoThongPage() {
 
   return (
     <>
+      <JsonLd data={[jsonLdBreadcrumb([{ name: "Trang chủ", path: "/" }, { name: "Giao thông", path: "/giao-thong" }])]} />
       <section className="qp-pagehero" aria-labelledby="gt-title">
         <span className="qp-pagehero__blob is-teal" aria-hidden />
         <span className="qp-pagehero__blob is-indigo" aria-hidden />
