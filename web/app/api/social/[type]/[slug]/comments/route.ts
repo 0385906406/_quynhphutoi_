@@ -6,6 +6,7 @@ import { notifyMany } from "@/lib/notifications";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { getSettings } from "@/lib/settings";
+import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ type: string; slug: string }> }) {
   const { type, slug } = await params;
@@ -47,6 +48,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ type: s
   const content = typeof body.content === "string" ? body.content : "";
   if (!content.trim()) return NextResponse.json({ error: "Nội dung bình luận trống." }, { status: 400 });
   if (content.length > settings.commentMaxLength) return NextResponse.json({ error: `Bình luận quá dài (tối đa ${settings.commentMaxLength} ký tự).` }, { status: 400 });
+  if (settings.profanityFilterEnabled && scanProfanity(content, await getActiveProfanityWords()).length) {
+    return NextResponse.json({ error: "Bình luận chứa từ ngữ không phù hợp. Vui lòng chỉnh sửa." }, { status: 400 });
+  }
 
   try {
     const c = await addSocialComment(type, slug, { id: session.id, name: session.name }, content);

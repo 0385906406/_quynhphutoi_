@@ -7,6 +7,7 @@ import { stripHtml } from "@/lib/strip-html";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";
+import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { createClassified, listClassifieds, countClassifieds, CLASSIFIED_CATEGORIES, type ClassifiedCategory, type ClassifiedStatus, type ClassifiedCondition } from "@/lib/classifieds";
 
@@ -74,13 +75,19 @@ export async function POST(req: Request) {
     mapUrl = await resolveMapUrl(rawMap);
   }
 
+  // Lọc từ ngữ thô tục: nếu phát hiện → KHÔNG tự động duyệt, giữ chờ admin xem.
+  const badWords = settings.profanityFilterEnabled
+    ? scanProfanity(`${title}\n${stripHtml(cleanDescription)}\n${priceText ?? ""}`, await getActiveProfanityWords())
+    : [];
+  const approved = !settings.postRequireApproval && badWords.length === 0;
+
   try {
     const ad = await createClassified(
       { id: session.id, name: session.name },
       {
         title, category,
         description: cleanDescription,
-        approved: !settings.postRequireApproval,
+        approved,
         images: Array.isArray(images) ? images.filter((x) => typeof x === "string").slice(0, settings.postMaxImages) : [],
         priceText: typeof priceText === "string" && priceText.trim() ? priceText.trim() : "Thỏa thuận",
         condition: cond,
@@ -90,10 +97,16 @@ export async function POST(req: Request) {
     );
     await recordPost(session.id);
     await notifyAdmins(
-      { type: "post_pending", title: `Tin mua bán mới chờ duyệt: “${ad.title}”`, href: "/admin/mua-ban", actorName: session.name, module: "mua-ban" },
+      {
+        type: "post_pending",
+        title: badWords.length
+          ? `⚠️ Tin mua bán có từ ngữ nhạy cảm, cần xem: “${ad.title}”`
+          : `Tin mua bán mới chờ duyệt: “${ad.title}”`,
+        href: "/admin/mua-ban", actorName: session.name, module: "mua-ban",
+      },
       session.id,
     );
-    return NextResponse.json({ ok: true, slug: ad.slug });
+    return NextResponse.json({ ok: true, slug: ad.slug, approved });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Đăng tin thất bại." }, { status: 400 });
   }

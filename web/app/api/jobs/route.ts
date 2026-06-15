@@ -7,6 +7,7 @@ import { stripHtml } from "@/lib/strip-html";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";
+import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { createJob, listJobs, countJobs, type JobType, type JobStatus } from "@/lib/jobs";
 
@@ -101,13 +102,19 @@ export async function POST(req: Request) {
     mapUrl = await resolveMapUrl(rawMap);
   }
 
+  // Lọc từ ngữ thô tục: nếu phát hiện → KHÔNG tự động duyệt, giữ chờ admin xem.
+  const badWords = settings.profanityFilterEnabled
+    ? scanProfanity(`${title}\n${companyClean}\n${stripHtml(cleanDescription)}`, await getActiveProfanityWords())
+    : [];
+  const approved = !settings.postRequireApproval && badWords.length === 0;
+
   try {
     const job = await createJob(
       { id: session.id, name: session.name },
       {
         title, company: companyClean, industry, jobType,
         description: cleanDescription,
-        approved: !settings.postRequireApproval,
+        approved,
         images: Array.isArray(images) ? images.filter((x) => typeof x === "string").slice(0, settings.postMaxImages) : [],
         salary: { min: sMin, max: sMax, negotiable: !!salary?.negotiable || (!sMin && !sMax) },
         location: { wardSlug: location.wardSlug, address: location.address?.trim() || undefined, mapUrl },
@@ -120,10 +127,16 @@ export async function POST(req: Request) {
     );
     await recordPost(session.id);
     await notifyAdmins(
-      { type: "post_pending", title: `Tin việc làm mới chờ duyệt: “${job.title}”`, href: "/admin/viec-lam", actorName: session.name, module: "viec-lam" },
+      {
+        type: "post_pending",
+        title: badWords.length
+          ? `⚠️ Tin việc làm có từ ngữ nhạy cảm, cần xem: “${job.title}”`
+          : `Tin việc làm mới chờ duyệt: “${job.title}”`,
+        href: "/admin/viec-lam", actorName: session.name, module: "viec-lam",
+      },
       session.id,
     );
-    return NextResponse.json({ ok: true, slug: job.slug });
+    return NextResponse.json({ ok: true, slug: job.slug, approved });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Đăng tin thất bại." }, { status: 400 });
   }

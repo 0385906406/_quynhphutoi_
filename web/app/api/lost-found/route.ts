@@ -7,6 +7,7 @@ import { stripHtml } from "@/lib/strip-html";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";
+import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import {
   createPost,
@@ -111,6 +112,12 @@ export async function POST(req: Request) {
     mapUrl = await resolveMapUrl(rawMap);
   }
 
+  // Lọc từ ngữ thô tục: nếu phát hiện → KHÔNG tự động duyệt, giữ chờ admin xem.
+  const badWords = settings.profanityFilterEnabled
+    ? scanProfanity(`${title}\n${stripHtml(cleanDescription)}\n${typeof reward === "string" ? reward : ""}`, await getActiveProfanityWords())
+    : [];
+  const approved = !settings.postRequireApproval && badWords.length === 0;
+
   try {
     const post = await createPost(
       { id: session.id, name: session.name },
@@ -119,7 +126,7 @@ export async function POST(req: Request) {
         title,
         description: cleanDescription,
         categoryId,
-        approved: !settings.postRequireApproval,
+        approved,
         images: Array.isArray(images) ? images.filter((x) => typeof x === "string").slice(0, settings.postMaxImages) : [],
         location: { wardSlug: location.wardSlug, address: location.address?.trim() || undefined, mapUrl },
         occurredAt: when,
@@ -134,10 +141,16 @@ export async function POST(req: Request) {
     );
     await recordPost(session.id);
     await notifyAdmins(
-      { type: "post_pending", title: `Tin tìm đồ rơi mới chờ duyệt: “${post.title}”`, href: "/admin/tim-do-roi", actorName: session.name, module: "tim-do-roi" },
+      {
+        type: "post_pending",
+        title: badWords.length
+          ? `⚠️ Tin tìm đồ rơi có từ ngữ nhạy cảm, cần xem: “${post.title}”`
+          : `Tin tìm đồ rơi mới chờ duyệt: “${post.title}”`,
+        href: "/admin/tim-do-roi", actorName: session.name, module: "tim-do-roi",
+      },
       session.id,
     );
-    return NextResponse.json({ ok: true, slug: post.slug });
+    return NextResponse.json({ ok: true, slug: post.slug, approved });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Đăng tin thất bại.";
     return NextResponse.json({ error: msg }, { status: 400 });

@@ -7,6 +7,7 @@ import { notifyMany } from "@/lib/notifications";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { getSettings } from "@/lib/settings";
+import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 
 // Bài tồn tại nếu là bài DB đã xuất bản. Trả tiêu đề để dùng cho thông báo.
 async function resolveArticleTitle(slug: string): Promise<string | null> {
@@ -55,6 +56,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const content = typeof body.content === "string" ? body.content : "";
   if (!content.trim()) return NextResponse.json({ error: "Nội dung bình luận trống." }, { status: 400 });
   if (content.length > settings.commentMaxLength) return NextResponse.json({ error: `Bình luận quá dài (tối đa ${settings.commentMaxLength} ký tự).` }, { status: 400 });
+  if (settings.profanityFilterEnabled && scanProfanity(content, await getActiveProfanityWords()).length) {
+    return NextResponse.json({ error: "Bình luận chứa từ ngữ không phù hợp. Vui lòng chỉnh sửa." }, { status: 400 });
+  }
 
   try {
     const c = await addNewsComment(slug, { id: session.id, name: session.name }, content);

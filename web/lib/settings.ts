@@ -10,6 +10,7 @@ export type AppSettings = {
   postMaxImages: number;
   adMaxImages: number;             // số ảnh tối đa cho 1 quảng cáo (thư viện trang chi tiết)
   postRequireApproval: boolean;
+  profanityFilterEnabled: boolean; // lọc từ ngữ thô tục cho tin đăng & bình luận (danh sách từ ở /admin/loc-tu-ngu)
   jobsPostEnabled: boolean;        // cho phép đăng tin Việc làm
   lostfoundPostEnabled: boolean;   // cho phép đăng tin Tìm đồ rơi
   classifiedsPostEnabled: boolean; // cho phép đăng tin Mua bán
@@ -49,6 +50,7 @@ const DEFAULTS: AppSettings = {
   postMaxImages: 8,
   adMaxImages: 6,
   postRequireApproval: true,
+  profanityFilterEnabled: true,
   jobsPostEnabled: true,
   lostfoundPostEnabled: true,
   classifiedsPostEnabled: true,
@@ -110,6 +112,7 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     postMaxImages: int(patch.postMaxImages ?? c.postMaxImages, 1, 20, c.postMaxImages),
     adMaxImages: int(patch.adMaxImages ?? c.adMaxImages, 1, 20, c.adMaxImages),
     postRequireApproval: bool(patch.postRequireApproval, c.postRequireApproval),
+    profanityFilterEnabled: bool(patch.profanityFilterEnabled, c.profanityFilterEnabled),
     jobsPostEnabled: bool(patch.jobsPostEnabled, c.jobsPostEnabled),
     lostfoundPostEnabled: bool(patch.lostfoundPostEnabled, c.lostfoundPostEnabled),
     classifiedsPostEnabled: bool(patch.classifiedsPostEnabled, c.classifiedsPostEnabled),

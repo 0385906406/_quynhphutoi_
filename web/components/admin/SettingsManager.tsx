@@ -104,11 +104,18 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
               </div>
             </Card>
             <Card title="Kiểm duyệt & phân hệ" desc="Bật/tắt nhanh từng tính năng đăng tin.">
-              <Toggle k="postRequireApproval" label="Bắt buộc duyệt tin" desc="Tin chỉ hiện công khai sau khi admin duyệt." warn={!form.postRequireApproval} />
+              <Toggle k="postRequireApproval" label="Bắt buộc duyệt tin" desc="Bật: tin chỉ hiện sau khi admin duyệt. Tắt: tự động duyệt — tin sạch hiện ngay, tin dính từ tục vẫn được giữ chờ duyệt." warn={!form.postRequireApproval} />
               <Toggle k="jobsPostEnabled" label="Cho phép đăng Việc làm" />
               <Toggle k="lostfoundPostEnabled" label="Cho phép đăng Tìm đồ rơi" />
               <Toggle k="classifiedsPostEnabled" label="Cho phép đăng Mua bán" />
               <Toggle k="newsPostEnabled" label="Cho phép gửi bài Tin tức" desc="Người dùng gửi bài viết; hiển thị sau khi admin duyệt." />
+            </Card>
+            <Card title="Lọc từ ngữ thô tục" desc="Tự động phát hiện từ chửi tục / xúc phạm. Tin đăng dính từ tục sẽ KHÔNG được tự động duyệt mà giữ lại chờ admin xem; bình luận dính từ tục bị từ chối, yêu cầu người dùng chỉnh sửa.">
+              <Toggle k="profanityFilterEnabled" label="Bật lọc từ ngữ thô tục" desc="Áp dụng cho cả tin đăng và bình luận toàn site." warn={!form.profanityFilterEnabled} />
+              <p className="qp-form-tip" style={{ marginTop: 12 }}>
+                Quản lý danh sách từ cấm (thêm / sửa / xoá) tại trang{" "}
+                <a href="/admin/loc-tu-ngu" style={{ color: "var(--color-navy)", fontWeight: 600, textDecoration: "underline" }}>Lọc từ ngữ</a>.
+              </p>
             </Card>
           </>
         )}
