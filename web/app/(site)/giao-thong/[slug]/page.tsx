@@ -6,6 +6,7 @@ import { DetailSocial } from "@/components/common/DetailSocial";
 import { buildMetadata, jsonLdTransit, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,7 @@ export default async function TransitDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
 
+            <AffiliateCTA />
             <DetailSocial type="giao-thong" slug={slug} title={t.name} />
           </div>
 

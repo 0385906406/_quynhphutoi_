@@ -7,6 +7,7 @@ import { DetailSocial } from "@/components/common/DetailSocial";
 import { buildMetadata, jsonLdHealth, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,7 @@ export default async function HealthDetailPage({ params }: { params: Promise<{ s
               {!h.verified && <p className="type-body-small text-muted">* Thông tin tổng hợp theo quy ước, cần đối chiếu với cơ quan y tế.</p>}
             </div>
 
+            <AffiliateCTA />
             <DetailSocial type="y-te" slug={slug} title={h.name} />
           </div>
 

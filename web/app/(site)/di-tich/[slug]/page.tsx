@@ -8,6 +8,7 @@ import { DetailSocial } from "@/components/common/DetailSocial";
 import { buildMetadata, jsonLdRelic, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,7 @@ export default async function RelicDetailPage({ params }: { params: Promise<{ sl
               )}
             </div>
 
+            <AffiliateCTA />
             <DetailSocial type="di-tich" slug={slug} title={r.name} />
           </div>
 

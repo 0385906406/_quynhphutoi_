@@ -7,6 +7,7 @@ import { DetailSocial } from "@/components/common/DetailSocial";
 import { buildMetadata, jsonLdMarket, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,7 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ s
               )}
             </div>
 
+            <AffiliateCTA />
             <DetailSocial type="cho" slug={slug} title={m.name} />
           </div>
 

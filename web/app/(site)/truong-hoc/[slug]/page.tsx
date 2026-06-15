@@ -7,6 +7,7 @@ import { DetailSocial } from "@/components/common/DetailSocial";
 import { buildMetadata, jsonLdSchool, jsonLdBreadcrumb } from "@/lib/seo";
 import { applySeo } from "@/lib/seo-fields";
 import { JsonLd } from "@/components/common/JsonLd";
+import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +90,7 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
               {!s.verified && <p className="type-body-small text-muted">* Thông tin tổng hợp theo quy ước, cần đối chiếu với danh sách chính thức của ngành Giáo dục.</p>}
             </div>
 
+            <AffiliateCTA />
             <DetailSocial type="truong-hoc" slug={slug} title={s.name} />
           </div>
 
