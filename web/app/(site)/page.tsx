@@ -6,12 +6,24 @@ import { loadHomeSections } from "@/lib/home-sections";
 import { NewsCard } from "@/components/news/NewsCard";
 import { HomeModuleCard } from "@/components/home/HomeModuleCard";
 import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/seo";
+import { getPageSeoConfig, type PageSeoConfig } from "@/lib/page-seo";
 import { JsonLd } from "@/components/common/JsonLd";
 
-export const metadata: Metadata = {
-  ...buildMetadata({ title: SITE.name, description: SITE.description, path: "/" }),
-  title: { absolute: `${SITE.name} — Tin tức, việc làm & cộng đồng Quỳnh Phụ, Thái Bình` },
-};
+// SEO trang chủ — admin chỉnh ở "SEO từng trang" (key "/"); ô trống = mặc định bên dưới.
+// Dùng title tuyệt đối để KHÔNG gắn hậu tố "· Tên site" cho trang gốc.
+export async function generateMetadata(): Promise<Metadata> {
+  const cfg: PageSeoConfig = await getPageSeoConfig().catch(() => ({}));
+  const ov = cfg["/"] ?? {};
+  const title = ov.title || `${SITE.name} — Tin tức, việc làm & cộng đồng Quỳnh Phụ, Thái Bình`;
+  const description = ov.description || SITE.description;
+  const base = buildMetadata({
+    title, description, path: "/",
+    image: ov.ogImage || undefined,
+    noindex: ov.noindex,
+    keywords: ov.keywords ? ov.keywords.split(",").map((k) => k.trim()).filter(Boolean) : undefined,
+  });
+  return { ...base, title: { absolute: title } };
+}
 
 /* ----------------------------- Dữ liệu mẫu ----------------------------- */
 const KPIS = [

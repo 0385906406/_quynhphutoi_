@@ -18,6 +18,7 @@ export type PageSeoConfig = Record<string, PageSeoOverride>;
 
 // Danh sách trang quản lý SEO (thứ tự + nhãn hiển thị ở admin).
 export const PAGE_SEO_DEFS: { key: string; label: string }[] = [
+  { key: "/", label: "Trang chủ" },
   { key: "/tin-tuc", label: "Tin tức" },
   { key: "/viec-lam", label: "Việc làm" },
   { key: "/mua-ban", label: "Mua bán" },

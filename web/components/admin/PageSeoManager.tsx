@@ -7,6 +7,7 @@ import { useToast } from "@/components/common/Toast";
 import type { PageSeoConfig, PageSeoOverride } from "@/lib/page-seo";
 
 const DEFS: { key: string; label: string }[] = [
+  { key: "/", label: "Trang chủ" },
   { key: "/tin-tuc", label: "Tin tức" },
   { key: "/viec-lam", label: "Việc làm" },
   { key: "/mua-ban", label: "Mua bán" },
