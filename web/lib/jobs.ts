@@ -16,6 +16,8 @@ export type JobContact = { name: string; phone: string; email?: string; hidePhon
 export type JobLocation = { wardSlug: string; address?: string; mapUrl?: string }; // FK → admin_units.slug
 // Lương theo triệu VND/tháng. negotiable=true → "Thỏa thuận".
 export type SalaryInfo = { min?: number | null; max?: number | null; negotiable?: boolean };
+// Độ tuổi ứng viên (tuổi tối thiểu / tối đa). Để trống = không yêu cầu.
+export type AgeRange = { min?: number | null; max?: number | null };
 
 export type JobDoc = {
   _id?: ObjectId;
@@ -30,6 +32,7 @@ export type JobDoc = {
   images?: string[];        // ảnh minh hoạ (URL /uploads/…)
   salary: SalaryInfo;
   location: JobLocation;
+  age?: AgeRange;               // độ tuổi ứng viên (tuỳ chọn)
   quantity?: number | null;     // số lượng cần tuyển
   experience?: string;          // kinh nghiệm yêu cầu
   education?: string;           // trình độ
@@ -68,6 +71,16 @@ export function formatSalary(s: SalaryInfo): string {
   return `Tới ${s.max} triệu`;
 }
 
+// Hiển thị độ tuổi gọn: "18 - 35 tuổi", "Từ 18 tuổi", "Đến 35 tuổi", "" (không yêu cầu).
+export function formatAge(a?: AgeRange | null): string {
+  if (!a) return "";
+  const min = a.min ?? null, max = a.max ?? null;
+  if (min && max) return `${min} - ${max} tuổi`;
+  if (min) return `Từ ${min} tuổi`;
+  if (max) return `Đến ${max} tuổi`;
+  return "";
+}
+
 export async function jobs() {
   const db = await getDb();
   const col = db.collection<JobDoc>("jobs");
@@ -93,6 +106,7 @@ export type CreateJobInput = {
   images?: string[];
   salary: SalaryInfo;
   location: JobLocation;
+  age?: AgeRange;
   quantity?: number | null;
   experience?: string;
   education?: string;
@@ -126,6 +140,7 @@ export async function createJob(poster: { id: string; name: string }, input: Cre
     images: input.images ?? [],
     salary: input.salary,
     location: input.location,
+    age: input.age ?? { min: null, max: null },
     quantity: input.quantity ?? null,
     experience: input.experience,
     education: input.education,

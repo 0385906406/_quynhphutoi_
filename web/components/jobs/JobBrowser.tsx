@@ -19,6 +19,9 @@ export type JobItem = {
   jobTypeLabel: string;
   images: string[];
   salaryText: string;
+  ageText: string;            // hiển thị: "18 - 35 tuổi" / "" nếu không yêu cầu
+  ageMin: number | null;      // dùng để lọc theo tuổi
+  ageMax: number | null;
   ward: string;
   wardSlug: string;
   newCommune: string | null;
@@ -40,6 +43,7 @@ function Pin() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 function Wallet() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4z" /></svg>; }
 function Clock() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>; }
 function Eye() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>; }
+function User() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>; }
 
 function JobCard({ j, pending = false }: { j: JobItem; pending?: boolean }) {
   const href = `/viec-lam/${j.slug}`;
@@ -58,6 +62,7 @@ function JobCard({ j, pending = false }: { j: JobItem; pending?: boolean }) {
         </div>
         <h3 className="qp-newscard__title"><Link href={href}>{j.title}</Link></h3>
         <div className="qp-job-card__salary"><Wallet /> {j.salaryText}</div>
+        {j.ageText && <div className="qp-job-card__salary"><User /> {j.ageText}</div>}
         <div className="qp-newscard__meta qp-lf-meta">
           <div className="qp-lf-meta__loc">
             <Pin /> <span>{j.ward}{j.newCommune ? <span className="qp-newscard__nc"> ({j.newCommune})</span> : null}</span>
@@ -87,6 +92,7 @@ export function JobBrowser({
   const [industry, setIndustry] = useState("all");
   const [jobType, setJobType] = useState("all");
   const [ward, setWard] = useState("all");
+  const [age, setAge] = useState("");   // "tuổi của bạn" — lọc tin phù hợp độ tuổi
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [postOpen, setPostOpen] = useState(false);
@@ -103,15 +109,19 @@ export function JobBrowser({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const ageNum = age.trim() ? Number(age) : null;
     const src = isPending ? pendingItems : items;
     return src.filter((j) => {
       const okInd = industry === "all" || j.industry === industry;
       const okType = jobType === "all" || j.jobTypeLabel === typeOptions.find((t) => t.value === jobType)?.label;
       const okWard = ward === "all" || j.wardSlug === ward;
+      // Lọc theo tuổi: tin phù hợp nếu tuổi của bạn nằm trong khoảng yêu cầu (hoặc tin không yêu cầu tuổi).
+      const okAge = ageNum === null || Number.isNaN(ageNum)
+        || ((j.ageMin === null || ageNum >= j.ageMin) && (j.ageMax === null || ageNum <= j.ageMax));
       const okQ = !q || j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.ward.toLowerCase().includes(q);
-      return okInd && okType && okWard && okQ;
+      return okInd && okType && okWard && okAge && okQ;
     });
-  }, [items, pendingItems, isPending, industry, jobType, ward, query, typeOptions]);
+  }, [items, pendingItems, isPending, industry, jobType, ward, age, query, typeOptions]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -142,6 +152,7 @@ export function JobBrowser({
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Ngành nghề</span><Combobox options={indOptions} value={industry} onChange={(v) => { setIndustry(v); reset(); }} placeholder="Tất cả ngành" searchPlaceholder="Tìm ngành…" /></div>
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Loại hình</span><Combobox options={typeOptions} value={jobType} onChange={(v) => { setJobType(v); reset(); }} placeholder="Tất cả loại hình" searchPlaceholder="Tìm…" /></div>
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Xã / Thị trấn</span><Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); reset(); }} placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã…" /></div>
+        <div className="qp-toolbar__field"><span className="qp-toolbar__label">Tuổi của bạn</span><input type="number" inputMode="numeric" min={0} max={100} className="qp-input" value={age} onChange={(e) => { setAge(e.target.value); reset(); }} placeholder="VD: 25" aria-label="Lọc theo tuổi của bạn" /></div>
       </form>
 
       <div className="qp-newsgrid-head">

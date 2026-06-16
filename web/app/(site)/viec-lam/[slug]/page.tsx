@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getJobBySlug, incrementViews, relatedJobs, formatSalary } from "@/lib/jobs";
+import { getJobBySlug, incrementViews, relatedJobs, formatSalary, formatAge } from "@/lib/jobs";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
 import { stripHtml } from "@/lib/strip-html";
@@ -155,6 +155,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
                 <div className="qp-lf-spec__row"><span>Loại hình</span><b>{job.jobTypeLabel}</b></div>
                 <div className="qp-lf-spec__row"><span>Địa điểm</span><b>{wardName}{newCommune && <><br /><span className="qp-lf-spec__sub">(Xã mới: {newCommune})</span></>}{job.location.address && <><br /><span className="qp-lf-spec__sub" style={{ color: "var(--color-gray-text)" }}>{job.location.address}</span></>}</b></div>
                 {job.quantity ? <div className="qp-lf-spec__row"><span>Số lượng</span><b>{job.quantity} người</b></div> : null}
+                {formatAge(job.age) && <div className="qp-lf-spec__row"><span>Độ tuổi</span><b>{formatAge(job.age)}</b></div>}
                 {job.experience && <div className="qp-lf-spec__row"><span>Kinh nghiệm</span><b>{job.experience}</b></div>}
                 {job.education && <div className="qp-lf-spec__row"><span>Trình độ</span><b>{job.education}</b></div>}
                 {job.deadline && <div className="qp-lf-spec__row"><span>Hạn nộp</span><b>{formatDate(job.deadline)}</b></div>}

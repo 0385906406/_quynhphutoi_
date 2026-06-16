@@ -2,7 +2,7 @@ import { pageMetadata } from "@/lib/page-seo";
 import { JsonLd } from "@/components/common/JsonLd";
 import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
-import { listJobs, listMyJobs, countJobs, formatSalary, type JobDoc } from "@/lib/jobs";
+import { listJobs, listMyJobs, countJobs, formatSalary, formatAge, type JobDoc } from "@/lib/jobs";
 import { getSession } from "@/lib/auth";
 import { INDUSTRIES } from "@/lib/industries";
 import { WARDS } from "@/lib/wards";
@@ -31,6 +31,9 @@ function toJobItem(d: JobDoc, units: Map<string, AdminUnit>, showPhone = false):
     jobTypeLabel: d.jobTypeLabel,
     images: d.images ?? [],
     salaryText: formatSalary(d.salary),
+    ageText: formatAge(d.age),
+    ageMin: d.age?.min ?? null,
+    ageMax: d.age?.max ?? null,
     ward: u?.name ?? d.location.wardSlug,
     wardSlug: d.location.wardSlug,
     newCommune: u?.newCommune ?? null,

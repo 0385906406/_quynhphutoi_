@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { listJobs, formatSalary } from "@/lib/jobs";
+import { listJobs, formatSalary, formatAge } from "@/lib/jobs";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { PostModerationManager, type ModRow, type ModConfig } from "@/components/admin/PostModerationManager";
 import { getPageSeoConfig } from "@/lib/page-seo";
@@ -36,6 +36,7 @@ export default async function AdminJobsPage() {
         ...spec("Ngành", d.industryLabel),
         ...spec("Hình thức", d.jobTypeLabel),
         ...spec("Mức lương", formatSalary(d.salary)),
+        ...spec("Độ tuổi", formatAge(d.age) || undefined),
         ...spec("Số lượng", d.quantity ?? undefined),
         ...spec("Kinh nghiệm", d.experience),
         ...spec("Trình độ", d.education),

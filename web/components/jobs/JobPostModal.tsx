@@ -24,6 +24,8 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
   const [negotiable, setNegotiable] = useState(false);
+  const [ageMin, setAgeMin] = useState("");
+  const [ageMax, setAgeMax] = useState("");
   const [wardSlug, setWardSlug] = useState("");
   const [address, setAddress] = useState("");
   const [mapUrl, setMapUrl] = useState("");
@@ -89,6 +91,7 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
         body: JSON.stringify({
           title: title.trim(), company: company.trim(), industry, jobType, description, images,
           salary: { min: salaryMin || undefined, max: salaryMax || undefined, negotiable },
+          age: { min: ageMin || undefined, max: ageMax || undefined },
           location: { wardSlug: ward.slug, address: address.trim() || undefined, mapUrl: mapUrl.trim() || undefined },
           quantity: quantity || undefined, experience, education,
           deadline: deadline || undefined,
@@ -173,6 +176,16 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
               <label className="qp-check" style={{ marginTop: 8 }}>
                 <input type="checkbox" checked={negotiable} onChange={(e) => setNegotiable(e.target.checked)} /> Lương thỏa thuận
               </label>
+            </div>
+
+            {/* Độ tuổi ứng viên (tuỳ chọn) */}
+            <div className="qp-form-group">
+              <label className="qp-label">Độ tuổi ứng viên (tuỳ chọn)</label>
+              <div className="grid grid-2" style={{ gap: "var(--space-4)" }}>
+                <input className="qp-input" type="number" min={0} max={100} step={1} value={ageMin} onChange={(e) => setAgeMin(e.target.value)} placeholder="Từ tuổi (VD: 18)" />
+                <input className="qp-input" type="number" min={0} max={100} step={1} value={ageMax} onChange={(e) => setAgeMax(e.target.value)} placeholder="Đến tuổi (VD: 35)" />
+              </div>
+              <p className="qp-form-tip">Để trống nếu không yêu cầu độ tuổi.</p>
             </div>
 
             <div className="grid grid-2" style={{ gap: "var(--space-4)" }}>

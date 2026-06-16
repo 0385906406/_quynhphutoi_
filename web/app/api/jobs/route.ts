@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   if (!(await verifyRecaptcha(b.recaptchaToken))) {
     return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
   }
-  const { company, industry, jobType, description, images, salary, location, quantity, experience, education, deadline, contact } = b;
+  const { company, industry, jobType, description, images, salary, location, age, quantity, experience, education, deadline, contact } = b;
   const title = stripHtml(String(b.title ?? "")).trim();
   const companyClean = stripHtml(String(company ?? "")).trim();
 
@@ -85,6 +85,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Lương tối thiểu không được lớn hơn tối đa." }, { status: 400 });
   }
 
+  // Độ tuổi — số nguyên 0–100; min ≤ max. Để trống = không yêu cầu.
+  const ageNum = (v: unknown) => { const n = Number(v); return Number.isInteger(n) && n >= 0 && n <= 100 ? n : null; };
+  const aMin = ageNum(age?.min), aMax = ageNum(age?.max);
+  if (aMin !== null && aMax !== null && aMin > aMax) {
+    return NextResponse.json({ error: "Tuổi tối thiểu không được lớn hơn tuổi tối đa." }, { status: 400 });
+  }
+
   let dl: Date | null = null;
   if (deadline) {
     const d = new Date(deadline);
@@ -118,6 +125,7 @@ export async function POST(req: Request) {
         images: Array.isArray(images) ? images.filter((x) => typeof x === "string").slice(0, settings.postMaxImages) : [],
         salary: { min: sMin, max: sMax, negotiable: !!salary?.negotiable || (!sMin && !sMax) },
         location: { wardSlug: location.wardSlug, address: location.address?.trim() || undefined, mapUrl },
+        age: { min: aMin, max: aMax },
         quantity: num(quantity),
         experience: experience?.trim() || undefined,
         education: education?.trim() || undefined,
