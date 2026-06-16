@@ -1,7 +1,7 @@
 // Admin duyệt / bỏ duyệt 1 tin. POST body { approved?: boolean } (mặc định true).
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { approvePost, getPostBySlug } from "@/lib/lostfound";
 import { notifyUser } from "@/lib/notifications";
 
@@ -11,7 +11,7 @@ export async function POST(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: "Chỉ admin mới được duyệt tin." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin mới được duyệt tin." }, { status: 403 });
 
   const { slug } = await params;
   const post = await getPostBySlug(slug);

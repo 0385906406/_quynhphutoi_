@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isAdmin, isEditor } from "@/lib/users";
 import { getMyPosts, type MyPost } from "@/lib/my-posts";
 import { formatDate } from "@/lib/datetime";
 
@@ -32,7 +32,7 @@ export default async function ProfilePage() {
         <dl className="qp-acc-info">
           <div className="qp-acc-info__row"><dt>Tên hiển thị</dt><dd>{user.name || "—"}</dd></div>
           <div className="qp-acc-info__row"><dt>Email</dt><dd>{user.email}</dd></div>
-          <div className="qp-acc-info__row"><dt>Vai trò</dt><dd>{isAdmin(user) ? "Quản trị viên" : "Thành viên"}</dd></div>
+          <div className="qp-acc-info__row"><dt>Vai trò</dt><dd>{isAdmin(user) ? "Quản trị viên" : isEditor(user) ? "Biên tập viên" : "Thành viên"}</dd></div>
           <div className="qp-acc-info__row"><dt>Trạng thái</dt><dd>{user.verified ? <span className="qp-acc-ok">✓ Đã xác minh email</span> : <span className="qp-acc-warn">Chưa xác minh email</span>}</dd></div>
           <div className="qp-acc-info__row"><dt>Ngày tham gia</dt><dd>{formatDate(user.createdAt.toISOString())}</dd></div>
         </dl>

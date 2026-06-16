@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { listContacts, toContactRow } from "@/lib/contact";
 import { ContactManager } from "@/components/admin/ContactManager";
 import { getPageSeoConfig } from "@/lib/page-seo";
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "Liên hệ / Phản ánh — Quản 
 export const dynamic = "force-dynamic";
 
 export default async function AdminContactPage() {
+  await requireAdminPage();
   const [docs, pageSeo] = await Promise.all([listContacts(), getPageSeoConfig()]);
   const rows = docs.map(toContactRow);
   return (

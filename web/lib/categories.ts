@@ -195,6 +195,14 @@ export function buildTree(flat: CategoryDoc[]): CategoryNode[] {
   return roots;
 }
 
+// Danh sách phẳng {slug, name} các danh mục ĐANG bật của 1 module (theo order),
+// dùng cho dropdown/lọc ở Tin tức & Mua bán (danh mục phẳng, không phân cấp).
+export async function listActiveCategoryOptions(module: string): Promise<{ slug: string; name: string }[]> {
+  const col = await categories();
+  const rows = await col.find({ module, active: true }).sort({ order: 1, name: 1 }).toArray();
+  return rows.map((c) => ({ slug: c.slug, name: c.name }));
+}
+
 export async function getByPath(module: string, path: string) {
   const col = await categories();
   return col.findOne({ module, path: path.startsWith("/") ? path : `/${path}` });

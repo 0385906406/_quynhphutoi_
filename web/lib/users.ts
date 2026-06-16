@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-export type UserRole = "admin" | "user";
+export type UserRole = "admin" | "editor" | "user";
 
 export type UserDoc = {
   _id?: ObjectId;
@@ -13,7 +13,7 @@ export type UserDoc = {
   passwordHash: string;
   verified: boolean;
   avatar?: string | null;     // URL ảnh đại diện (Cloudinary). Trống = dùng chữ cái đầu.
-  role?: UserRole;            // thiếu = "user". "admin" mới được duyệt tin.
+  role?: UserRole;            // thiếu = "user". "admin" toàn quyền; "editor" làm nội dung + kiểm duyệt.
   verifyToken?: string | null;
   verifyTokenExp?: Date | null;
   resetToken?: string | null;
@@ -22,6 +22,10 @@ export type UserDoc = {
 };
 
 export const isAdmin = (u: Pick<UserDoc, "role"> | null | undefined) => u?.role === "admin";
+// Biên tập viên: làm nội dung + kiểm duyệt, KHÔNG đụng quản trị hệ thống.
+export const isEditor = (u: Pick<UserDoc, "role"> | null | undefined) => u?.role === "editor";
+// Nhân sự khu quản trị = admin ∪ editor (được vào /admin).
+export const isStaff = (u: Pick<UserDoc, "role"> | null | undefined) => isAdmin(u) || isEditor(u);
 
 async function users() {
   const db = await getDb();
@@ -49,7 +53,10 @@ export type UserListOpts = { search?: string; role?: UserRole; limit?: number; s
 
 function userFilter(opts: UserListOpts) {
   const filter: Record<string, unknown> = {};
-  if (opts.role) filter.role = opts.role === "admin" ? "admin" : { $ne: "admin" };
+  if (opts.role) {
+    // "user" gồm cả tài khoản cũ thiếu field role → loại admin/editor.
+    filter.role = opts.role === "user" ? { $nin: ["admin", "editor"] } : opts.role;
+  }
   if (opts.search?.trim()) {
     const rx = new RegExp(opts.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
     filter.$or = [{ email: rx }, { name: rx }];
@@ -95,7 +102,7 @@ export type UserRow = { id: string; email: string; name: string; role: UserRole;
 export function toUserRow(u: UserDoc): UserRow {
   return {
     id: u._id!.toString(), email: u.email, name: u.name,
-    role: u.role === "admin" ? "admin" : "user", verified: u.verified,
+    role: u.role === "admin" ? "admin" : u.role === "editor" ? "editor" : "user", verified: u.verified,
     createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : "",
   };
 }

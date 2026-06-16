@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { listSubscribers, toSubscriberRow } from "@/lib/newsletter";
 import { NewsletterManager } from "@/components/admin/NewsletterManager";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = { title: "Đăng ký nhận tin — Quản tr�
 export const dynamic = "force-dynamic";
 
 export default async function AdminNewsletterPage() {
+  await requireAdminPage();
   const docs = await listSubscribers();
   const rows = docs.map(toSubscriberRow);
   return (

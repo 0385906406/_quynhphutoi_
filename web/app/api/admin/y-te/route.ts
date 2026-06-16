@@ -1,6 +1,6 @@
 // Admin: liệt kê (GET) & tạo (POST) cơ sở y tế.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { listHealth, createHealth, toHealthRow, HEALTH_TYPES, type HealthType, type HealthOwnership } from "@/lib/health";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
@@ -10,14 +10,14 @@ const OWNERSHIPS: HealthOwnership[] = ["cong-lap", "tu-nhan"];
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
 export async function GET() {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const docs = await listHealth({});
   return NextResponse.json({ items: docs.map(toHealthRow) });
 }
 
 export async function POST(req: Request) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const b = await req.json().catch(() => ({}));
 

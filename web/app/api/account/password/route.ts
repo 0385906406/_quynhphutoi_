@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { findById, checkPassword, setUserPassword } from "@/lib/users";
 import { validatePassword } from "@/lib/password";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { adaptiveRecaptcha } from "@/lib/recaptcha";
 
 // Đổi mật khẩu — yêu cầu nhập đúng mật khẩu hiện tại.
 export async function POST(req: Request) {
@@ -12,9 +12,8 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { current, next } = body;
 
-  if (!(await verifyRecaptcha(body.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
+  const cap = await adaptiveRecaptcha(req, "password", body.recaptchaToken);
+  if (cap) return cap;
 
   const pwErr = validatePassword(typeof next === "string" ? next : "");
   if (pwErr) return NextResponse.json({ error: pwErr.replace("Mật khẩu", "Mật khẩu mới") }, { status: 400 });

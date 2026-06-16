@@ -1,7 +1,7 @@
 "use client";
 
 // Modal đăng tin Mua bán — POST /api/mua-ban (cần đăng nhập). Tin chờ admin duyệt.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { WARDS } from "@/lib/wards";
 import { CLASSIFIED_CATEGORIES, type ClassifiedCategory } from "@/lib/classified-categories";
@@ -9,12 +9,12 @@ import { Combobox } from "@/components/lostfound/Combobox";
 import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { CharCount } from "@/components/common/CharCount";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
-type Props = { open: boolean; onClose: () => void; isLoggedIn: boolean; defaultName?: string; onSuccess?: () => void; maxImages?: number };
+type Props = { open: boolean; onClose: () => void; isLoggedIn: boolean; defaultName?: string; onSuccess?: () => void; maxImages?: number; categories?: { slug: string; name: string }[] };
 
-export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "", onSuccess, maxImages = 8 }: Props) {
+export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "", onSuccess, maxImages = 8, categories }: Props) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<ClassifiedCategory | "">("");
   const [description, setDescription] = useState("");
@@ -32,7 +32,7 @@ export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "
   const [loading, setLoading] = useState(false);
   const [doneSlug, setDoneSlug] = useState<string | null>(null);
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +47,11 @@ export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "
     };
   }, [open, onClose]);
 
-  const catOptions = useMemo(() => CLASSIFIED_CATEGORIES.map((c) => ({ value: c.slug, label: c.label })), []);
+  // Danh mục từ DB (prop) — admin quản lý; rỗng → fallback list cố định.
+  const catOptions = useMemo(
+    () => (categories?.length ? categories.map((c) => ({ value: c.slug, label: c.name })) : CLASSIFIED_CATEGORIES.map((c) => ({ value: c.slug, label: c.label }))),
+    [categories],
+  );
   const wardOptions = useMemo(() => WARDS.map((w) => ({ value: w.slug, label: w.name, hint: `Xã mới: ${w.newCommune}` })), []);
 
   if (!open) return null;
@@ -55,19 +59,13 @@ export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!title.trim()) { toast.error("Vui lòng nhập tiêu đề."); return; }
-    if (!CLASSIFIED_CATEGORIES.some((c) => c.slug === category)) { toast.error("Vui lòng chọn danh mục."); return; }
+    if (!category || !catOptions.some((c) => c.value === category)) { toast.error("Vui lòng chọn danh mục."); return; }
     if (!description.trim()) { toast.error("Vui lòng nhập mô tả."); return; }
     const ward = WARDS.find((w) => w.slug === wardSlug);
     if (!ward) { toast.error("Vui lòng chọn địa điểm."); return; }
     const phoneClean = phone.replace(/[\s.\-()]/g, "");
     if (!/^(?:0\d{9}|\+84\d{9})$/.test(phoneClean)) { toast.error("Số điện thoại không hợp lệ (VD: 0912345678)."); return; }
     if (!contactName.trim()) { toast.error("Vui lòng nhập tên liên hệ."); return; }
-
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -78,11 +76,12 @@ export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "
           priceText: priceText.trim() || undefined, condition: condition || undefined,
           location: { wardSlug: ward.slug, address: address.trim() || undefined, mapUrl: mapUrl.trim() || undefined },
           contact: { name: contactName.trim(), phone: phoneClean, email: email.trim() || undefined, hidePhone },
-          recaptchaToken,
+          recaptchaToken: cap.token(),
         }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) { toast.error(data.error || "Đăng tin thất bại."); return; }
       setDoneSlug(data.slug || ""); onSuccess?.();
     } catch { toast.error("Lỗi kết nối, vui lòng thử lại."); } finally { setLoading(false); }
@@ -189,7 +188,7 @@ export function ClassifiedPostModal({ open, onClose, isLoggedIn, defaultName = "
               <input type="checkbox" checked={hidePhone} onChange={(e) => setHidePhone(e.target.checked)} /> Ẩn số điện thoại công khai
             </label>
 
-            <Recaptcha ref={captcha} className="qp-recaptcha" />
+            {cap.slot}
 
             <button className="qp-btn-primary qp-btn-block mt-6" type="submit" disabled={loading}>
               {loading ? "Đang gửi…" : <>Đăng tin <span className="qp-arrow">→</span></>}

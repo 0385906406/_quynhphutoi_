@@ -90,13 +90,6 @@ export async function Footer() {
           <span>© {year} · Cổng thông tin cộng đồng Quỳnh Phụ — phi chính thức.</span>
           <span className="qp-footer__madein">Làm bởi một người yêu Thái Bình <span className="qp-footer__heart" aria-hidden>♥</span></span>
         </div>
-
-        {/* Ghi chú bắt buộc khi ẩn huy hiệu reCAPTCHA (theo điều khoản Google) */}
-        <p className="qp-footer__recaptcha">
-          Trang này được bảo vệ bởi reCAPTCHA — áp dụng{" "}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Chính sách bảo mật</a> và{" "}
-          <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer">Điều khoản dịch vụ</a> của Google.
-        </p>
       </div>
     </footer>
   );

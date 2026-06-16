@@ -1,20 +1,20 @@
 // Admin: liệt kê (GET) & tạo (POST) bài viết tin tức.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { listAllArticles, createArticle, toArticleRow, type ArticleStatus } from "@/lib/articles";
 import { sanitizeHtml } from "@/lib/sanitize";
 
 const STATUSES: ArticleStatus[] = ["draft", "published"];
 
 export async function GET() {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const docs = await listAllArticles();
   return NextResponse.json({ items: docs.map(toArticleRow) });
 }
 
 export async function POST(req: Request) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const b = await req.json().catch(() => ({}));
 

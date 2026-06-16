@@ -157,7 +157,7 @@ export function ClassifiedBrowser({
 
       <ListPager pager={pager} />
 
-      {postOpen && <ClassifiedPostModal open onClose={() => setPostOpen(false)} isLoggedIn={isLoggedIn} defaultName={defaultName} maxImages={maxImages} onSuccess={() => router.refresh()} />}
+      {postOpen && <ClassifiedPostModal open onClose={() => setPostOpen(false)} isLoggedIn={isLoggedIn} defaultName={defaultName} maxImages={maxImages} categories={categories} onSuccess={() => router.refresh()} />}
     </>
   );
 }

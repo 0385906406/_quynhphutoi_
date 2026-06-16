@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { getHomeSections, listHomeCandidates } from "@/lib/home-sections";
 import { getPageSeoConfig } from "@/lib/page-seo";
 import { HomeSectionsManager } from "@/components/admin/HomeSectionsManager";
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "Trang chủ — Quản trị", robot
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomeSectionsPage() {
+  await requireAdminPage();
   const [config, candidates, pageSeo] = await Promise.all([
     getHomeSections(), listHomeCandidates(), getPageSeoConfig(),
   ]);

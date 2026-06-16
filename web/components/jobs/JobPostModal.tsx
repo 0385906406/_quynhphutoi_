@@ -1,7 +1,7 @@
 "use client";
 
 // Modal đăng tin tuyển dụng — POST /api/jobs (cần đăng nhập). Tin chờ admin duyệt.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { WARDS } from "@/lib/wards";
 import { INDUSTRIES, JOB_TYPES, type JobType } from "@/lib/industries";
@@ -9,7 +9,7 @@ import { Combobox } from "@/components/lostfound/Combobox";
 import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { CharCount } from "@/components/common/CharCount";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
 type Props = { open: boolean; onClose: () => void; isLoggedIn: boolean; defaultName?: string; onSuccess?: () => void; maxImages?: number };
@@ -41,7 +41,7 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
   const [loading, setLoading] = useState(false);
   const [doneSlug, setDoneSlug] = useState<string | null>(null);
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   useEffect(() => {
     if (!open) return;
@@ -78,12 +78,6 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
     if (!/^(?:0\d{9}|\+84\d{9})$/.test(phoneClean)) { toast.error("Số điện thoại không hợp lệ (VD: 0912345678)."); return; }
     if (!contactName.trim()) { toast.error("Vui lòng nhập tên liên hệ."); return; }
 
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch("/api/jobs", {
@@ -96,11 +90,12 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
           quantity: quantity || undefined, experience, education,
           deadline: deadline || undefined,
           contact: { name: contactName.trim(), phone: phoneClean, email: email.trim() || undefined, hidePhone },
-          recaptchaToken,
+          recaptchaToken: cap.token(),
         }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) { toast.error(data.error || "Đăng tin thất bại."); return; }
       setDoneSlug(data.slug || "");
       onSuccess?.();
@@ -246,7 +241,7 @@ export function JobPostModal({ open, onClose, isLoggedIn, defaultName = "", onSu
               <input type="checkbox" checked={hidePhone} onChange={(e) => setHidePhone(e.target.checked)} /> Ẩn số điện thoại công khai
             </label>
 
-            <Recaptcha ref={captcha} className="qp-recaptcha" />
+            {cap.slot}
 
             <button className="qp-btn-primary qp-btn-block mt-6" type="submit" disabled={loading}>
               {loading ? "Đang gửi…" : <>Đăng tin tuyển dụng <span className="qp-arrow">→</span></>}

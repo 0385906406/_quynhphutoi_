@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { getAffiliateConfig } from "@/lib/affiliate";
 import { AffiliateManager } from "@/components/admin/AffiliateManager";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = { title: "Affiliate Shopee — Quản trị", 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAffiliatePage() {
+  await requireAdminPage();
   const config = await getAffiliateConfig();
   return (
     <>

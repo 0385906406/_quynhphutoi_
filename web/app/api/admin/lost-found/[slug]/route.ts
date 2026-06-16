@@ -1,7 +1,7 @@
 // Admin sửa nội dung / từ chối / xoá hẳn 1 tin. PATCH + DELETE.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { deletePost, getPostBySlug, updatePost, type LostFoundPatch, type LostFoundStatus } from "@/lib/lostfound";
 import { notifyUser } from "@/lib/notifications";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -13,7 +13,7 @@ const LF_STATUSES: LostFoundStatus[] = ["open", "matched", "resolved", "closed"]
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: "Chỉ admin." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin." }, { status: 403 });
   const { slug } = await params;
   const b = await req.json().catch(() => ({}));
 
@@ -46,7 +46,7 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: "Chỉ admin mới được xoá tin." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin mới được xoá tin." }, { status: 403 });
 
   const { slug } = await params;
   const post = await getPostBySlug(slug);

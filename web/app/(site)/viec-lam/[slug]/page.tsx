@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJobBySlug, incrementViews, relatedJobs, formatSalary, formatAge } from "@/lib/jobs";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { JobActions } from "@/components/jobs/JobActions";
@@ -54,7 +54,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
 
   const user = await getCurrentUser();
   const isOwner = !!user && user._id?.toString() === job.postedBy.toString();
-  if (!job.approved && !isOwner && !isAdmin(user)) notFound();
+  if (!job.approved && !isOwner && !isStaff(user)) notFound();
   if (job.approved && !isOwner) await incrementViews(slug);
 
   const showPhone = !job.contact.hidePhone || isOwner;

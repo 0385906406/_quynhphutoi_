@@ -7,11 +7,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BRAND } from "@/lib/nav";
+import type { UserRole } from "@/lib/users";
 
 export type AdminCounts = { "viec-lam": number; "tim-do-roi": number; "mua-ban": number };
 
 type Item = { href: string; label: string; icon: IconName; countKey?: keyof AdminCounts };
-type Group = { title: string; items: Item[] };
+// adminOnly: nhóm chỉ admin thấy (editor bị ẩn).
+type Group = { title: string; items: Item[]; adminOnly?: boolean };
 
 const GROUPS: Group[] = [
   { title: "Tổng quan", items: [{ href: "/admin", label: "Bảng điều khiển", icon: "home" }] },
@@ -37,6 +39,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "Trang khác",
+    adminOnly: true,
     items: [
       { href: "/admin/tong-quan", label: "Tổng quan", icon: "globe" },
       { href: "/admin/sap-nhap", label: "Sáp nhập 2025", icon: "map" },
@@ -45,6 +48,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "Danh mục & dữ liệu",
+    adminOnly: true,
     items: [
       { href: "/admin/danh-muc", label: "Danh mục", icon: "folder" },
       { href: "/admin/don-vi-hanh-chinh", label: "Đơn vị hành chính", icon: "map" },
@@ -52,6 +56,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "Hệ thống",
+    adminOnly: true,
     items: [
       { href: "/admin/trang-chu", label: "Trang chủ", icon: "layout" },
       { href: "/admin/affiliate", label: "Affiliate Shopee", icon: "cart" },
@@ -65,9 +70,11 @@ const GROUPS: Group[] = [
   },
 ];
 
-export function AdminSidebar({ counts, logo }: { counts: AdminCounts; logo?: string }) {
+export function AdminSidebar({ counts, logo, role }: { counts: AdminCounts; logo?: string; role: UserRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Editor chỉ thấy nhóm nội dung + kiểm duyệt; ẩn nhóm hệ thống (adminOnly).
+  const groups = role === "admin" ? GROUPS : GROUPS.filter((g) => !g.adminOnly);
 
   // Đồng bộ với nút burger ở topbar qua sự kiện cửa sổ.
   useEffect(() => {
@@ -96,7 +103,7 @@ export function AdminSidebar({ counts, logo }: { counts: AdminCounts; logo?: str
         </Link>
 
         <nav className="qp-admin-nav" aria-label="Điều hướng quản trị">
-          {GROUPS.map((g) => (
+          {groups.map((g) => (
             <div className="qp-admin-nav__group" key={g.title}>
               <div className="qp-admin-nav__title">{g.title}</div>
               {g.items.map((it) => {

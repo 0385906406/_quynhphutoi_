@@ -1,12 +1,12 @@
 "use client";
 
 // Modal gửi bài Tin tức — POST /api/articles (cần đăng nhập). Bài chờ admin duyệt.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { CharCount } from "@/components/common/CharCount";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
 const CATEGORIES = ["Thông báo", "Đời sống", "Kinh tế", "Giáo dục"];
@@ -24,7 +24,7 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   useEffect(() => {
     if (!open) return;
@@ -46,12 +46,6 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
     if (!coverImage) { toast.error("Vui lòng tải lên ảnh bìa."); return; }
     if (!bodyHtml.trim()) { toast.error("Vui lòng nhập nội dung bài viết."); return; }
 
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch("/api/articles", {
@@ -59,11 +53,12 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
         body: JSON.stringify({
           title: title.trim(), category, excerpt: excerpt.trim(), coverImage,
           tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-          bodyHtml, recaptchaToken,
+          bodyHtml, recaptchaToken: cap.token(),
         }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) { toast.error(data.error || "Gửi bài thất bại."); return; }
       setDone(true);
       onSuccess?.();
@@ -131,7 +126,7 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
               <input id="ar-tags" className="qp-input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="VD: Quỳnh Phụ, Nông nghiệp" />
             </div>
 
-            <Recaptcha ref={captcha} className="qp-recaptcha" />
+            {cap.slot}
 
             <button className="qp-btn-primary qp-btn-block mt-6" type="submit" disabled={loading}>
               {loading ? "Đang gửi…" : <>Gửi bài <span className="qp-arrow">→</span></>}

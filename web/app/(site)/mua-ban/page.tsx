@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { getAdminUnitsMap, type AdminUnit } from "@/lib/admin-units";
 import { stripHtml } from "@/lib/strip-html";
 import { ClassifiedBrowser, type ClassifiedItem } from "@/components/classifieds/ClassifiedBrowser";
+import { listActiveCategoryOptions } from "@/lib/categories";
 import { getSettings } from "@/lib/settings";
 
 export async function generateMetadata() {
@@ -33,13 +34,14 @@ function toItem(d: ClassifiedDoc, units: Map<string, AdminUnit>, showPhone = fal
 }
 
 export default async function MuaBanPage() {
-  const [docs, session, total, units, settings] = await Promise.all([listClassifieds({ limit: 500 }), getSession(), countClassifieds(), getAdminUnitsMap(), getSettings()]);
+  const [docs, session, total, units, settings, dbCats] = await Promise.all([listClassifieds({ limit: 500 }), getSession(), countClassifieds(), getAdminUnitsMap(), getSettings(), listActiveCategoryOptions("mua-ban")]);
   const items = docs.map((d) => toItem(d, units));
   const pendingItems: ClassifiedItem[] = session
     ? (await listMyClassifieds(session.id)).filter((d) => !d.approved && d.active).map((d) => toItem(d, units, true))
     : [];
 
-  const categories = CLASSIFIED_CATEGORIES.map((c) => ({ slug: c.slug, name: c.label }));
+  // Danh mục lấy từ DB (admin quản lý). DB rỗng → fallback list cố định.
+  const categories = dbCats.length ? dbCats : CLASSIFIED_CATEGORIES.map((c) => ({ slug: c.slug, name: c.label }));
   const wards = [...new Map(items.map((i) => [i.wardSlug, { slug: i.wardSlug, name: i.ward, newCommune: i.newCommune ?? undefined }])).values()]
     .sort((a, b) => a.name.localeCompare(b.name, "vi"));
 

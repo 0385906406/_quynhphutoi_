@@ -3,6 +3,7 @@ import { listAllArticles, toArticleRow } from "@/lib/articles";
 import { getNewsPageConfig, newsCandidatesBySlugs } from "@/lib/news-page";
 import { getPageSeoConfig } from "@/lib/page-seo";
 import { externalNewsConfigured } from "@/lib/external-news";
+import { listActiveCategoryOptions } from "@/lib/categories";
 import { ModuleTabs } from "@/components/admin/ModuleTabs";
 import { ArticleManager } from "@/components/admin/ArticleManager";
 import { NewsPageManager } from "@/components/admin/NewsPageManager";
@@ -11,9 +12,11 @@ export const metadata: Metadata = { title: "Tin tức — Quản trị", robots:
 export const dynamic = "force-dynamic";
 
 export default async function AdminArticlesPage() {
-  const [docs, newsConfig, pageSeo, externalEnabled] = await Promise.all([
-    listAllArticles(), getNewsPageConfig(), getPageSeoConfig(), externalNewsConfigured(),
+  const [docs, newsConfig, pageSeo, externalEnabled, catOpts] = await Promise.all([
+    listAllArticles(), getNewsPageConfig(), getPageSeoConfig(), externalNewsConfigured(), listActiveCategoryOptions("tin-tuc"),
   ]);
+  // Danh mục tin tức từ DB (admin quản lý ở /admin/danh-mục). DB rỗng → fallback list cố định trong ArticleManager.
+  const categoryNames = catOpts.map((c) => c.name);
   // Tiêu đề cho các bài đã chọn thủ công (để picker hiển thị chip ngay, không cần search).
   const selectedSlugs = [
     newsConfig.featured.heroSlug,
@@ -39,7 +42,7 @@ export default async function AdminArticlesPage() {
         seoInitial={pageSeo["/tin-tuc"] ?? {}}
         manage={<NewsPageManager initialConfig={newsConfig} initialTitles={newsTitles} />}
       >
-        <ArticleManager initial={rows} externalEnabled={externalEnabled} />
+        <ArticleManager initial={rows} externalEnabled={externalEnabled} categories={categoryNames} />
       </ModuleTabs>
     </>
   );

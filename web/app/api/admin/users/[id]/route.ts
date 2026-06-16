@@ -12,7 +12,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const isSelf = g.user._id!.toString() === id;
 
   if (b.role !== undefined) {
-    if (b.role !== "admin" && b.role !== "user") return NextResponse.json({ error: "Vai trò không hợp lệ." }, { status: 400 });
+    if (!["admin", "editor", "user"].includes(b.role)) return NextResponse.json({ error: "Vai trò không hợp lệ." }, { status: 400 });
     if (isSelf && b.role !== "admin") return NextResponse.json({ error: "Không thể tự gỡ quyền admin của chính mình." }, { status: 400 });
     const n = await setUserRole(id, b.role);
     if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { getPageSeoConfig } from "@/lib/page-seo";
 import { ModuleTabs } from "@/components/admin/ModuleTabs";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = { title: "Sáp nhập 2025 — Quản trị", 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSapNhapPage() {
+  await requireAdminPage();
   const pageSeo = await getPageSeoConfig();
   return (
     <>

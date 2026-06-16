@@ -16,3 +16,8 @@ build/
 .DS_Store
 *.tsbuildinfo
 .vercel
+
+# Tài liệu trình chiếu & nội dung giải nén — không đưa vào repo
+*.pptx
+_pptx_extract/
+_slides_text.txt

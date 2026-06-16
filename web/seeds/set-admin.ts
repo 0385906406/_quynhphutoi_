@@ -1,8 +1,9 @@
-// Gán (hoặc gỡ) quyền admin cho 1 tài khoản theo email.
+// Gán vai trò cho 1 tài khoản theo email.
 //
 // Dùng:
-//   npm run set-admin -- email@cua-ban.com          → đặt role = admin
-//   npm run set-admin -- email@cua-ban.com user      → gỡ về role = user
+//   npm run set-admin -- email@cua-ban.com           → đặt role = admin (toàn quyền)
+//   npm run set-admin -- email@cua-ban.com editor     → đặt role = editor (nội dung + kiểm duyệt)
+//   npm run set-admin -- email@cua-ban.com user       → gỡ về role = user (thường)
 //
 // Tài khoản phải đã đăng ký trước (có trong collection users).
 
@@ -11,11 +12,13 @@ import { MongoClient } from "mongodb";
 const uri = process.env.MONGODB_URI || "mongodb://localhost:27017";
 const dbName = process.env.MONGODB_DB || "quynhphu";
 
+const ROLES = ["admin", "editor", "user"] as const;
 const email = process.argv[2]?.trim().toLowerCase();
-const role = (process.argv[3] || "admin").trim() === "user" ? "user" : "admin";
+const arg = (process.argv[3] || "admin").trim();
+const role = (ROLES as readonly string[]).includes(arg) ? arg : "admin";
 
 if (!email) {
-  console.error("❌ Thiếu email. Dùng: npm run set-admin -- email@cua-ban.com [admin|user]");
+  console.error("❌ Thiếu email. Dùng: npm run set-admin -- email@cua-ban.com [admin|editor|user]");
   process.exit(1);
 }
 

@@ -1,11 +1,11 @@
 "use client";
 
 // Form đổi thông tin tài khoản: ảnh đại diện + tên hiển thị. Email chỉ đọc.
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CharCount } from "@/components/common/CharCount";
 import { ImageUploader } from "@/components/common/ImageUploader";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
 export function ProfileForm({ initialName, email, initialAvatar = "" }: { initialName: string; email: string; initialAvatar?: string }) {
@@ -14,24 +14,20 @@ export function ProfileForm({ initialName, email, initialAvatar = "" }: { initia
   const [name, setName] = useState(initialName);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [busy, setBusy] = useState(false);
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
     setBusy(true);
     try {
       const res = await fetch("/api/account/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, avatar, recaptchaToken }),
+        body: JSON.stringify({ name, avatar, recaptchaToken: cap.token() }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra."); return; }
       toast.success("Đã lưu thông tin.");
       router.refresh();
@@ -60,7 +56,7 @@ export function ProfileForm({ initialName, email, initialAvatar = "" }: { initia
         <input id="acc-email" className="qp-input" value={email} disabled readOnly />
         <span className="qp-acc-form__hint">Email dùng để đăng nhập, không thể thay đổi.</span>
       </div>
-      <Recaptcha ref={captcha} className="qp-recaptcha" />
+      {cap.slot}
       <button type="submit" className="qp-btn-primary" disabled={busy || !changed}>{busy ? "Đang lưu…" : "Lưu thay đổi"}</button>
     </form>
   );

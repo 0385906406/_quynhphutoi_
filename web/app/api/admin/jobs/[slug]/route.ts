@@ -1,7 +1,7 @@
 // Admin sửa nội dung / từ chối / xoá hẳn 1 tin việc làm.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { deleteJob, getJobBySlug, updateJob, type JobPatch, type JobStatus } from "@/lib/jobs";
 import { notifyUser } from "@/lib/notifications";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -13,7 +13,7 @@ const JOB_STATUSES: JobStatus[] = ["open", "closed", "filled"];
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: "Chỉ admin." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin." }, { status: 403 });
   const { slug } = await params;
   const b = await req.json().catch(() => ({}));
 
@@ -43,7 +43,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: "Chỉ admin mới được xoá tin." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin mới được xoá tin." }, { status: 403 });
   const { slug } = await params;
   const job = await getJobBySlug(slug);
   const deleted = await deleteJob(slug);

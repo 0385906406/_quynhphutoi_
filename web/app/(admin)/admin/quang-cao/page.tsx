@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { listAllAds } from "@/lib/ads";
 import { getSettings } from "@/lib/settings";
 import { getPageSeoConfig } from "@/lib/page-seo";
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "Quản lý quảng cáo — Quản t
 export const dynamic = "force-dynamic";
 
 export default async function AdminAdsPage() {
+  await requireAdminPage();
   const [docs, settings, pageSeo] = await Promise.all([listAllAds(), getSettings(), getPageSeoConfig()]);
   const initial: AdRow[] = docs.map((a) => ({
     id: a._id!.toString(), advertiser: a.advertiser, title: a.title, description: a.description ?? "",

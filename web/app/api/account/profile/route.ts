@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession, createSession } from "@/lib/auth";
 import { findById, updateUserProfile } from "@/lib/users";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { adaptiveRecaptcha } from "@/lib/recaptcha";
 
 // Cập nhật thông tin tài khoản: tên hiển thị + ảnh đại diện.
 export async function POST(req: Request) {
@@ -11,9 +11,8 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { name, avatar } = body;
 
-  if (!(await verifyRecaptcha(body.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
+  const cap = await adaptiveRecaptcha(req, "profile", body.recaptchaToken);
+  if (cap) return cap;
 
   const trimmed = typeof name === "string" ? name.trim() : "";
   if (trimmed.length < 2) return NextResponse.json({ error: "Tên hiển thị phải có ít nhất 2 ký tự." }, { status: 400 });

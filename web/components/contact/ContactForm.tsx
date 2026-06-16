@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { CharCount } from "@/components/common/CharCount";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
 const TYPES = ["Đặt quảng cáo", "Hợp tác / tài trợ", "Góp ý nội dung", "Báo lỗi / phản ánh", "Khác"];
@@ -10,7 +10,7 @@ const TYPES = ["Đặt quảng cáo", "Hợp tác / tài trợ", "Góp ý nội 
 export function ContactForm() {
   const [busy, setBusy] = useState(false);
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,21 +21,16 @@ export function ContactForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
-
     setBusy(true);
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, type, message, recaptchaToken }),
+        body: JSON.stringify({ name, email, phone, type, message, recaptchaToken: cap.token() }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) { toast.error(data.error || "Gửi liên hệ thất bại, vui lòng thử lại."); return; }
       setName(""); setEmail(""); setPhone(""); setType("Đặt quảng cáo"); setMessage("");
       toast.success("Đã gửi liên hệ! Mình sẽ phản hồi qua email sớm nhất.");
@@ -85,7 +80,7 @@ export function ContactForm() {
         Tôi đồng ý để được liên hệ lại qua email hoặc điện thoại.
       </label>
 
-      <Recaptcha ref={captcha} className="qp-recaptcha" />
+      {cap.slot}
 
       <button className="qp-btn-primary qp-btn-block mt-6" type="submit" disabled={busy}>
         {busy ? "Đang gửi…" : <>Gửi liên hệ <span className="qp-arrow">→</span></>}

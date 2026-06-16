@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClassifiedBySlug, incrementViews, relatedClassifieds, CONDITION_LABEL } from "@/lib/classifieds";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { ClassifiedActions } from "@/components/classifieds/ClassifiedActions";
@@ -52,7 +52,7 @@ export default async function ClassifiedDetailPage({ params }: { params: Promise
 
   const user = await getCurrentUser();
   const isOwner = !!user && user._id?.toString() === a.postedBy.toString();
-  if (!a.approved && !isOwner && !isAdmin(user)) notFound();
+  if (!a.approved && !isOwner && !isStaff(user)) notFound();
   if (a.approved && !isOwner) await incrementViews(slug);
 
   const showPhone = !a.contact.hidePhone || isOwner;

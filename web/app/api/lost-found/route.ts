@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { stripHtml } from "@/lib/strip-html";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { adaptiveRecaptcha } from "@/lib/recaptcha";
 import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";
 import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
@@ -54,9 +54,8 @@ export async function POST(req: Request) {
   if (!quota.ok) return NextResponse.json({ error: quota.message }, { status: 429 });
 
   const b = await req.json().catch(() => ({}));
-  if (!(await verifyRecaptcha(b.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
+  const cap = await adaptiveRecaptcha(req, "lostfound", b.recaptchaToken);
+  if (cap) return cap;
   const { kind, description, categoryId, images, location, occurredAt, contact, reward } = b;
   const title = stripHtml(String(b.title ?? "")).trim();
 

@@ -33,7 +33,7 @@ const toForm = (r: ArticleRow): Form => ({
   seoKeywords: (r.seo.keywords ?? []).join(", "), seoOgImage: r.seo.ogImage ?? "", seoNoindex: !!r.seo.noindex,
 });
 
-export function ArticleManager({ initial, externalEnabled }: { initial: ArticleRow[]; externalEnabled?: boolean }) {
+export function ArticleManager({ initial, externalEnabled, categories }: { initial: ArticleRow[]; externalEnabled?: boolean; categories?: string[] }) {
   const [rows, setRows] = useState<ArticleRow[]>(initial);
   const [q, setQ] = useState("");
   const [fStatus, setFStatus] = useState("");
@@ -45,6 +45,13 @@ export function ArticleManager({ initial, externalEnabled }: { initial: ArticleR
   const { toast } = useToast();
 
   function set<K extends keyof Form>(k: K, v: Form[K]) { setForm((f) => ({ ...f, [k]: v })); }
+
+  // Danh mục: ưu tiên list từ DB (prop, admin quản lý), fallback list cố định.
+  // Luôn gồm cả danh mục đang chọn (kể cả bài cũ có danh mục không còn trong list) để không mất lựa chọn.
+  const catList = useMemo(() => {
+    const base = categories?.length ? categories : CATEGORIES;
+    return form.category && !base.includes(form.category) ? [...base, form.category] : base;
+  }, [categories, form.category]);
 
   const filtered = useMemo(() => {
     const kw = q.trim().toLowerCase();
@@ -149,7 +156,7 @@ export function ArticleManager({ initial, externalEnabled }: { initial: ArticleR
               <div className="qp-acc-grid2">
                 <div className="qp-form-group"><label className="qp-label">Chuyên mục <span className="req">*</span></label>
                   <select className="qp-select" value={form.category} onChange={(e) => set("category", e.target.value)}>
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {catList.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select></div>
                 <div className="qp-form-group"><label className="qp-label">Thẻ (cách nhau dấu phẩy)</label>
                   <input className="qp-input" value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="VD: Việc làm, Thông báo" /></div>

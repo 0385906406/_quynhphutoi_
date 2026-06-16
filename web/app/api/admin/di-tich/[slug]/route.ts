@@ -1,6 +1,6 @@
 // Admin: cập nhật (PATCH) & xoá (DELETE) một di tích.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { updateRelic, deleteRelic, type RelicInput, type RelicType, type RelicRanking } from "@/lib/relics";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
@@ -10,7 +10,7 @@ const RANKINGS: RelicRanking[] = ["quoc-gia", "cap-tinh", "kiem-ke"];
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const { slug } = await params;
   const b = await req.json().catch(() => ({}));
@@ -35,7 +35,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const { slug } = await params;
   const n = await deleteRelic(slug);

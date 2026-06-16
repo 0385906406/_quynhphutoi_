@@ -1,6 +1,6 @@
 // Admin: cập nhật (PATCH) & xoá (DELETE) một cơ sở y tế.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { updateHealth, deleteHealth, HEALTH_TYPES, type HealthInput, type HealthType, type HealthOwnership } from "@/lib/health";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
@@ -10,7 +10,7 @@ const OWNERSHIPS: HealthOwnership[] = ["cong-lap", "tu-nhan"];
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const { slug } = await params;
   const b = await req.json().catch(() => ({}));
@@ -36,7 +36,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const { slug } = await params;
   const n = await deleteHealth(slug);

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { NotifyComposer } from "@/components/admin/NotifyComposer";
 
 export const metadata: Metadata = { title: "Gửi thông báo — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-export default function AdminNotifyPage() {
+export default async function AdminNotifyPage() {
+  await requireAdminPage();
   return (
     <>
       <div className="qp-admin-head">

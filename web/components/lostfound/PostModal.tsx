@@ -2,14 +2,14 @@
 
 // Modal đăng tin Tìm đồ rơi — POST /api/lost-found (yêu cầu đăng nhập).
 // Tin gửi lên ở trạng thái chờ duyệt (approved=false) nên chưa hiện công khai ngay.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { WARDS } from "@/lib/wards";
 import { Combobox } from "./Combobox";
 import { RichTextEditor } from "./RichTextEditor";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { CharCount } from "@/components/common/CharCount";
-import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
+import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
 
 export type CategoryOption = { id: string; label: string };
@@ -48,7 +48,7 @@ export function PostModal({ open, onClose, categoryOptions, isLoggedIn, defaultN
   const [loading, setLoading] = useState(false);
   const [doneSlug, setDoneSlug] = useState<string | null>(null);
   const { toast } = useToast();
-  const captcha = useRef<RecaptchaHandle>(null);
+  const cap = useAdaptiveCaptcha();
 
   // Đóng bằng phím Esc.
   useEffect(() => {
@@ -96,12 +96,6 @@ export function PostModal({ open, onClose, categoryOptions, isLoggedIn, defaultN
     }
     if (!contactName.trim()) { toast.error("Vui lòng nhập tên liên hệ."); return; }
 
-    const recaptchaToken = captcha.current?.getToken() ?? "";
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      toast.error('Vui lòng xác nhận "Tôi không phải robot".');
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch("/api/lost-found", {
@@ -118,11 +112,12 @@ export function PostModal({ open, onClose, categoryOptions, isLoggedIn, defaultN
           contact: { name: contactName.trim(), phone: phoneClean, email: email.trim() || undefined, hidePhone },
           // Hậu tạ chỉ áp dụng cho tin "tìm đồ".
           reward: kind === "tim-do" ? (reward.trim() || undefined) : undefined,
-          recaptchaToken,
+          recaptchaToken: cap.token(),
         }),
       });
       const data = await res.json().catch(() => ({}));
-      captcha.current?.reset();
+      cap.reset();
+      if (cap.challenged(res, data)) { toast.error("Vui lòng xác nhận reCAPTCHA rồi gửi lại."); return; }
       if (!res.ok) {
         toast.error(data.error || "Đăng tin thất bại, vui lòng thử lại.");
         return;
@@ -265,7 +260,7 @@ export function PostModal({ open, onClose, categoryOptions, isLoggedIn, defaultN
               Ẩn số điện thoại công khai (người xem liên hệ qua trang tin)
             </label>
 
-            <Recaptcha ref={captcha} className="qp-recaptcha" />
+            {cap.slot}
 
             <button className="qp-btn-primary qp-btn-block mt-6" type="submit" disabled={loading}>
               {loading ? "Đang gửi…" : <>Đăng tin <span className="qp-arrow">→</span></>}

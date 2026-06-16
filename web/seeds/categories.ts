@@ -26,7 +26,8 @@ type SeedNode = {
   children?: SeedNode[];
 };
 
-const MODULES: { module: string; label: string; tree: SeedNode[] }[] = [
+// prune=false: chỉ bootstrap danh mục ban đầu, KHÔNG xoá node admin thêm sau (Tin tức, Mua bán, Tìm đồ rơi).
+const MODULES: { module: string; label: string; tree: SeedNode[]; prune?: boolean }[] = [
   {
     module: "dich-vu-cong",
     label: "Dịch vụ công",
@@ -125,6 +126,32 @@ const MODULES: { module: string; label: string; tree: SeedNode[] }[] = [
       },
       { slug: "khac", name: "Khác", icon: "dots" },
     ],
+    prune: false,
+  },
+  {
+    module: "tin-tuc",
+    label: "Tin tức",
+    prune: false, // danh mục tin tức — admin tự thêm; seed chỉ bootstrap danh mục có sẵn
+    tree: [
+      { slug: "thong-bao", name: "Thông báo" },
+      { slug: "doi-song", name: "Đời sống" },
+      { slug: "kinh-te", name: "Kinh tế" },
+      { slug: "giao-duc", name: "Giáo dục" },
+    ],
+  },
+  {
+    module: "mua-ban",
+    label: "Mua bán",
+    prune: false, // GIỮ slug cũ để tin đã đăng không lệch danh mục; admin thêm danh mục mới
+    tree: [
+      { slug: "xe-co", name: "Xe cộ" },
+      { slug: "bat-dong-san", name: "Nhà đất" },
+      { slug: "dien-tu", name: "Điện tử - Điện máy" },
+      { slug: "do-gia-dung", name: "Đồ gia dụng - Nội thất" },
+      { slug: "nong-san-vat-nuoi", name: "Nông sản - Vật nuôi" },
+      { slug: "thoi-trang", name: "Thời trang - Mẹ & bé" },
+      { slug: "khac", name: "Đồ khác" },
+    ],
   },
 ];
 
@@ -180,8 +207,11 @@ async function main() {
     for (const m of MODULES) {
       const seenPaths: string[] = [];
       await seedTree(col, m.module, m.tree, null, seenPaths);
-      // Prune: xoá node cũ của module không còn trong cây seed (seed là nguồn chuẩn).
-      const pruned = await col.deleteMany({ module: m.module, path: { $nin: seenPaths } });
+      // Prune: xoá node cũ KHÔNG còn trong cây seed — CHỈ với module seed là nguồn chuẩn.
+      // Module do admin quản lý (prune=false) → giữ nguyên node admin thêm.
+      const pruned = m.prune === false
+        ? { deletedCount: 0 }
+        : await col.deleteMany({ module: m.module, path: { $nin: seenPaths } });
       total += seenPaths.length;
       const extra = pruned.deletedCount ? ` (đã dọn ${pruned.deletedCount} node cũ)` : "";
       console.log(`✓ ${m.label} (${m.module}): ${seenPaths.length} danh mục${extra}`);

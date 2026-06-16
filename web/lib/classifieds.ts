@@ -3,11 +3,20 @@
 import { getDb, ensureIndexes } from "@/lib/db";
 import { ObjectId, type Filter } from "mongodb";
 import { CLASSIFIED_CATEGORIES, categoryLabel, CONDITION_LABEL, type ClassifiedCategory, type ClassifiedCondition } from "@/lib/classified-categories";
+import { categories } from "@/lib/categories";
 import type { SeoFields } from "@/lib/seo-fields";
 
 export { CLASSIFIED_CATEGORIES, categoryLabel, CONDITION_LABEL };
 export type { ClassifiedCategory, ClassifiedCondition };
 export type ClassifiedStatus = "open" | "sold" | "closed";
+
+// Nhãn danh mục: ưu tiên list cố định; danh mục admin thêm (DB) thì tra collection categories.
+async function resolveCategoryLabel(slug: string): Promise<string> {
+  const hard = CLASSIFIED_CATEGORIES.find((x) => x.slug === slug)?.label;
+  if (hard) return hard;
+  const cat = await (await categories()).findOne({ module: "mua-ban", slug });
+  return cat?.name || slug;
+}
 
 export type ClassifiedContact = { name: string; phone: string; email?: string; hidePhone?: boolean };
 export type ClassifiedLocation = { wardSlug: string; address?: string; mapUrl?: string };
@@ -83,11 +92,12 @@ export async function createClassified(poster: { id: string; name: string }, inp
   const col = await classifieds();
   const now = new Date();
   const slug = await uniqueSlug(col, input.slug || slugify(input.title));
+  const catLabel = await resolveCategoryLabel(input.category);
   const doc: ClassifiedDoc = {
     slug,
     title: input.title.trim(),
     category: input.category,
-    categoryLabel: categoryLabel(input.category),
+    categoryLabel: catLabel,
     description: input.description,
     images: input.images ?? [],
     priceText: input.priceText.trim() || "Thỏa thuận",
@@ -198,7 +208,7 @@ export type ClassifiedPatch = Partial<{
 export async function updateClassified(slug: string, patch: ClassifiedPatch) {
   const set: Record<string, unknown> = { updatedAt: new Date() };
   for (const [k, v] of Object.entries(patch)) if (v !== undefined) set[k] = v;
-  if (patch.category) set.categoryLabel = categoryLabel(patch.category);
+  if (patch.category) set.categoryLabel = await resolveCategoryLabel(patch.category);
   if (patch.title) set.title = patch.title.trim();
   const res = await (await classifieds()).updateOne({ slug }, { $set: set });
   return res.matchedCount;

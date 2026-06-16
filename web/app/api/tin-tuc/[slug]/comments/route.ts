@@ -5,7 +5,7 @@ import { getArticleBySlug } from "@/lib/articles";
 import { addNewsComment, listNewsComments, newsCommenterIds } from "@/lib/news-social";
 import { notifyMany } from "@/lib/notifications";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { adaptiveRecaptcha } from "@/lib/recaptcha";
 import { getSettings } from "@/lib/settings";
 import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 
@@ -50,9 +50,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (!rlPost.ok) return tooMany(rlPost.retryAfter, "Bạn bình luận quá nhiều vào bài này. Vui lòng chậm lại.");
 
   const body = await req.json().catch(() => ({}));
-  if (!(await verifyRecaptcha(body.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
+  const cap = await adaptiveRecaptcha(req, "comment", body.recaptchaToken);
+  if (cap) return cap;
   const content = typeof body.content === "string" ? body.content : "";
   if (!content.trim()) return NextResponse.json({ error: "Nội dung bình luận trống." }, { status: 400 });
   if (content.length > settings.commentMaxLength) return NextResponse.json({ error: `Bình luận quá dài (tối đa ${settings.commentMaxLength} ký tự).` }, { status: 400 });

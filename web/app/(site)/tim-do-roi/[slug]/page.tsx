@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getPostBySlug, incrementViews, relatedPosts } from "@/lib/lostfound";
 import { likeInfo, listComments } from "@/lib/lostfound-social";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { stripHtml } from "@/lib/strip-html";
 import { getAdminUnitsMap } from "@/lib/admin-units";
 import { ResolveButton } from "@/components/lostfound/ResolveButton";
@@ -59,7 +59,7 @@ export default async function LostFoundDetailPage({ params }: { params: Promise<
 
   const user = await getCurrentUser();
   const isOwner = !!user && user._id?.toString() === post.postedBy.toString();
-  if (!post.approved && !isOwner && !isAdmin(user)) notFound();
+  if (!post.approved && !isOwner && !isStaff(user)) notFound();
 
   if (post.approved && !isOwner) await incrementViews(slug);
 

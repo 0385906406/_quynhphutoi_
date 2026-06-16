@@ -35,10 +35,10 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
     }
   }
 
-  function toggleRole(r: UserRow) {
-    const next = r.role === "admin" ? "user" : "admin";
+  function changeRole(r: UserRow, next: UserRow["role"]) {
+    if (next === r.role) return;
     if (r.id === me) { toast.error("Không thể tự đổi quyền của chính mình."); return; }
-    if (next === "admin" && !confirm(`Cấp quyền ADMIN cho ${r.email}?`)) return;
+    if (next === "admin" && !confirm(`Cấp quyền ADMIN (toàn quyền) cho ${r.email}?`)) return;
     patch(r, { role: next }, { role: next });
   }
   function toggleVerified(r: UserRow) { patch(r, { verified: !r.verified }, { verified: !r.verified }); }
@@ -59,6 +59,7 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
         <select className="qp-select" style={{ maxWidth: 200 }} value={fRole} onChange={(e) => setFRole(e.target.value)}>
           <option value="">Tất cả vai trò</option>
           <option value="admin">Admin</option>
+          <option value="editor">Biên tập viên</option>
           <option value="user">Người dùng</option>
         </select>
         <span className="qp-admin-toolbar__spacer" />
@@ -78,9 +79,18 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
                   <td><b>{r.email}</b>{r.id === me && <> <span className="qp-badge-g4">Bạn</span></>}</td>
                   <td>{r.name}</td>
                   <td>
-                    <button type="button" className={`qp-acc-badge is-${r.role === "admin" ? "active" : "hidden"}`} style={{ border: 0, cursor: "pointer" }} onClick={() => toggleRole(r)} title="Bấm để đổi vai trò">
-                      {r.role === "admin" ? "Admin" : "Người dùng"}
-                    </button>
+                    <select
+                      className="qp-select"
+                      style={{ maxWidth: 170 }}
+                      value={r.role}
+                      disabled={r.id === me}
+                      onChange={(e) => changeRole(r, e.target.value as UserRow["role"])}
+                      title={r.id === me ? "Không thể tự đổi quyền của mình" : "Đổi vai trò"}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="editor">Biên tập viên</option>
+                      <option value="user">Người dùng</option>
+                    </select>
                   </td>
                   <td>
                     <button type="button" className={`qp-acc-badge is-${r.verified ? "active" : "pending"}`} style={{ border: 0, cursor: "pointer" }} onClick={() => toggleVerified(r)} title="Bấm để đổi trạng thái xác minh">

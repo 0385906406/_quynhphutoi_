@@ -2,7 +2,7 @@
 // Guard tập trung: chưa đăng nhập / không phải admin → đẩy về trang đăng nhập.
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { isStaff } from "@/lib/users";
 import { countPendingJobs } from "@/lib/jobs";
 import { countPending as countPendingLostFound } from "@/lib/lostfound";
 import { countPendingClassifieds } from "@/lib/classifieds";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  if (!isAdmin(user)) redirect("/dang-nhap?next=/admin");
+  if (!isStaff(user)) redirect("/dang-nhap?next=/admin");
 
   const [jb, lf, mb, settings] = await Promise.all([
     countPendingJobs(),
@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="qp-admin-shell">
-      <AdminSidebar counts={counts} logo={settings.siteLogo || undefined} />
+      <AdminSidebar counts={counts} logo={settings.siteLogo || undefined} role={user!.role ?? "user"} />
       <div className="qp-admin-main">
         <AdminTopbar name={user!.name} />
         <div className="qp-admin-content">{children}</div>

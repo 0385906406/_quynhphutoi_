@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 
 export const metadata: Metadata = { title: "Danh mục — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-export default function AdminCategoriesPage() {
+export default async function AdminCategoriesPage() {
+  await requireAdminPage();
   return (
     <>
       <div className="qp-admin-head">

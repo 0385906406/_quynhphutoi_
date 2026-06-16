@@ -137,7 +137,7 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         {tab === "security" && (
           <Card title="Bảo mật & tài khoản">
             <Field label={'reCAPTCHA v2 (ô tick "Tôi không phải robot")'} hint="Cấu hình bằng biến môi trường NEXT_PUBLIC_RECAPTCHA_SITE_KEY và RECAPTCHA_SECRET_KEY. Chưa đặt khóa thì các form vẫn gửi được (bỏ qua kiểm tra).">
-              <span className="type-body-small" style={{ opacity: 0.7 }}>Ô tick sẽ tự hiện trên các form khi đã cấu hình khóa.</span>
+              <span className="type-body-small" style={{ opacity: 0.7 }}>Form đăng ký / quên mật khẩu / đặt lại mật khẩu luôn yêu cầu ô tick. Các form còn lại chỉ hiện ô tick khi phát hiện thao tác bất thường (cùng một IP gửi quá nhiều lần trong thời gian ngắn).</span>
             </Field>
             <div style={{ marginTop: 8 }}>
               <Toggle k="registerEnabled" label="Cho phép đăng ký tài khoản mới" desc="Tắt để tạm dừng nhận tài khoản mới." />

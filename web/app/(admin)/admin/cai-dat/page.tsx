@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { getSettings } from "@/lib/settings";
 import { SettingsManager } from "@/components/admin/SettingsManager";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = { title: "Cài đặt — Quản trị", robot
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
+  await requireAdminPage();
   const settings = await getSettings();
   return (
     <>

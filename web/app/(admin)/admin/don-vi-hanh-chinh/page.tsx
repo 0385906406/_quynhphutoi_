@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin";
 import { listAdminUnits, toAdminUnitRow } from "@/lib/admin-units";
 import { AdminUnitManager } from "@/components/admin/AdminUnitManager";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = { title: "Đơn vị hành chính — Quản t
 export const dynamic = "force-dynamic";
 
 export default async function AdminUnitsPage() {
+  await requireAdminPage();
   const docs = await listAdminUnits();
   const rows = docs.map(toAdminUnitRow);
   return (

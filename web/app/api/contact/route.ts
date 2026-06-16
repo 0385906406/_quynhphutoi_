@@ -4,7 +4,7 @@ import { createContact } from "@/lib/contact";
 import { notifyAdmins } from "@/lib/notifications";
 import { stripHtml } from "@/lib/strip-html";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { adaptiveRecaptcha } from "@/lib/recaptcha";
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
@@ -12,9 +12,8 @@ export async function POST(req: Request) {
   if (!rl.ok) return tooMany(rl.retryAfter, "Bạn gửi liên hệ quá nhiều lần. Vui lòng thử lại sau.");
 
   const b = await req.json().catch(() => ({}));
-  if (!(await verifyRecaptcha(b.recaptchaToken))) {
-    return NextResponse.json({ error: "Xác thực reCAPTCHA thất bại, vui lòng thử lại." }, { status: 403 });
-  }
+  const cap = await adaptiveRecaptcha(req, "contact", b.recaptchaToken);
+  if (cap) return cap;
   const name = stripHtml(String(b.name ?? "")).trim();
   const email = String(b.email ?? "").trim();
   const message = stripHtml(String(b.message ?? "")).trim();

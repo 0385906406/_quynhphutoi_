@@ -1,6 +1,6 @@
 // Admin: liệt kê (GET) & tạo (POST) trường học.
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireStaff } from "@/lib/admin-guard";
 import { listSchools, createSchool, toSchoolRow, SCHOOL_LEVELS, type SchoolLevel, type SchoolType } from "@/lib/schools";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
@@ -10,14 +10,14 @@ const TYPES: SchoolType[] = ["cong-lap", "tu-thuc", "dan-lap", "gdnn-gdtx"];
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
 export async function GET() {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const docs = await listSchools({});
   return NextResponse.json({ items: docs.map(toSchoolRow) });
 }
 
 export async function POST(req: Request) {
-  const g = await requireAdmin();
+  const g = await requireStaff();
   if (g instanceof NextResponse) return g;
   const b = await req.json().catch(() => ({}));
 
