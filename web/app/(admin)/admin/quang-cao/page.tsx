@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { listAllAds } from "@/lib/ads";
 import { getSettings } from "@/lib/settings";
+import { getPageSeoConfig } from "@/lib/page-seo";
+import { ModuleTabs } from "@/components/admin/ModuleTabs";
 import { AdManager, type AdRow } from "@/components/ads/AdManager";
 
 export const metadata: Metadata = { title: "Quản lý quảng cáo — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function AdminAdsPage() {
-  const [docs, settings] = await Promise.all([listAllAds(), getSettings()]);
+  const [docs, settings, pageSeo] = await Promise.all([listAllAds(), getSettings(), getPageSeoConfig()]);
   const initial: AdRow[] = docs.map((a) => ({
     id: a._id!.toString(), advertiser: a.advertiser, title: a.title, description: a.description ?? "",
     imageDesktop: a.imageDesktop, imageMobile: a.imageMobile ?? "", images: a.images ?? [],
@@ -25,7 +27,9 @@ export default async function AdminAdsPage() {
         <h1 className="type-h1">Quản lý quảng cáo</h1>
         <p className="qp-admin-head__desc">Thêm banner/quảng cáo của nhãn hàng, chọn vị trí hiển thị và theo dõi lượt xem · click.</p>
       </div>
-      <AdManager initial={initial} adMaxImages={settings.adMaxImages} />
+      <ModuleTabs pageKey="/quang-cao" pageLabel="Quảng cáo" listLabel="Danh sách quảng cáo" seoInitial={pageSeo["/quang-cao"] ?? {}}>
+        <AdManager initial={initial} adMaxImages={settings.adMaxImages} />
+      </ModuleTabs>
     </>
   );
 }

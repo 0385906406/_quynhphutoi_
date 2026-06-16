@@ -34,6 +34,13 @@ const GROUPS: Group[] = [
     ],
   },
   {
+    title: "Trang giới thiệu",
+    items: [
+      { href: "/admin/tong-quan", label: "Tổng quan", icon: "globe" },
+      { href: "/admin/sap-nhap", label: "Sáp nhập 2025", icon: "map" },
+    ],
+  },
+  {
     title: "Danh mục & dữ liệu",
     items: [
       { href: "/admin/danh-muc", label: "Danh mục", icon: "folder" },
@@ -44,7 +51,6 @@ const GROUPS: Group[] = [
     title: "Hệ thống",
     items: [
       { href: "/admin/trang-chu", label: "Trang chủ", icon: "layout" },
-      { href: "/admin/seo", label: "SEO từng trang", icon: "globe" },
       { href: "/admin/affiliate", label: "Affiliate Shopee", icon: "cart" },
       { href: "/admin/nguoi-dung", label: "Người dùng", icon: "users" },
       { href: "/admin/lien-he", label: "Liên hệ / Phản ánh", icon: "mail" },
