@@ -15,7 +15,7 @@ type ExternalItem = {
 export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleRow[]) => void }) {
   const [show, setShow] = useState(false);
   useModalDismiss(show, () => setShow(false));
-  const [q, setQ] = useState("Quỳnh Phụ");
+  const [q, setQ] = useState("");
   const [items, setItems] = useState<ExternalItem[]>([]);
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
@@ -105,7 +105,7 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
               >
                 <input
                   className="qp-input qp-admin-toolbar__search"
-                  placeholder="Từ khoá tìm tin… (VD: Quỳnh Phụ)"
+                  placeholder="Từ khoá lọc… (để trống = tin mới nhất)"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                 />

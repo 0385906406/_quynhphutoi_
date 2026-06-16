@@ -144,7 +144,7 @@ export function JobBrowser({
         <button type="button" className="qp-btn-primary qp-lf-post-btn" onClick={() => setPostOpen(true)}>+ Đăng tin tuyển dụng</button>
       </div>
 
-      <form className="qp-toolbar qp-school-toolbar qp-lf-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
+      <form className="qp-toolbar qp-school-toolbar qp-lf-toolbar qp-job-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
         <div className="qp-toolbar__search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
           <input type="search" placeholder="Tìm vị trí, công ty…" aria-label="Tìm việc" value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
@@ -152,8 +152,28 @@ export function JobBrowser({
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Ngành nghề</span><Combobox options={indOptions} value={industry} onChange={(v) => { setIndustry(v); reset(); }} placeholder="Tất cả ngành" searchPlaceholder="Tìm ngành…" /></div>
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Loại hình</span><Combobox options={typeOptions} value={jobType} onChange={(v) => { setJobType(v); reset(); }} placeholder="Tất cả loại hình" searchPlaceholder="Tìm…" /></div>
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Xã / Thị trấn</span><Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); reset(); }} placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã…" /></div>
-        <div className="qp-toolbar__field"><span className="qp-toolbar__label">Tuổi của bạn</span><input type="number" inputMode="numeric" min={0} max={100} className="qp-input" value={age} onChange={(e) => { setAge(e.target.value); reset(); }} placeholder="VD: 25" aria-label="Lọc theo tuổi của bạn" /></div>
+        <div className="qp-toolbar__field qp-toolbar__field--age">
+          <span className="qp-toolbar__label">Tuổi của bạn</span>
+          <div className={`qp-agefield${age.trim() ? " is-filled" : ""}`}>
+            <span className="qp-agefield__icon"><User /></span>
+            <input
+              type="number" inputMode="numeric" min={0} max={100}
+              className="qp-agefield__input" value={age}
+              onChange={(e) => { setAge(e.target.value); reset(); }}
+              placeholder="VD: 25" aria-label="Lọc theo tuổi của bạn"
+            />
+            <span className="qp-agefield__suffix">tuổi</span>
+            {age.trim() !== "" && (
+              <button type="button" className="qp-agefield__clear" aria-label="Bỏ lọc tuổi" onClick={() => { setAge(""); reset(); }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M4 4l8 8M12 4l-8 8" /></svg>
+              </button>
+            )}
+          </div>
+        </div>
       </form>
+      {age.trim() !== "" && !Number.isNaN(Number(age)) && (
+        <p className="qp-job-agehint">Đang hiển thị việc phù hợp với <b>{Number(age)} tuổi</b> — gồm cả tin không yêu cầu độ tuổi.</p>
+      )}
 
       <div className="qp-newsgrid-head">
         <span className="type-tag qp-sechead__eyebrow">{isPending ? "Tin của bạn" : "Tin tuyển dụng"}</span>

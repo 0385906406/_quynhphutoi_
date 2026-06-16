@@ -47,11 +47,15 @@ export type AppSettings = {
   siteFavicon: string;            // logo nhỏ / icon trên tab trình duyệt. Trống = dùng siteLogo rồi mặc định
 
   // --- Nguồn tin ngoài (nút "Tạo tin từ nguồn ngoài" ở admin Tin tức) ---
-  newsImportEnabled: boolean;     // bật tính năng import; cần có newsApiKey mới dùng được
+  newsImportEnabled: boolean;     // bật tính năng import
+  newsSourceType: "rss" | "newsapi" | "gnews"; // nguồn lấy tin: RSS báo VN (free, prod) · NewsAPI (free chỉ localhost) · GNews (free chạy prod)
+  newsRssFeeds: string;           // danh sách link RSS (mỗi dòng 1 link) — dùng khi newsSourceType="rss"
   newsApiKey: string;             // khoá API (NewsAPI). Để trống = lấy từ env NEWS_API_KEY
   newsApiUrl: string;             // endpoint (để trống = NewsAPI mặc định)
-  newsApiQuery: string;           // từ khoá tìm mặc định khi mở modal
-  newsApiKeySet?: boolean;        // SUY DIỄN (không lưu DB): đã có khoá lưu chưa — để UI báo "đã lưu"
+  newsApiQuery: string;           // từ khoá tìm/lọc mặc định khi mở modal
+  newsGnewsKey: string;           // khoá API (GNews.io). Để trống = lấy từ env GNEWS_API_KEY
+  newsApiKeySet?: boolean;        // SUY DIỄN (không lưu DB): đã có khoá NewsAPI chưa — để UI báo "đã lưu"
+  newsGnewsKeySet?: boolean;      // SUY DIỄN (không lưu DB): đã có khoá GNews chưa
 };
 
 const DEFAULTS: AppSettings = {
@@ -93,9 +97,16 @@ const DEFAULTS: AppSettings = {
   siteFavicon: "",
 
   newsImportEnabled: !!process.env.NEWS_API_KEY,
+  newsSourceType: "rss",
+  newsRssFeeds: [
+    "https://vnexpress.net/rss/thoi-su.rss",
+    "https://dantri.com.vn/rss/home.rss",
+    "https://tuoitre.vn/rss/tin-moi-nhat.rss",
+  ].join("\n"),
   newsApiKey: "",
   newsApiUrl: process.env.NEWS_API_URL || "",
   newsApiQuery: process.env.NEWS_API_QUERY || "Quỳnh Phụ",
+  newsGnewsKey: "",
 };
 
 type SettingsDoc = { _id: string; values: Partial<AppSettings> };
@@ -116,7 +127,13 @@ async function readSettings(): Promise<AppSettings> {
 
 // Che khoá bí mật trước khi đẩy ra ngoài (client / trang public truyền settings xuống).
 // Kèm cờ suy diễn newsApiKeySet để UI biết "đã có khoá lưu" mà không cần lộ khoá thật.
-const redact = (s: AppSettings): AppSettings => ({ ...s, newsApiKey: "", newsApiKeySet: !!s.newsApiKey });
+const redact = (s: AppSettings): AppSettings => ({
+  ...s,
+  newsApiKey: "",
+  newsApiKeySet: !!s.newsApiKey,
+  newsGnewsKey: "",
+  newsGnewsKeySet: !!s.newsGnewsKey,
+});
 
 // Bản DÙNG CHUNG — đã che newsApiKey. Mọi trang/route public dùng hàm này (an toàn).
 export async function getSettings(): Promise<AppSettings> {
@@ -177,11 +194,16 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     siteFavicon: str(patch.siteFavicon ?? c.siteFavicon, 500, c.siteFavicon),
 
     newsImportEnabled: bool(patch.newsImportEnabled, c.newsImportEnabled),
+    newsSourceType: patch.newsSourceType === "rss" || patch.newsSourceType === "newsapi" || patch.newsSourceType === "gnews"
+      ? patch.newsSourceType : c.newsSourceType,
+    newsRssFeeds: str(patch.newsRssFeeds ?? c.newsRssFeeds, 2000, c.newsRssFeeds),
     // Ô khoá để TRỐNG = giữ khoá hiện tại (không bao giờ gửi khoá thật xuống client).
     newsApiKey: typeof patch.newsApiKey === "string" && patch.newsApiKey.trim()
       ? patch.newsApiKey.trim().slice(0, 200) : c.newsApiKey,
     newsApiUrl: str(patch.newsApiUrl ?? c.newsApiUrl, 300, c.newsApiUrl),
     newsApiQuery: str(patch.newsApiQuery ?? c.newsApiQuery, 120, c.newsApiQuery),
+    newsGnewsKey: typeof patch.newsGnewsKey === "string" && patch.newsGnewsKey.trim()
+      ? patch.newsGnewsKey.trim().slice(0, 200) : c.newsGnewsKey,
   };
   if (next.postCooldownMax < next.postCooldownMin) next.postCooldownMax = next.postCooldownMin;
   await (await col()).updateOne({ _id: "app" }, { $set: { values: next } }, { upsert: true });

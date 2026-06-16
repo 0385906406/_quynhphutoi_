@@ -208,27 +208,78 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         )}
 
         {tab === "news" && (
-          <Card title="Tạo tin từ nguồn ngoài" desc="Bật để hiện nút “Tạo tin từ nguồn ngoài” ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản. Mặc định dùng NewsAPI.org — lấy khoá miễn phí tại newsapi.org/register.">
-            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc="Phải BẬT công tắc này VÀ có khoá API thì nút “Tạo tin từ nguồn ngoài” mới hiện ở trang Tin tức." />
+          <Card title="Tạo tin từ nguồn ngoài" desc="Bật để hiện nút “Tạo tin từ nguồn ngoài” ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản.">
+            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc="Phải BẬT công tắc này VÀ cấu hình nguồn bên dưới thì nút “Tạo tin từ nguồn ngoài” mới hiện ở trang Tin tức." />
+
             <div style={{ marginTop: 16 }}>
-              <Field label="Khoá API (NewsAPI key)" hint="Khoá lưu phía máy chủ và KHÔNG gửi lại về trình duyệt vì lý do bảo mật. Để trống = giữ khoá đã lưu (hoặc dùng env NEWS_API_KEY nếu chưa lưu). Nhập khoá mới để thay.">
-                {form.newsApiKeySet && (
-                  <span className="qp-acc-badge is-active" style={{ marginBottom: 8, display: "inline-flex" }}>🔑 Đã lưu khoá API</span>
-                )}
-                <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.newsApiKey} onChange={txt("newsApiKey")} placeholder={form.newsApiKeySet ? "Đã có khoá • nhập để thay khoá mới" : "Dán khoá API tại đây…"} />
+              <Field label="Nguồn lấy tin" hint="RSS báo VN: miễn phí, không cần khoá, chạy trên web thật — khuyến nghị. GNews: cần khoá nhưng gói free chạy được web thật (tìm theo từ khoá toàn web). NewsAPI: cần khoá, gói free CHỈ chạy localhost.">
+                <select className="qp-input" value={form.newsSourceType} onChange={(e) => set("newsSourceType", e.target.value as never)}>
+                  <option value="rss">RSS báo Việt Nam (miễn phí, chạy trên web thật)</option>
+                  <option value="gnews">GNews.io (cần khoá API — free 100 lượt/ngày, chạy web thật)</option>
+                  <option value="newsapi">NewsAPI.org (cần khoá API — free chỉ chạy localhost)</option>
+                </select>
               </Field>
-              <div className="qp-acc-grid2">
-                <Field label="Từ khoá tìm mặc định" hint="Hiển thị sẵn khi mở modal chọn tin.">
-                  <input maxLength={120} className="qp-input" value={form.newsApiQuery} onChange={txt("newsApiQuery")} placeholder="Quỳnh Phụ" />
-                </Field>
-                <Field label="Endpoint (tuỳ chọn)" hint="Để trống = NewsAPI mặc định. Chỉ đổi nếu dùng proxy/API tương thích.">
-                  <input maxLength={300} className="qp-input" value={form.newsApiUrl} onChange={txt("newsApiUrl")} placeholder="https://newsapi.org/v2/everything" />
-                </Field>
-              </div>
-              <p className="qp-form-tip" style={{ marginTop: 12 }}>
-                Lưu ý: gói miễn phí (Developer) của NewsAPI chỉ chạy ở môi trường localhost/dev, không dùng được trên domain production.
-              </p>
             </div>
+
+            {form.newsSourceType === "rss" && (
+              <div style={{ marginTop: 16 }}>
+                <Field label="Danh sách RSS (mỗi dòng 1 link)" hint="Dán link RSS của các báo bạn muốn lấy tin. Có thể thêm/bớt tuỳ ý. VD: https://vnexpress.net/rss/thoi-su.rss">
+                  <textarea
+                    className="qp-textarea"
+                    rows={5}
+                    value={form.newsRssFeeds}
+                    onChange={(e) => set("newsRssFeeds", e.target.value as never)}
+                    placeholder={"https://vnexpress.net/rss/thoi-su.rss\nhttps://dantri.com.vn/rss/home.rss\nhttps://tuoitre.vn/rss/tin-moi-nhat.rss"}
+                    style={{ fontFamily: "var(--font-mono, monospace)", fontSize: 13 }}
+                  />
+                </Field>
+                <Field label="Từ khoá lọc (tuỳ chọn)" hint="Để trống = lấy tin mới nhất từ các báo. Nhập từ khoá (VD: Quỳnh Phụ, Thái Bình) để chỉ giữ tin có chứa từ đó.">
+                  <input maxLength={120} className="qp-input" value={form.newsApiQuery} onChange={txt("newsApiQuery")} placeholder="Để trống = tin mới nhất" />
+                </Field>
+                <p className="qp-form-tip" style={{ marginTop: 12 }}>
+                  Mẹo: dùng RSS chuyên mục để tin sát nhu cầu hơn (thời sự, địa phương…). Báo lớn thường có trang “RSS” liệt kê link từng chuyên mục.
+                </p>
+              </div>
+            )}
+
+            {form.newsSourceType === "gnews" && (
+              <div style={{ marginTop: 16 }}>
+                <Field label="Khoá API (GNews key)" hint="Khoá lưu phía máy chủ và KHÔNG gửi lại về trình duyệt vì lý do bảo mật. Để trống = giữ khoá đã lưu (hoặc dùng env GNEWS_API_KEY nếu chưa lưu). Nhập khoá mới để thay. Lấy khoá miễn phí tại gnews.io (đăng ký → Dashboard → API key).">
+                  {form.newsGnewsKeySet && (
+                    <span className="qp-acc-badge is-active" style={{ marginBottom: 8, display: "inline-flex" }}>🔑 Đã lưu khoá API</span>
+                  )}
+                  <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.newsGnewsKey} onChange={txt("newsGnewsKey")} placeholder={form.newsGnewsKeySet ? "Đã có khoá • nhập để thay khoá mới" : "Dán khoá API GNews tại đây…"} />
+                </Field>
+                <Field label="Từ khoá tìm (tuỳ chọn)" hint="Để trống = tin mới nhất ở Việt Nam (top headlines). Nhập từ khoá (VD: Quỳnh Phụ, Thái Bình) để tìm theo nội dung trên toàn web báo chí.">
+                  <input maxLength={120} className="qp-input" value={form.newsApiQuery} onChange={txt("newsApiQuery")} placeholder="Để trống = tin mới nhất VN" />
+                </Field>
+                <p className="qp-form-tip" style={{ marginTop: 12 }}>
+                  Lưu ý: gói miễn phí GNews giới hạn 100 lượt gọi/ngày và tối đa 10 bài mỗi lượt — đủ dùng cho việc tạo nháp thủ công.
+                </p>
+              </div>
+            )}
+
+            {form.newsSourceType === "newsapi" && (
+              <div style={{ marginTop: 16 }}>
+                <Field label="Khoá API (NewsAPI key)" hint="Khoá lưu phía máy chủ và KHÔNG gửi lại về trình duyệt vì lý do bảo mật. Để trống = giữ khoá đã lưu (hoặc dùng env NEWS_API_KEY nếu chưa lưu). Nhập khoá mới để thay. Lấy khoá tại newsapi.org/register.">
+                  {form.newsApiKeySet && (
+                    <span className="qp-acc-badge is-active" style={{ marginBottom: 8, display: "inline-flex" }}>🔑 Đã lưu khoá API</span>
+                  )}
+                  <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.newsApiKey} onChange={txt("newsApiKey")} placeholder={form.newsApiKeySet ? "Đã có khoá • nhập để thay khoá mới" : "Dán khoá API tại đây…"} />
+                </Field>
+                <div className="qp-acc-grid2">
+                  <Field label="Từ khoá tìm mặc định" hint="Hiển thị sẵn khi mở modal chọn tin.">
+                    <input maxLength={120} className="qp-input" value={form.newsApiQuery} onChange={txt("newsApiQuery")} placeholder="Quỳnh Phụ" />
+                  </Field>
+                  <Field label="Endpoint (tuỳ chọn)" hint="Để trống = NewsAPI mặc định. Chỉ đổi nếu dùng proxy/API tương thích.">
+                    <input maxLength={300} className="qp-input" value={form.newsApiUrl} onChange={txt("newsApiUrl")} placeholder="https://newsapi.org/v2/everything" />
+                  </Field>
+                </div>
+                <p className="qp-form-tip" style={{ marginTop: 12 }}>
+                  Lưu ý: gói miễn phí (Developer) của NewsAPI chỉ chạy ở môi trường localhost/dev, không dùng được trên domain production.
+                </p>
+              </div>
+            )}
           </Card>
         )}
 
