@@ -42,11 +42,16 @@ export type AppSettings = {
   seoVerificationGoogle: string;  // mã xác minh Google Search Console
   seoVerificationBing: string;    // mã xác minh Bing Webmaster
 
+  // --- Thương hiệu (logo) ---
+  siteLogo: string;               // logo chính (header/footer). Trống = logo mặc định BRAND.logo
+  siteFavicon: string;            // logo nhỏ / icon trên tab trình duyệt. Trống = dùng siteLogo rồi mặc định
+
   // --- Nguồn tin ngoài (nút "Tạo tin từ nguồn ngoài" ở admin Tin tức) ---
   newsImportEnabled: boolean;     // bật tính năng import; cần có newsApiKey mới dùng được
   newsApiKey: string;             // khoá API (NewsAPI). Để trống = lấy từ env NEWS_API_KEY
   newsApiUrl: string;             // endpoint (để trống = NewsAPI mặc định)
   newsApiQuery: string;           // từ khoá tìm mặc định khi mở modal
+  newsApiKeySet?: boolean;        // SUY DIỄN (không lưu DB): đã có khoá lưu chưa — để UI báo "đã lưu"
 };
 
 const DEFAULTS: AppSettings = {
@@ -84,6 +89,9 @@ const DEFAULTS: AppSettings = {
   seoVerificationGoogle: "",
   seoVerificationBing: "",
 
+  siteLogo: "",
+  siteFavicon: "",
+
   newsImportEnabled: !!process.env.NEWS_API_KEY,
   newsApiKey: "",
   newsApiUrl: process.env.NEWS_API_URL || "",
@@ -107,7 +115,8 @@ async function readSettings(): Promise<AppSettings> {
 }
 
 // Che khoá bí mật trước khi đẩy ra ngoài (client / trang public truyền settings xuống).
-const redact = (s: AppSettings): AppSettings => ({ ...s, newsApiKey: "" });
+// Kèm cờ suy diễn newsApiKeySet để UI biết "đã có khoá lưu" mà không cần lộ khoá thật.
+const redact = (s: AppSettings): AppSettings => ({ ...s, newsApiKey: "", newsApiKeySet: !!s.newsApiKey });
 
 // Bản DÙNG CHUNG — đã che newsApiKey. Mọi trang/route public dùng hàm này (an toàn).
 export async function getSettings(): Promise<AppSettings> {
@@ -163,6 +172,9 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     seoDefaultOgImage: str(patch.seoDefaultOgImage ?? c.seoDefaultOgImage, 500, c.seoDefaultOgImage),
     seoVerificationGoogle: str(patch.seoVerificationGoogle ?? c.seoVerificationGoogle, 200, c.seoVerificationGoogle),
     seoVerificationBing: str(patch.seoVerificationBing ?? c.seoVerificationBing, 200, c.seoVerificationBing),
+
+    siteLogo: str(patch.siteLogo ?? c.siteLogo, 500, c.siteLogo),
+    siteFavicon: str(patch.siteFavicon ?? c.siteFavicon, 500, c.siteFavicon),
 
     newsImportEnabled: bool(patch.newsImportEnabled, c.newsImportEnabled),
     // Ô khoá để TRỐNG = giữ khoá hiện tại (không bao giờ gửi khoá thật xuống client).

@@ -4,14 +4,16 @@
 import { useState } from "react";
 import type { AppSettings } from "@/lib/settings";
 import { useToast } from "@/components/common/Toast";
+import { ImageUploader } from "@/components/common/ImageUploader";
 
-type Tab = "post" | "comment" | "security" | "contact" | "seo" | "news" | "data";
+type Tab = "post" | "comment" | "security" | "contact" | "seo" | "brand" | "news" | "data";
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "post", label: "Đăng tin", icon: "📝" },
   { key: "comment", label: "Bình luận & tương tác", icon: "💬" },
   { key: "security", label: "Bảo mật & tài khoản", icon: "🔒" },
   { key: "contact", label: "Liên hệ & chung", icon: "📞" },
   { key: "seo", label: "SEO toàn site", icon: "🔎" },
+  { key: "brand", label: "Thương hiệu (Logo)", icon: "🖼️" },
   { key: "news", label: "Nguồn tin ngoài", icon: "🌐" },
   { key: "data", label: "Dữ liệu mẫu", icon: "🌱" },
 ];
@@ -192,12 +194,28 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
           </>
         )}
 
+        {tab === "brand" && (
+          <Card title="Logo thương hiệu" desc="Tải lên logo hiển thị ở đầu trang (header), chân trang và trang đăng nhập; cùng logo nhỏ làm icon trên tab trình duyệt. Để trống = dùng logo mặc định. Áp dụng ngay cho lượt truy cập tiếp theo (icon tab có thể cần tải lại trang do trình duyệt cache).">
+            <div className="qp-acc-grid2">
+              <Field label="Logo chính" hint="Hiển thị ở header/footer/trang đăng nhập. Nên dùng ảnh vuông hoặc gần vuông, nền trong (PNG).">
+                <ImageUploader value={form.siteLogo ? [form.siteLogo] : []} onChange={(a) => set("siteLogo", (a[0] ?? "") as never)} max={1} />
+              </Field>
+              <Field label="Logo nhỏ (icon tab trình duyệt)" hint="Dùng làm favicon trên tab & PWA. Nên vuông ~512×512, PNG nền trong. Để trống = dùng Logo chính.">
+                <ImageUploader value={form.siteFavicon ? [form.siteFavicon] : []} onChange={(a) => set("siteFavicon", (a[0] ?? "") as never)} max={1} />
+              </Field>
+            </div>
+          </Card>
+        )}
+
         {tab === "news" && (
           <Card title="Tạo tin từ nguồn ngoài" desc="Bật để hiện nút “Tạo tin từ nguồn ngoài” ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản. Mặc định dùng NewsAPI.org — lấy khoá miễn phí tại newsapi.org/register.">
-            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc="Cần điền Khoá API bên dưới mới dùng được." />
+            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc="Phải BẬT công tắc này VÀ có khoá API thì nút “Tạo tin từ nguồn ngoài” mới hiện ở trang Tin tức." />
             <div style={{ marginTop: 16 }}>
               <Field label="Khoá API (NewsAPI key)" hint="Khoá lưu phía máy chủ và KHÔNG gửi lại về trình duyệt vì lý do bảo mật. Để trống = giữ khoá đã lưu (hoặc dùng env NEWS_API_KEY nếu chưa lưu). Nhập khoá mới để thay.">
-                <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.newsApiKey} onChange={txt("newsApiKey")} placeholder="Để trống = giữ khoá hiện tại • nhập để thay" />
+                {form.newsApiKeySet && (
+                  <span className="qp-acc-badge is-active" style={{ marginBottom: 8, display: "inline-flex" }}>🔑 Đã lưu khoá API</span>
+                )}
+                <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.newsApiKey} onChange={txt("newsApiKey")} placeholder={form.newsApiKeySet ? "Đã có khoá • nhập để thay khoá mới" : "Dán khoá API tại đây…"} />
               </Field>
               <div className="qp-acc-grid2">
                 <Field label="Từ khoá tìm mặc định" hint="Hiển thị sẵn khi mở modal chọn tin.">

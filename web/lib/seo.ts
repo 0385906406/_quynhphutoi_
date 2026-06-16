@@ -121,7 +121,7 @@ export function jsonLdOrganization(s?: Partial<AppSettings>) {
     name: SITE.name,
     alternateName: SITE.shortName,
     url: SITE.url,
-    logo: abs(SITE.logo),
+    logo: abs(s?.siteLogo || SITE.logo),
     description: SITE.description,
     areaServed: `${SITE.region}, ${SITE.province}`,
     ...(sameAs.length ? { sameAs } : {}),

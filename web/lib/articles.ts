@@ -209,7 +209,7 @@ export function buildArticleJsonLd(a: ArticleDoc) {
     publisher: {
       "@type": "Organization",
       name: "Cổng thông tin Quỳnh Phụ",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/img/patterns/logo.png` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}${SITE.logo}` },
     },
     articleSection: a.category,
     keywords: (a.seo.keywords?.length ? a.seo.keywords : a.tags).join(", "),

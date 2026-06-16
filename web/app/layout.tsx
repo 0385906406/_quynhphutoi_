@@ -55,6 +55,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = s.seoDefaultOgImage
     ? (s.seoDefaultOgImage.startsWith("http") ? s.seoDefaultOgImage : `${SITE.url}${s.seoDefaultOgImage}`)
     : `${SITE.url}/opengraph-image`;
+  // Icon tab trình duyệt: ưu tiên logo nhỏ, rồi logo chính, cuối cùng là logo mặc định.
+  const iconUrl = s.siteFavicon || s.siteLogo || "/img/patterns/logo.png";
   const verification =
     s.seoVerificationGoogle || s.seoVerificationBing
       ? {
@@ -72,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords,
     alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
     manifest: "/manifest.webmanifest",
-    icons: { icon: "/img/patterns/logo.png", apple: "/img/patterns/logo.png", shortcut: "/img/patterns/logo.png" },
+    icons: { icon: iconUrl, apple: iconUrl, shortcut: iconUrl },
     ...(verification ? { verification } : {}),
     robots: {
       index: true, follow: true,

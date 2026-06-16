@@ -7,17 +7,18 @@ import { BackToTop } from "@/components/layout/BackToTop";
 import { StickyAdBar } from "@/components/ads/StickyAdBar";
 import { getSession } from "@/lib/auth";
 import { isCurrentUserAdmin } from "@/lib/admin";
+import { getSettings } from "@/lib/settings";
 
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [user, admin] = await Promise.all([getSession(), isCurrentUserAdmin()]);
+  const [user, admin, settings] = await Promise.all([getSession(), isCurrentUserAdmin(), getSettings()]);
   return (
     <>
       <a className="skip-link" href="#main">
         Bỏ qua tới nội dung
       </a>
-      <TopBar user={user} isAdmin={admin} />
+      <TopBar user={user} isAdmin={admin} logo={settings.siteLogo || undefined} />
       <Marquee />
       <main id="main">{children}</main>
       <Footer />

@@ -55,7 +55,7 @@ function MenuIcon({ name }: { name?: string }) {
   }
 }
 
-export function TopBar({ user, isAdmin = false }: { user: SessionUser | null; isAdmin?: boolean }) {
+export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | null; isAdmin?: boolean; logo?: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -126,7 +126,7 @@ export function TopBar({ user, isAdmin = false }: { user: SessionUser | null; is
       <div className="container-wide qp-topbar__inner">
         <Link className="qp-brand" href="/" aria-label={`${BRAND.name} — Trang chủ`}>
           <span className="qp-brand__mark">
-            <Image src={BRAND.logo} alt="" fill sizes="48px" priority />
+            <Image src={logo || BRAND.logo} alt="" fill sizes="48px" priority />
           </span>
           <span className="qp-brand__text">
             <span className="qp-brand__name">{BRAND.name}</span>

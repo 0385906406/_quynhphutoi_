@@ -44,7 +44,7 @@ export async function Footer() {
           <div className="qp-footer__brand">
             <div className="qp-brand">
               <span className="qp-brand__mark">
-                <Image src={BRAND.logo} alt="" fill sizes="48px" />
+                <Image src={s.siteLogo || BRAND.logo} alt="" fill sizes="48px" />
               </span>
               <span className="qp-brand__text">
                 <span className="qp-brand__name">{BRAND.name}</span>
