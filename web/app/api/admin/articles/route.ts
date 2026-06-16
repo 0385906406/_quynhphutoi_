@@ -26,6 +26,7 @@ export async function POST(req: Request) {
 
   const created = await createArticle({
     title, excerpt: String(b.excerpt || "").trim(), category, categorySlug: b.categorySlug,
+    scope: b.scope === "ngoai-tinh" ? "ngoai-tinh" : "trong-tinh",
     tags: Array.isArray(b.tags) ? b.tags.map((t: unknown) => String(t).trim()).filter(Boolean) : [],
     coverImage: String(b.coverImage || ""), coverAlt: b.coverAlt,
     author: { name: String(b.authorName || "Ban biên tập").trim(), title: b.authorTitle || undefined, avatarUrl: b.authorAvatar || undefined },

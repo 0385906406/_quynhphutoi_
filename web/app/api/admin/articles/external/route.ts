@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       title,
       excerpt: String(it.description || "").trim().slice(0, 300),
       category: "Thông báo",
+      scope: "ngoai-tinh", // tin báo ngoài → mặc định ngoài tỉnh (admin sửa được)
       tags: [],
       coverImage: image,
       coverAlt: image ? title : undefined,

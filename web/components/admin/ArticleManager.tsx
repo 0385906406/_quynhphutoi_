@@ -6,6 +6,7 @@ import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 import type { ArticleRow } from "@/lib/articles";
+import type { ArticleScope } from "@/lib/news";
 import { Pagination } from "@/components/common/Pagination";
 import { usePagination, PageSizeControl } from "@/components/admin/AdminPaging";
 import { RowActions } from "@/components/admin/RowActions";
@@ -15,18 +16,18 @@ import { useToast } from "@/components/common/Toast";
 const CATEGORIES = ["Thông báo", "Đời sống", "Kinh tế", "Giáo dục"];
 
 type Form = {
-  slug: string; title: string; excerpt: string; category: string; tags: string;
+  slug: string; title: string; excerpt: string; category: string; scope: ArticleScope; tags: string;
   coverImage: string; coverAlt: string; authorName: string; authorTitle: string;
   bodyHtml: string; featured: boolean; status: "draft" | "published";
   seoMetaTitle: string; seoMetaDescription: string; seoKeywords: string; seoOgImage: string; seoNoindex: boolean;
 };
 const EMPTY: Form = {
-  slug: "", title: "", excerpt: "", category: "Thông báo", tags: "", coverImage: "", coverAlt: "",
+  slug: "", title: "", excerpt: "", category: "Thông báo", scope: "trong-tinh", tags: "", coverImage: "", coverAlt: "",
   authorName: "Ban biên tập", authorTitle: "", bodyHtml: "", featured: false, status: "draft",
   seoMetaTitle: "", seoMetaDescription: "", seoKeywords: "", seoOgImage: "", seoNoindex: false,
 };
 const toForm = (r: ArticleRow): Form => ({
-  slug: r.slug, title: r.title, excerpt: r.excerpt, category: r.category, tags: (r.tags ?? []).join(", "),
+  slug: r.slug, title: r.title, excerpt: r.excerpt, category: r.category, scope: r.scope, tags: (r.tags ?? []).join(", "),
   coverImage: r.coverImage, coverAlt: r.coverAlt, authorName: r.authorName, authorTitle: r.authorTitle,
   bodyHtml: r.bodyHtml, featured: r.featured, status: r.status,
   seoMetaTitle: r.seo.metaTitle ?? "", seoMetaDescription: r.seo.metaDescription ?? "",
@@ -77,7 +78,7 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
 
   function payload(f: Form) {
     return {
-      title: f.title, excerpt: f.excerpt, category: f.category,
+      title: f.title, excerpt: f.excerpt, category: f.category, scope: f.scope,
       tags: f.tags.split(",").map((t) => t.trim()).filter(Boolean),
       coverImage: f.coverImage, coverAlt: f.coverAlt, authorName: f.authorName, authorTitle: f.authorTitle,
       bodyHtml: f.bodyHtml, featured: f.featured, status: f.status,
@@ -101,7 +102,7 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
       if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra."); return; }
       if (editing) {
         setRows((cur) => cur.map((r) => (r.slug === editing ? ({
-          ...r, title: form.title, excerpt: form.excerpt, category: form.category, tags: body.tags,
+          ...r, title: form.title, excerpt: form.excerpt, category: form.category, scope: form.scope, tags: body.tags,
           coverImage: form.coverImage, coverAlt: form.coverAlt, authorName: form.authorName, authorTitle: form.authorTitle,
           bodyHtml: form.bodyHtml, featured: form.featured, status: form.status,
         }) : r)));
@@ -158,9 +159,14 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
                   <select className="qp-select" value={form.category} onChange={(e) => set("category", e.target.value)}>
                     {catList.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select></div>
-                <div className="qp-form-group"><label className="qp-label">Thẻ (cách nhau dấu phẩy)</label>
-                  <input className="qp-input" value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="VD: Việc làm, Thông báo" /></div>
+                <div className="qp-form-group"><label className="qp-label">Phạm vi <span className="req">*</span></label>
+                  <select className="qp-select" value={form.scope} onChange={(e) => set("scope", e.target.value as ArticleScope)}>
+                    <option value="trong-tinh">Trong tỉnh</option>
+                    <option value="ngoai-tinh">Ngoài tỉnh</option>
+                  </select></div>
               </div>
+              <div className="qp-form-group"><label className="qp-label">Thẻ (cách nhau dấu phẩy)</label>
+                <input className="qp-input" value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="VD: Việc làm, Thông báo" /></div>
               <div className="qp-acc-grid2">
                 <div className="qp-form-group"><label className="qp-label">Tác giả</label>
                   <input className="qp-input" value={form.authorName} onChange={(e) => set("authorName", e.target.value)} /></div>
@@ -229,7 +235,7 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
                     <b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
                     {r.pending && r.postedByName ? <div className="type-body-small text-muted">Người gửi: {r.postedByName}</div> : null}
                   </td>
-                  <td>{r.category}</td>
+                  <td>{r.category}{r.scope === "ngoai-tinh" ? <> <span className="qp-badge-g4">Ngoài tỉnh</span></> : null}</td>
                   <td>
                     {r.pending
                       ? <span className="qp-acc-badge is-pending">Chờ duyệt</span>

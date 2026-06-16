@@ -8,7 +8,7 @@ import { ListPager } from "@/components/common/ListPager";
 import { usePagedList } from "@/lib/use-paged-list";
 import { Combobox } from "@/components/lostfound/Combobox";
 import Image from "next/image";
-import { fmtViews, dateKey, type Article } from "@/lib/news";
+import { fmtViews, dateKey, SCOPE_LABEL, type Article } from "@/lib/news";
 import { NewsCard } from "./NewsCard";
 import { ArticleSubmitModal } from "./ArticleSubmitModal";
 
@@ -78,10 +78,13 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"all" | "cho-duyet">("all");
+  const [scopeTab, setScopeTab] = useState<"all" | "trong-tinh" | "ngoai-tinh">("all");
   const [postOpen, setPostOpen] = useState(false);
   const router = useRouter();
   const isPending = view === "cho-duyet";
 
+  const countLocal = useMemo(() => items.filter((a) => a.scope !== "ngoai-tinh").length, [items]);
+  const countOutside = useMemo(() => items.filter((a) => a.scope === "ngoai-tinh").length, [items]);
   const CATEGORIES = useMemo(() => ["Tất cả", ...Array.from(new Set(items.map((a) => a.category)))], [items]);
   const catOptions = useMemo(() => CATEGORIES.map((c) => ({ value: c, label: c })), [CATEGORIES]);
   const sortOptions = useMemo(() => SORTS.map((s) => ({ value: s.value, label: s.label })), []);
@@ -90,15 +93,16 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
     const q = query.trim().toLowerCase();
     const filtered = items.filter((a) => {
       const okCat = category === "Tất cả" || a.category === category;
+      const okScope = scopeTab === "all" || (scopeTab === "ngoai-tinh" ? a.scope === "ngoai-tinh" : a.scope !== "ngoai-tinh");
       const okQ = !q || a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
-      return okCat && okQ;
+      return okCat && okScope && okQ;
     });
     return [...filtered].sort((x, y) => {
       if (sort === "oldest") return dateKey(x.date) - dateKey(y.date);
       if (sort === "popular") return y.views - x.views;
       return dateKey(y.date) - dateKey(x.date);
     });
-  }, [items, category, sort, query]);
+  }, [items, category, scopeTab, sort, query]);
 
   // Vùng nổi bật & "Đọc nhiều" do admin cấu hình (truyền từ server). Nếu thiếu thì suy diễn tại client.
   const featuredList = featuredItems ?? sorted.slice(0, 4);
@@ -112,7 +116,13 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const pageItems = pager.items;
   const reset = pager.reset;
 
-  const defaultMode = category === "Tất cả" && !query.trim() && pager.page === 1;
+  const defaultMode = scopeTab === "all" && category === "Tất cả" && !query.trim() && pager.page === 1;
+  // Tiêu đề lưới: mặc định / theo phạm vi đang lọc / theo số kết quả.
+  const headingTitle = defaultMode
+    ? "Tất cả tin tức"
+    : scopeTab !== "all" && category === "Tất cả" && !query.trim()
+      ? `Tin ${SCOPE_LABEL[scopeTab].toLowerCase()}`
+      : `${sorted.length} bài viết`;
   const featured = defaultMode ? featuredList[0] : undefined;
   const levelTwo = defaultMode ? featuredList.slice(1, 4) : [];
   const showPopular = defaultMode && popular.length > 0;
@@ -123,8 +133,14 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
       {/* Tabs + nút gửi bài */}
       <div className="qp-lf-head">
         <div className="qp-tabs" role="tablist" aria-label="Lọc tin tức">
-          <button type="button" role="tab" aria-selected={view === "all"} className={`qp-tab${view === "all" ? " is-active" : ""}`} onClick={() => { setView("all"); reset(); }}>
+          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "all"} className={`qp-tab${view === "all" && scopeTab === "all" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("all"); reset(); }}>
             Tất cả tin <span className="qp-tab__count">{items.length}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "trong-tinh"} className={`qp-tab${view === "all" && scopeTab === "trong-tinh" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("trong-tinh"); reset(); }}>
+            Trong tỉnh <span className="qp-tab__count">{countLocal}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "ngoai-tinh"} className={`qp-tab${view === "all" && scopeTab === "ngoai-tinh" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("ngoai-tinh"); reset(); }}>
+            Ngoài tỉnh <span className="qp-tab__count">{countOutside}</span>
           </button>
           {isLoggedIn && (
             <button type="button" role="tab" aria-selected={isPending} className={`qp-tab qp-tab--pending${isPending ? " is-active" : ""}`} onClick={() => { setView("cho-duyet"); reset(); }}>
@@ -202,7 +218,7 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
       {/* Lưới tất cả tin tức */}
       <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">{defaultMode ? "Mới cập nhật" : "Kết quả"}</span>
-        <h2 className="type-h2">{defaultMode ? "Tất cả tin tức" : `${sorted.length} bài viết`}</h2>
+        <h2 className="type-h2">{headingTitle}</h2>
       </div>
 
       {pageItems.length === 0 ? (
