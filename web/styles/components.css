@@ -804,9 +804,9 @@
 .qp-article-hero img { object-fit: cover; }
 /* Bài viết tin tức: cho nội dung lấp đầy cột chính (bỏ giới hạn 720px) */
 .qp-prose.qp-prose--wide { max-width: none; }
-/* Ảnh bài viết trong cột nội dung: vừa phải, không quá cao */
-.qp-lf-main > .qp-article-hero { aspect-ratio: 16 / 8; max-height: 360px; margin-bottom: var(--space-6); }
-@media (max-width: 540px) { .qp-lf-main > .qp-article-hero { aspect-ratio: 16 / 10; max-height: 240px; } }
+/* Ảnh bài viết nằm ở cột phải (trên thẻ tác giả): khớp bề ngang cột, gap do aside lo */
+.qp-lf-aside > .qp-article-hero { aspect-ratio: 16 / 10; margin: 0; }
+@media (max-width: 900px) { .qp-lf-aside > .qp-article-hero { aspect-ratio: 16 / 9; max-height: 320px; } }
 
 /* ============================================================
    PAGE HERO (sáng) — hero trang con (Tin tức…)
@@ -1996,6 +1996,53 @@ a.qp-school-card__name:hover { color: var(--color-teal-dark); }
   /* Trang tìm đồ rơi: 2 bộ lọc xếp dọc full-width + hiện lại nhãn cho rõ ràng */
   .qp-lf-toolbar .qp-toolbar__field { flex: 1 1 100%; }
   .qp-lf-toolbar .qp-toolbar__label { display: block; }
+}
+
+/* ── Bộ lọc "Tuổi của bạn" (trang Việc làm) — ô nhập riêng, gọn & rõ ── */
+.qp-toolbar .qp-toolbar__field--age { flex-shrink: 0; }
+.qp-toolbar .qp-agefield {
+  display: flex; align-items: center; gap: 8px; width: 160px; padding: 7px 10px 7px 12px;
+  background: #fff; border: 1px solid var(--color-gray-border); border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+}
+.qp-toolbar .qp-agefield:focus-within { border-color: var(--color-indigo); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.qp-toolbar .qp-agefield.is-filled { border-color: var(--color-teal); }
+.qp-agefield__icon { display: inline-flex; flex-shrink: 0; color: var(--color-gray-text); }
+.qp-agefield__icon svg { width: 16px; height: 16px; }
+.qp-agefield.is-filled .qp-agefield__icon { color: var(--color-teal); }
+.qp-agefield__input {
+  flex: 1; min-width: 0; width: 100%; border: none; outline: none; background: transparent;
+  text-align: right; font: 600 14px/1.4 var(--font-primary); color: var(--color-navy-deep);
+  -moz-appearance: textfield; appearance: textfield;
+}
+.qp-agefield__input::-webkit-outer-spin-button,
+.qp-agefield__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qp-agefield__input::placeholder { color: #94A3B8; opacity: 0.7; font-weight: 400; }
+.qp-agefield__suffix { flex-shrink: 0; font: 500 12px/1 var(--font-primary); color: var(--color-gray-text); }
+.qp-agefield__clear {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 18px; height: 18px; padding: 0; border: none; cursor: pointer; border-radius: 50%;
+  background: var(--color-navy-pale); color: var(--color-navy);
+  transition: background var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+.qp-agefield__clear:hover { background: var(--color-teal); color: #fff; }
+.qp-agefield__clear svg { width: 11px; height: 11px; }
+/* Dòng gợi ý dưới thanh lọc khi đang lọc theo tuổi */
+.qp-job-agehint {
+  margin: -16px 0 20px; font: 400 13px/1.5 var(--font-primary); color: var(--color-gray-text);
+}
+.qp-job-agehint b { color: var(--color-teal-dark); font-weight: 600; }
+
+/* Toolbar Việc làm có nhiều ô (5 bộ lọc) → cho phép xuống hàng sớm ở màn hình vừa, tránh bó chật */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .qp-job-toolbar { flex-flow: row wrap; align-items: flex-end; }
+  .qp-job-toolbar .qp-toolbar__search { flex: 1 1 100%; }
+  .qp-job-toolbar .qp-toolbar__field { flex: 1 1 auto; }
+  .qp-job-toolbar .qp-combo { width: 100%; }
+  .qp-job-toolbar .qp-agefield { width: 100%; }
+}
+@media (max-width: 767px) {
+  .qp-toolbar .qp-agefield { width: 100%; }
 }
 
 /* Modal đăng tin */

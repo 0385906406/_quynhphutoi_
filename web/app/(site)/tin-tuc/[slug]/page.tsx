@@ -117,10 +117,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <div className="container-wide qp-lf-body">
         <div className="qp-article-layout is-lf">
           <div className="qp-lf-main">
-            <figure className="qp-article-hero">
-              <Image src={a.image} alt={a.title} fill sizes="(max-width:900px) 100vw, 1000px" priority />
-            </figure>
-
             <div className="qp-prose qp-prose--wide">
               {body.map((b, i) => {
                 switch (b.type) {
@@ -162,6 +158,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           </div>
 
           <aside className="qp-lf-aside">
+            <figure className="qp-article-hero">
+              <Image src={a.image} alt={a.title} fill sizes="(max-width:900px) 100vw, 340px" priority />
+            </figure>
+
             <div className="qp-lf-infocard">
               <div className="qp-author">
                 <span className="qp-avatar-initials" aria-hidden>{initials}</span>
