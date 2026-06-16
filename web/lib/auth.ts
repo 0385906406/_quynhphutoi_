@@ -6,10 +6,10 @@ const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "dev-secret-c
 const COOKIE = "qp_session";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 ngày (giây)
 
-export type SessionUser = { id: string; email: string; name: string };
+export type SessionUser = { id: string; email: string; name: string; avatar?: string };
 
 export async function createSession(user: SessionUser) {
-  const token = await new SignJWT({ email: user.email, name: user.name })
+  const token = await new SignJWT({ email: user.email, name: user.name, avatar: user.avatar || "" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setIssuedAt()
@@ -36,6 +36,7 @@ export async function getSession(): Promise<SessionUser | null> {
       id: String(payload.sub ?? ""),
       email: String(payload.email ?? ""),
       name: String(payload.name ?? ""),
+      avatar: payload.avatar ? String(payload.avatar) : undefined,
     };
   } catch {
     return null;

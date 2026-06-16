@@ -5,10 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { NAV_TREE, BRAND, type NavItem } from "@/lib/nav";
+import { cldUrl } from "@/lib/cloudinary-url";
 import { NotificationBell } from "./NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
 
-type SessionUser = { id: string; email: string; name: string };
+type SessionUser = { id: string; email: string; name: string; avatar?: string };
 
 function AccIcon({ name }: { name: string }) {
   const p = {
@@ -112,6 +113,10 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
   const groupActive = (children: NavItem[]) => children.some((c) => isActive(c.href, pathname));
 
   const initial = (user?.name?.trim()?.[0] || user?.email?.[0] || "?").toUpperCase();
+  // Avatar: ảnh nếu có, không thì chữ cái đầu.
+  const avatarNode = user?.avatar
+    ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={cldUrl(user.avatar, { w: 96 })} alt="" />
+    : initial;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -234,7 +239,7 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
                 aria-expanded={accountOpen}
                 onClick={() => setAccountOpen((v) => !v)}
               >
-                <span className="qp-account__avatar">{initial}</span>
+                <span className="qp-account__avatar">{avatarNode}</span>
                 <span className="qp-account__id">
                   <span className="qp-account__name">{user.name || "Tài khoản"}</span>
                   <span className="qp-account__email">{user.email}</span>
@@ -247,7 +252,7 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
               {accountOpen && (
                 <div className="qp-account__menu" role="menu">
                   <div className="qp-account__head">
-                    <span className="qp-account__avatar is-lg">{initial}</span>
+                    <span className="qp-account__avatar is-lg">{avatarNode}</span>
                     <span className="qp-account__id">
                       <span className="qp-account__name">{user.name || "Tài khoản"}</span>
                       <span className="qp-account__email">{user.email}</span>

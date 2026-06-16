@@ -3,8 +3,10 @@
 // Sidebar điều hướng khu quản trị. Nhóm theo chức năng; badge số tin chờ duyệt.
 // Mobile: ẩn, mở bằng nút burger ở AdminTopbar (qua sự kiện custom).
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BRAND } from "@/lib/nav";
 
 export type AdminCounts = { "viec-lam": number; "tim-do-roi": number; "mua-ban": number };
 
@@ -63,7 +65,7 @@ const GROUPS: Group[] = [
   },
 ];
 
-export function AdminSidebar({ counts }: { counts: AdminCounts }) {
+export function AdminSidebar({ counts, logo }: { counts: AdminCounts; logo?: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -84,7 +86,9 @@ export function AdminSidebar({ counts }: { counts: AdminCounts }) {
       {open && <button className="qp-admin-backdrop" aria-label="Đóng menu" onClick={() => setOpen(false)} />}
       <aside className={`qp-admin-sidebar${open ? " is-open" : ""}`}>
         <Link href="/admin" className="qp-admin-brand">
-          <span className="qp-admin-brand__mark">QP</span>
+          <span className="qp-admin-brand__mark">
+            <Image src={logo || BRAND.logo} alt="" fill sizes="38px" />
+          </span>
           <span>
             <span className="qp-admin-brand__name">Quản trị</span><br />
             <span className="qp-admin-brand__sub">Cổng thông tin Quỳnh Phụ</span>

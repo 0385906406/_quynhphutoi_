@@ -5,8 +5,11 @@
 .qp-btn-outline:hover { border-color: var(--color-teal); background: var(--color-navy-pale); }
 
 /* Hero tài khoản */
+.qp-acc-hero h1 { font-size: 30px; letter-spacing: -0.8px; }
+@media (max-width: 767px) { .qp-acc-hero h1 { font-size: 24px; } }
 .qp-acc-hero__id { display: flex; align-items: center; gap: 16px; margin-top: var(--space-3); }
-.qp-acc-hero__avatar { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 800 24px/1 var(--font-primary); color: #fff; background: linear-gradient(135deg, var(--color-teal), var(--color-indigo)); box-shadow: 0 6px 16px -4px rgba(15,76,129,0.4); }
+.qp-acc-hero__avatar { flex: 0 0 auto; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font: 800 24px/1 var(--font-primary); color: #fff; background: linear-gradient(135deg, var(--color-teal), var(--color-indigo)); box-shadow: 0 6px 16px -4px rgba(15,76,129,0.4); }
+.qp-acc-hero__avatar img { width: 100%; height: 100%; object-fit: cover; }
 .qp-acc-hero__email { margin: 4px 0 0; color: var(--color-gray-text); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .qp-acc-hero__role { font: 700 11px/1 var(--font-mono-sans); letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 9px; border-radius: var(--radius-sm); background: rgba(0,169,143,0.13); color: var(--color-teal-dark); }
 

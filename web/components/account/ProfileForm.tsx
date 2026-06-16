@@ -1,16 +1,18 @@
 "use client";
 
-// Form đổi thông tin tài khoản (tên hiển thị). Email chỉ đọc.
+// Form đổi thông tin tài khoản: ảnh đại diện + tên hiển thị. Email chỉ đọc.
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CharCount } from "@/components/common/CharCount";
+import { ImageUploader } from "@/components/common/ImageUploader";
 import { Recaptcha, RECAPTCHA_SITE_KEY, type RecaptchaHandle } from "@/components/common/Recaptcha";
 import { useToast } from "@/components/common/Toast";
 
-export function ProfileForm({ initialName, email }: { initialName: string; email: string }) {
+export function ProfileForm({ initialName, email, initialAvatar = "" }: { initialName: string; email: string; initialAvatar?: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState(initialName);
+  const [avatar, setAvatar] = useState(initialAvatar);
   const [busy, setBusy] = useState(false);
   const captcha = useRef<RecaptchaHandle>(null);
 
@@ -26,7 +28,7 @@ export function ProfileForm({ initialName, email }: { initialName: string; email
       const res = await fetch("/api/account/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, recaptchaToken }),
+        body: JSON.stringify({ name, avatar, recaptchaToken }),
       });
       const data = await res.json().catch(() => ({}));
       captcha.current?.reset();
@@ -38,10 +40,17 @@ export function ProfileForm({ initialName, email }: { initialName: string; email
     }
   }
 
-  const changed = name.trim() !== initialName.trim() && name.trim().length >= 2;
+  const changed =
+    (name.trim() !== initialName.trim() && name.trim().length >= 2) ||
+    avatar !== initialAvatar;
 
   return (
     <form className="qp-acc-form" onSubmit={submit}>
+      <div className="qp-form-group">
+        <label className="qp-label">Ảnh đại diện</label>
+        <ImageUploader value={avatar ? [avatar] : []} onChange={(a) => setAvatar(a[0] ?? "")} max={1} />
+        <span className="qp-acc-form__hint">Ảnh vuông đẹp nhất. Để trống = dùng chữ cái đầu của tên.</span>
+      </div>
       <div className="qp-form-group">
         <label className="qp-label" htmlFor="acc-name">Tên hiển thị <span className="req">*</span><CharCount value={name} max={60} /></label>
         <input id="acc-name" className="qp-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="Họ và tên của bạn" />

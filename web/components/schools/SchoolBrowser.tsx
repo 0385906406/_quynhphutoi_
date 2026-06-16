@@ -4,7 +4,10 @@
 // kiếm; hiển thị lưới thẻ trường + phân trang. Dữ liệu nhận từ trang server.
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Pagination } from "@/components/common/Pagination";
+import { FilterBar } from "@/components/common/FilterBar";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
+import { Combobox } from "@/components/lostfound/Combobox";
 
 export type SchoolItem = {
   slug: string;
@@ -111,7 +114,10 @@ export function SchoolBrowser({ items, wards, newCommunes, counts }: { items: Sc
   const [newCommune, setNewCommune] = useState("all");
   const [type, setType] = useState("all");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+
+  const wardOptions = useMemo(() => [{ value: "all", label: `Tất cả (${wards.length})` }, ...wards.map((w) => ({ value: w.slug, label: w.name }))], [wards]);
+  const newCommuneOptions = useMemo(() => [{ value: "all", label: `Tất cả (${newCommunes.length})` }, ...newCommunes.map((w) => ({ value: w.slug, label: w.name }))], [newCommunes]);
+  const typeOptions = useMemo(() => TYPES.map((t) => ({ value: t.value, label: t.label })), []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -125,10 +131,9 @@ export function SchoolBrowser({ items, wards, newCommunes, counts }: { items: Sc
     });
   }, [items, level, ward, newCommune, type, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const reset = () => setPage(1);
+  const pager = usePagedList(filtered, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
 
   return (
     <>
@@ -148,41 +153,30 @@ export function SchoolBrowser({ items, wards, newCommunes, counts }: { items: Sc
         ))}
       </div>
 
-      {/* Toolbar: tìm kiếm + xã + loại hình */}
-      <form className="qp-toolbar qp-school-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="qp-toolbar__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
+      {/* Bộ lọc: tìm kiếm + xã + loại hình */}
+      <FilterBar
+        className="qp-school-toolbar"
+        activeCount={(ward !== "all" ? 1 : 0) + (newCommune !== "all" ? 1 : 0) + (type !== "all" ? 1 : 0)}
+        searchInput={
           <input type="search" placeholder="Tìm tên trường, xã…" aria-label="Tìm trường"
             value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
-        </div>
-        <label className="qp-toolbar__field">
+        }
+      >
+        <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Xã / Thị trấn (cũ)</span>
-          <select className="qp-select" aria-label="Lọc theo xã cũ" value={ward}
-            onChange={(e) => { setWard(e.target.value); reset(); }}>
-            <option value="all">Tất cả ({wards.length})</option>
-            {wards.map((w) => <option key={w.slug} value={w.slug}>{w.name}</option>)}
-          </select>
-        </label>
-        <label className="qp-toolbar__field">
+          <Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); reset(); }} placeholder="Tất cả" searchPlaceholder="Tìm xã…" />
+        </div>
+        <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Xã mới (2025)</span>
-          <select className="qp-select" aria-label="Lọc theo xã mới sau sáp nhập" value={newCommune}
-            onChange={(e) => { setNewCommune(e.target.value); reset(); }}>
-            <option value="all">Tất cả ({newCommunes.length})</option>
-            {newCommunes.map((w) => <option key={w.slug} value={w.slug}>{w.name}</option>)}
-          </select>
-        </label>
-        <label className="qp-toolbar__field">
+          <Combobox options={newCommuneOptions} value={newCommune} onChange={(v) => { setNewCommune(v); reset(); }} placeholder="Tất cả" searchPlaceholder="Tìm xã mới…" />
+        </div>
+        <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Loại hình</span>
-          <select className="qp-select" aria-label="Lọc theo loại hình" value={type}
-            onChange={(e) => { setType(e.target.value); reset(); }}>
-            {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </label>
-      </form>
+          <Combobox options={typeOptions} value={type} onChange={(v) => { setType(v); reset(); }} placeholder="Tất cả loại hình" searchPlaceholder="Tìm…" />
+        </div>
+      </FilterBar>
 
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">Danh bạ</span>
         <h2 className="type-h2">{filtered.length} trường</h2>
       </div>
@@ -201,7 +195,7 @@ export function SchoolBrowser({ items, wards, newCommunes, counts }: { items: Sc
         </div>
       )}
 
-      <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      <ListPager pager={pager} />
     </>
   );
 }

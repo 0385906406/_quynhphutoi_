@@ -4,7 +4,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Combobox } from "@/components/lostfound/Combobox";
-import { Pagination } from "@/components/common/Pagination";
+import { FilterBar } from "@/components/common/FilterBar";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
 
 const PAGE_SIZE = 9;
 
@@ -78,7 +80,6 @@ export function MarketBrowser({
   const [tab, setTab] = useState<TabKey>("all");
   const [ward, setWard] = useState("all");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
 
   const wardOptions = useMemo(() => [{ value: "all", label: `Tất cả xã/thị trấn (${wards.length})` }, ...wards.map((w) => ({ value: w.slug, label: w.name, hint: w.newCommune ? `Xã mới: ${w.newCommune}` : undefined }))], [wards]);
 
@@ -92,30 +93,32 @@ export function MarketBrowser({
     });
   }, [items, tab, ward, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pager = usePagedList(filtered, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
 
   return (
     <>
       <div className="qp-tabs" role="tablist" aria-label="Lọc theo mảng">
         {TABS.map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key}
-            className={`qp-tab${tab === t.key ? " is-active" : ""}`} onClick={() => { setTab(t.key); setPage(1); }}>
+            className={`qp-tab${tab === t.key ? " is-active" : ""}`} onClick={() => { setTab(t.key); reset(); }}>
             {t.label} <span className="qp-tab__count">{counts[t.key]}</span>
           </button>
         ))}
       </div>
 
-      <form className="qp-toolbar qp-school-toolbar qp-lf-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="qp-toolbar__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-          <input type="search" placeholder="Tìm chợ, đặc sản…" aria-label="Tìm" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
-        </div>
-        <div className="qp-toolbar__field"><span className="qp-toolbar__label">Xã / Thị trấn</span><Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); setPage(1); }} placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã…" /></div>
-      </form>
+      <FilterBar
+        className="qp-school-toolbar qp-lf-toolbar"
+        activeCount={ward !== "all" ? 1 : 0}
+        searchInput={
+          <input type="search" placeholder="Tìm chợ, đặc sản…" aria-label="Tìm" value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
+        }
+      >
+        <div className="qp-toolbar__field"><span className="qp-toolbar__label">Xã / Thị trấn</span><Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); reset(); }} placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã…" /></div>
+      </FilterBar>
 
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">Chợ & đặc sản</span>
         <h2 className="type-h2">{filtered.length} mục</h2>
       </div>
@@ -125,7 +128,7 @@ export function MarketBrowser({
       ) : (
         <>
           <div className="qp-job-grid">{pageItems.map((m) => <MarketCard key={m.slug} m={m} />)}</div>
-          <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+          <ListPager pager={pager} />
         </>
       )}
     </>

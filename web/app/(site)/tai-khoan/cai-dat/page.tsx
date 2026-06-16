@@ -21,7 +21,7 @@ export default async function AccountSettingsPage() {
       <div className="qp-acc-grid2">
         <div className="qp-acc-card">
           <div className="qp-acc-card__title">Thông tin tài khoản</div>
-          <ProfileForm initialName={user.name} email={user.email} />
+          <ProfileForm initialName={user.name} email={user.email} initialAvatar={user.avatar ?? ""} />
         </div>
 
         <div className="qp-acc-card">

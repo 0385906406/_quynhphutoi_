@@ -3,7 +3,8 @@
 // Bộ duyệt tuyến giao thông — lọc theo loại (tabs) + tìm kiếm; lưới thẻ tuyến.
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Pagination } from "@/components/common/Pagination";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
 
 const PAGE_SIZE = 9;
 
@@ -64,7 +65,6 @@ function TransitCard({ t }: { t: TransitItem }) {
 export function TransitBrowser({ items, counts }: { items: TransitItem[]; counts: Counts }) {
   const [tab, setTab] = useState<TabKey>("all");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,9 +75,9 @@ export function TransitBrowser({ items, counts }: { items: TransitItem[]; counts
     });
   }, [items, tab, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pager = usePagedList(filtered, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
 
   return (
     <>
@@ -85,18 +85,18 @@ export function TransitBrowser({ items, counts }: { items: TransitItem[]; counts
         <div className="qp-tabs" role="tablist" aria-label="Lọc theo loại tuyến">
           {TABS.map((t) => (
             <button key={t.key} type="button" role="tab" aria-selected={tab === t.key}
-              className={`qp-tab${tab === t.key ? " is-active" : ""}`} onClick={() => { setTab(t.key); setPage(1); }}>
+              className={`qp-tab${tab === t.key ? " is-active" : ""}`} onClick={() => { setTab(t.key); reset(); }}>
               {t.label} <span className="qp-tab__count">{counts[t.key]}</span>
             </button>
           ))}
         </div>
         <div className="qp-toolbar__search" style={{ maxWidth: 320 }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-          <input type="search" placeholder="Tìm tuyến, điểm đi/đến…" aria-label="Tìm tuyến" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+          <input type="search" placeholder="Tìm tuyến, điểm đi/đến…" aria-label="Tìm tuyến" value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
         </div>
       </div>
 
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">Tuyến xe</span>
         <h2 className="type-h2">{filtered.length} tuyến</h2>
       </div>
@@ -106,7 +106,7 @@ export function TransitBrowser({ items, counts }: { items: TransitItem[]; counts
       ) : (
         <>
           <div className="qp-job-grid">{pageItems.map((t) => <TransitCard key={t.slug} t={t} />)}</div>
-          <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+          <ListPager pager={pager} />
         </>
       )}
     </>

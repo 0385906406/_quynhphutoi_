@@ -4,7 +4,9 @@
 // danh mục, xã/thị trấn và tìm kiếm; lưới thẻ tin + phân trang. Dữ liệu từ trang server.
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Pagination } from "@/components/common/Pagination";
+import { FilterBar } from "@/components/common/FilterBar";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
 import { useRouter } from "next/navigation";
 import { PostModal, type CategoryOption } from "./PostModal";
 import { Combobox } from "./Combobox";
@@ -162,7 +164,6 @@ export function LostFoundBrowser({
   const [category, setCategory] = useState("all");
   const [ward, setWard] = useState("all");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
   const [postOpen, setPostOpen] = useState(false);
   const router = useRouter();
 
@@ -190,10 +191,9 @@ export function LostFoundBrowser({
     });
   }, [items, pendingItems, isPending, view, category, ward, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const reset = () => setPage(1);
+  const pager = usePagedList(filtered, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
 
   return (
     <>
@@ -224,18 +224,21 @@ export function LostFoundBrowser({
             </button>
           )}
         </div>
-        <button type="button" className="qp-btn-primary qp-lf-post-btn" onClick={() => setPostOpen(true)}>+ Đăng tin</button>
+        <button type="button" className="qp-btn-primary qp-lf-post-btn" aria-label="Đăng tin" onClick={() => setPostOpen(true)}>
+          <span className="qp-postbtn-full" aria-hidden>+ Đăng tin</span>
+          <span className="qp-postbtn-short" aria-hidden>+ Đăng</span>
+        </button>
       </div>
 
-      {/* Toolbar: tìm kiếm + danh mục + xã */}
-      <form className="qp-toolbar qp-school-toolbar qp-lf-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="qp-toolbar__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
+      {/* Bộ lọc: tìm kiếm + danh mục + xã */}
+      <FilterBar
+        className="qp-school-toolbar qp-lf-toolbar"
+        activeCount={(category !== "all" ? 1 : 0) + (ward !== "all" ? 1 : 0)}
+        searchInput={
           <input type="search" placeholder="Tìm theo tiêu đề, mô tả, xã…" aria-label="Tìm tin"
             value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
-        </div>
+        }
+      >
         <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Danh mục</span>
           <Combobox options={catOptions} value={category}
@@ -248,9 +251,9 @@ export function LostFoundBrowser({
             onChange={(v) => { setWard(v); reset(); }}
             placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã/thị trấn…" />
         </div>
-      </form>
+      </FilterBar>
 
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">{isPending ? "Tin của bạn" : "Bảng tin"}</span>
         <h2 className="type-h2">{filtered.length} tin{isPending ? " chờ duyệt" : ""}</h2>
       </div>
@@ -276,7 +279,7 @@ export function LostFoundBrowser({
         </div>
       )}
 
-      <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      <ListPager pager={pager} />
 
       {/* Render có điều kiện → mỗi lần mở là component mới, form luôn sạch. */}
       {postOpen && (

@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pagination } from "@/components/common/Pagination";
+import { FilterBar } from "@/components/common/FilterBar";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
+import { Combobox } from "@/components/lostfound/Combobox";
 import Image from "next/image";
 import { fmtViews, dateKey, type Article } from "@/lib/news";
 import { NewsCard } from "./NewsCard";
@@ -74,13 +77,14 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const [category, setCategory] = useState("Tất cả");
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
   const [view, setView] = useState<"all" | "cho-duyet">("all");
   const [postOpen, setPostOpen] = useState(false);
   const router = useRouter();
   const isPending = view === "cho-duyet";
 
   const CATEGORIES = useMemo(() => ["Tất cả", ...Array.from(new Set(items.map((a) => a.category)))], [items]);
+  const catOptions = useMemo(() => CATEGORIES.map((c) => ({ value: c, label: c })), [CATEGORIES]);
+  const sortOptions = useMemo(() => SORTS.map((s) => ({ value: s.value, label: s.label })), []);
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -103,19 +107,16 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
     [popularItems, items],
   );
 
-  const defaultMode = category === "Tất cả" && !query.trim() && page === 1;
+  // "Tất cả tin tức" hiển thị ĐẦY ĐỦ mọi bài (không cắt bỏ các bài đã lên vùng nổi bật).
+  const pager = usePagedList(sorted, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
+
+  const defaultMode = category === "Tất cả" && !query.trim() && pager.page === 1;
   const featured = defaultMode ? featuredList[0] : undefined;
   const levelTwo = defaultMode ? featuredList.slice(1, 4) : [];
   const showPopular = defaultMode && popular.length > 0;
   const showFeaturedZone = defaultMode && (!!featured || showPopular);
-
-  // "Tất cả tin tức" hiển thị ĐẦY ĐỦ mọi bài (không cắt bỏ các bài đã lên vùng nổi bật).
-  const listSource = sorted;
-  const totalPages = Math.max(1, Math.ceil(listSource.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = listSource.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  const reset = () => setPage(1);
 
   return (
     <>
@@ -131,12 +132,15 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
             </button>
           )}
         </div>
-        <button type="button" className="qp-btn-primary qp-lf-post-btn" onClick={() => setPostOpen(true)}>+ Gửi bài viết</button>
+        <button type="button" className="qp-btn-primary qp-lf-post-btn" aria-label="Gửi bài viết" onClick={() => setPostOpen(true)}>
+          <span className="qp-postbtn-full" aria-hidden>+ Gửi bài viết</span>
+          <span className="qp-postbtn-short" aria-hidden>+ Gửi</span>
+        </button>
       </div>
 
       {isPending ? (
         <>
-          <div className="qp-newsgrid-head">
+          <div className="qp-newsgrid-head qp-newsgrid-head--count">
             <span className="type-tag qp-sechead__eyebrow">Bài của bạn</span>
             <h2 className="type-h2">{pendingItems.length} bài chờ duyệt</h2>
           </div>
@@ -152,30 +156,24 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
         </>
       ) : (
       <>
-      {/* Toolbar */}
-      <form className="qp-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="qp-toolbar__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
+      {/* Bộ lọc */}
+      <FilterBar
+        className="qp-lf-toolbar"
+        activeCount={(category !== "Tất cả" ? 1 : 0) + (sort !== "newest" ? 1 : 0)}
+        searchInput={
           <input type="search" placeholder="Tìm bài viết, thông báo…" aria-label="Tìm bài viết"
             value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
-        </div>
-        <label className="qp-toolbar__field">
+        }
+      >
+        <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Danh mục</span>
-          <select className="qp-select" aria-label="Lọc theo danh mục" value={category}
-            onChange={(e) => { setCategory(e.target.value); reset(); }}>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </label>
-        <label className="qp-toolbar__field">
+          <Combobox options={catOptions} value={category} onChange={(v) => { setCategory(v); reset(); }} placeholder="Tất cả" searchPlaceholder="Tìm danh mục…" />
+        </div>
+        <div className="qp-toolbar__field">
           <span className="qp-toolbar__label">Sắp xếp</span>
-          <select className="qp-select" aria-label="Sắp xếp" value={sort}
-            onChange={(e) => { setSort(e.target.value as SortValue); reset(); }}>
-            {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </label>
-      </form>
+          <Combobox options={sortOptions} value={sort} onChange={(v) => { setSort(v as SortValue); reset(); }} placeholder="Mới nhất" searchPlaceholder="Tìm…" />
+        </div>
+      </FilterBar>
 
       {/* Vùng nổi bật (chỉ ở chế độ mặc định) — cấu hình từ admin */}
       {showFeaturedZone && (
@@ -202,7 +200,7 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
       )}
 
       {/* Lưới tất cả tin tức */}
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">{defaultMode ? "Mới cập nhật" : "Kết quả"}</span>
         <h2 className="type-h2">{defaultMode ? "Tất cả tin tức" : `${sorted.length} bài viết`}</h2>
       </div>
@@ -221,7 +219,7 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
         </div>
       )}
 
-      <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      <ListPager pager={pager} />
       </>
       )}
 

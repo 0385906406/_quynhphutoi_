@@ -12,6 +12,7 @@ export type UserDoc = {
   name: string;
   passwordHash: string;
   verified: boolean;
+  avatar?: string | null;     // URL ảnh đại diện (Cloudinary). Trống = dùng chữ cái đầu.
   role?: UserRole;            // thiếu = "user". "admin" mới được duyệt tin.
   verifyToken?: string | null;
   verifyTokenExp?: Date | null;
@@ -159,6 +160,21 @@ export async function updateUserName(id: string | ObjectId, name: string) {
   const _id = typeof id === "string" ? new ObjectId(id) : id;
   const col = await users();
   await col.updateOne({ _id }, { $set: { name: name.trim() } });
+  return col.findOne({ _id });
+}
+
+// Cập nhật hồ sơ (tên hiển thị + ảnh đại diện). avatar="" → xoá ảnh (về chữ cái đầu).
+export async function updateUserProfile(
+  id: string | ObjectId,
+  patch: { name?: string; avatar?: string | null },
+) {
+  if (typeof id === "string" && !ObjectId.isValid(id)) return null;
+  const _id = typeof id === "string" ? new ObjectId(id) : id;
+  const set: Record<string, unknown> = {};
+  if (typeof patch.name === "string") set.name = patch.name.trim();
+  if (patch.avatar !== undefined) set.avatar = patch.avatar ? patch.avatar : null;
+  const col = await users();
+  if (Object.keys(set).length) await col.updateOne({ _id }, { $set: set });
   return col.findOne({ _id });
 }
 

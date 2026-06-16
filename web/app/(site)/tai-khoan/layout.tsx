@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
+import { cldUrl } from "@/lib/cloudinary-url";
 import { AccountNav } from "@/components/account/AccountNav";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,11 @@ export default async function AccountLayout({ children }: { children: React.Reac
             <span className="qp-breadcrumb__current">Tài khoản</span>
           </nav>
           <div className="qp-acc-hero__id">
-            <span className="qp-acc-hero__avatar" aria-hidden>{initials(user.name, user.email)}</span>
+            <span className="qp-acc-hero__avatar" aria-hidden>
+              {user.avatar
+                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={cldUrl(user.avatar, { w: 200 })} alt="" />
+                : initials(user.name, user.email)}
+            </span>
             <div>
               <h1 id="acc-title" className="type-h1" style={{ margin: 0 }}>{user.name || "Tài khoản của tôi"}</h1>
               <p className="qp-acc-hero__email">{user.email}{isAdmin(user) && <span className="qp-acc-hero__role">Quản trị viên</span>}</p>

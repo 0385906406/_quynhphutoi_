@@ -3,7 +3,9 @@
 // Bộ duyệt cơ sở y tế — lọc theo loại (tabs), xã, loại hình + tìm kiếm; lưới thẻ.
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Pagination } from "@/components/common/Pagination";
+import { FilterBar } from "@/components/common/FilterBar";
+import { ListPager } from "@/components/common/ListPager";
+import { usePagedList } from "@/lib/use-paged-list";
 import { Combobox } from "@/components/lostfound/Combobox";
 
 export type HealthItem = {
@@ -81,7 +83,6 @@ export function HealthBrowser({
   const [ward, setWard] = useState("all");
   const [owner, setOwner] = useState("all");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
 
   const wardOptions = useMemo(() => [{ value: "all", label: `Tất cả xã/thị trấn (${wards.length})` }, ...wards.map((w) => ({ value: w.slug, label: w.name, hint: w.newCommune ? `Xã mới: ${w.newCommune}` : undefined }))], [wards]);
   const ownerOptions = [{ value: "all", label: "Tất cả loại hình" }, { value: "cong-lap", label: "Công lập" }, { value: "tu-nhan", label: "Tư nhân" }];
@@ -97,10 +98,9 @@ export function HealthBrowser({
     });
   }, [items, type, ward, owner, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const reset = () => setPage(1);
+  const pager = usePagedList(filtered, PAGE_SIZE);
+  const pageItems = pager.items;
+  const reset = pager.reset;
 
   return (
     <>
@@ -113,16 +113,18 @@ export function HealthBrowser({
         ))}
       </div>
 
-      <form className="qp-toolbar qp-school-toolbar qp-lf-toolbar" role="search" onSubmit={(e) => e.preventDefault()}>
-        <div className="qp-toolbar__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+      <FilterBar
+        className="qp-school-toolbar qp-lf-toolbar"
+        activeCount={(ward !== "all" ? 1 : 0) + (owner !== "all" ? 1 : 0)}
+        searchInput={
           <input type="search" placeholder="Tìm tên cơ sở, xã…" aria-label="Tìm cơ sở y tế" value={query} onChange={(e) => { setQuery(e.target.value); reset(); }} />
-        </div>
+        }
+      >
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Xã / Thị trấn</span><Combobox options={wardOptions} value={ward} onChange={(v) => { setWard(v); reset(); }} placeholder="Tất cả xã/thị trấn" searchPlaceholder="Tìm xã…" /></div>
         <div className="qp-toolbar__field"><span className="qp-toolbar__label">Loại hình</span><Combobox options={ownerOptions} value={owner} onChange={(v) => { setOwner(v); reset(); }} placeholder="Tất cả loại hình" searchPlaceholder="Tìm…" /></div>
-      </form>
+      </FilterBar>
 
-      <div className="qp-newsgrid-head">
+      <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">Danh bạ</span>
         <h2 className="type-h2">{filtered.length} cơ sở</h2>
       </div>
@@ -133,7 +135,7 @@ export function HealthBrowser({
         <div className="qp-job-grid">{pageItems.map((h) => <HealthCard key={h.slug} h={h} />)}</div>
       )}
 
-      <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      <ListPager pager={pager} />
     </>
   );
 }
