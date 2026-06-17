@@ -37,7 +37,7 @@ const toForm = (r: ArticleRow): Form => ({
 export function ArticleManager({ initial, externalEnabled, categories }: { initial: ArticleRow[]; externalEnabled?: boolean; categories?: string[] }) {
   const [rows, setRows] = useState<ArticleRow[]>(initial);
   const [q, setQ] = useState("");
-  const [fStatus, setFStatus] = useState("");
+  const [fStatus, setFStatus] = useState("published");
   const [form, setForm] = useState<Form>({ ...EMPTY });
   const [editing, setEditing] = useState<string | null>(null);
   const [show, setShow] = useState(false);
@@ -232,7 +232,7 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
                   <td>
-                    <b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
+                    <b className="qp-clip" title={r.title}>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
                     {r.pending && r.postedByName ? <div className="type-body-small text-muted">Người gửi: {r.postedByName}</div> : null}
                     {r.flags?.length ? (
                       <div className="type-body-small" style={{ color: "var(--color-danger, #c0392b)", marginTop: 2 }}>

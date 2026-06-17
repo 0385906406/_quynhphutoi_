@@ -177,7 +177,7 @@ export function TransitManager({ initial }: { initial: TransitRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b>{r.operator ? <><br /><span className="type-body-small text-muted">{r.operator}</span></> : null}</td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b>{r.operator ? <span className="qp-clip--sm type-body-small text-muted">{r.operator}</span> : null}</td>
                   <td>{typeLabel(r.type)}</td>
                   <td>{r.origin} → {r.destination}</td>
                   <td><span className={`qp-acc-badge is-${r.active ? "active" : "hidden"}`}>{r.active ? "Hiện" : "Ẩn"}</span></td>

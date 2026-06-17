@@ -177,7 +177,7 @@ export function MarketManager({ initial }: { initial: MarketRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b>{r.contactName ? <><br /><span className="type-body-small text-muted">LH: {r.contactName}</span></> : null}</td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b>{r.contactName ? <span className="qp-clip--sm type-body-small text-muted">LH: {r.contactName}</span> : null}</td>
                   <td>{categoryLabel(r.category)}</td>
                   <td>{wardName(r.wardSlug)}</td>
                   <td><span className={`qp-acc-badge is-${r.active ? "active" : "hidden"}`}>{r.active ? "Hiện" : "Ẩn"}</span></td>

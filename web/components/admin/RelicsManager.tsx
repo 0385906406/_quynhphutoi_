@@ -192,7 +192,7 @@ export function RelicsManager({ initial }: { initial: RelicRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b></td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b></td>
                   <td>{typeLabel(r.type)}</td>
                   <td>{r.ranking ? rankingLabel(r.ranking) : "—"}</td>
                   <td>{wardName(r.wardSlug)}</td>

@@ -202,7 +202,7 @@ export function HealthManager({ initial }: { initial: HealthRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b>{r.director ? <><br /><span className="type-body-small text-muted">GĐ: {r.director}</span></> : null}</td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b>{r.director ? <span className="qp-clip--sm type-body-small text-muted">GĐ: {r.director}</span> : null}</td>
                   <td>{typeLabel(r.type)}</td>
                   <td>{ownershipLabel(r.ownership)}</td>
                   <td>{wardName(r.wardSlug)}</td>

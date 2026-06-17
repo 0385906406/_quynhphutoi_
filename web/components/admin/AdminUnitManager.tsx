@@ -123,7 +123,7 @@ export function AdminUnitManager({ initial }: { initial: AdminUnitRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b></td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b></td>
                   <td className="type-body-small text-muted">{r.district}, {r.province}</td>
                   <td>{r.newCommune}</td>
                   <td>{r.newProvince}</td>

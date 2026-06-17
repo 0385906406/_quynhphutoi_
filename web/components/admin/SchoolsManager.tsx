@@ -187,7 +187,7 @@ export function SchoolsManager({ initial }: { initial: SchoolRow[] }) {
             <tbody>
               {pg.paged.map((r) => (
                 <tr key={r.slug}>
-                  <td><b>{r.name}</b>{r.principal ? <><br /><span className="type-body-small text-muted">HT: {r.principal}</span></> : null}</td>
+                  <td><b className="qp-clip" title={r.name}>{r.name}</b>{r.principal ? <span className="qp-clip--sm type-body-small text-muted">HT: {r.principal}</span> : null}</td>
                   <td>{levelLabel(r.level)}</td>
                   <td>{typeLabel(r.type)}</td>
                   <td>{wardName(r.wardSlug)}</td>

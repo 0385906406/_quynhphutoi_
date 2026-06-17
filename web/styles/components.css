@@ -1228,6 +1228,18 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
 .qp-table tbody tr:hover { background: var(--color-gray-light); }
 /* Cuộn ngang (kéo sang 2 bên) trên màn nhỏ thay vì xuống dòng xấu */
 .qp-table--wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-card); }
+/* Ô tiêu đề/nội dung dài: cắt bằng dấu … (truncate) để bảng không bị kéo rộng phải cuộn ngang.
+   Bọc nội dung bằng <span class="qp-clip"> (hoặc qp-clip--sm cho dòng phụ). Đặt max-width px cố
+   định trên CHÍNH phần tử cắt — table-layout:auto bỏ qua max-width đặt trên <td> nên phải đặt ở đây. */
+.qp-table .qp-clip,
+.qp-table .qp-clip--sm {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qp-table .qp-clip { max-width: 340px; }
+.qp-table .qp-clip--sm { max-width: 280px; }
 
 /* ============================================================
    ALERT & EMPTY STATE
@@ -2141,3 +2153,65 @@ a.qp-school-card__name:hover { color: var(--color-teal-dark); }
 
 /* reCAPTCHA v2 — ô tick "Tôi không phải robot" trong form */
 .qp-recaptcha { margin: var(--space-4) 0; }
+
+/* ============================================================
+   NỘI QUY — trang quy định đăng bài (/noi-quy)
+   Thẻ quy định dạng lưới, callout dẫn nhập + lời cảm ơn.
+   ============================================================ */
+.qp-rules { padding-block: var(--space-12) var(--space-16); }
+.qp-rules__lead {
+  display: flex; gap: var(--space-5); align-items: flex-start;
+  background: var(--color-navy-pale); border: 1px solid var(--color-navy-pale-2);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+  margin-bottom: var(--space-10);
+}
+.qp-rules__lead-icon {
+  flex: none; width: 48px; height: 48px; border-radius: var(--radius-md);
+  display: grid; place-items: center; background: #fff; color: var(--color-error);
+  border: 1px solid var(--color-gray-border); box-shadow: var(--shadow-sm);
+}
+.qp-rules__lead p { margin: 0; color: var(--color-navy-deep); font-size: 16px; line-height: 1.7; }
+.qp-rules__lead p b { color: var(--color-error); }
+
+.qp-rules__head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-5); }
+.qp-rules__head h2 { font: 700 22px/1.3 var(--font-primary); color: var(--color-navy); margin: 0; }
+.qp-rules__count {
+  font: 700 12px/1 var(--font-mono-sans); letter-spacing: 0.5px; color: var(--color-teal-dark);
+  background: var(--color-teal-pale); border-radius: var(--radius-pill); padding: 6px 12px;
+}
+
+.qp-rules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); }
+
+.qp-rule-card {
+  position: relative; display: flex; gap: var(--space-4); align-items: flex-start;
+  background: #fff; border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-card); padding: var(--space-5);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.qp-rule-card:hover { border-color: var(--color-teal); transform: translateY(-2px); box-shadow: var(--shadow-card); }
+.qp-rule-card__no {
+  flex: none; width: 36px; height: 36px; border-radius: var(--radius-full);
+  display: grid; place-items: center; font: 700 14px/1 var(--font-mono-sans);
+  color: var(--color-error); background: #FEE2E2; border: 1px solid #FCA5A5;
+  font-variant-numeric: tabular-nums;
+}
+.qp-rule-card__text { margin: 0; color: var(--color-gray-text); font-size: 15px; line-height: 1.6; }
+
+.qp-rules__note { margin-top: var(--space-8); }
+
+.qp-rules__outro {
+  position: relative; overflow: hidden; margin-top: var(--space-10); text-align: center;
+  background: var(--color-teal-pale); border: 1px solid #A7E8D8;
+  border-radius: var(--radius-lg); padding: var(--space-10) var(--space-6);
+}
+.qp-rules__outro p { max-width: 640px; margin: 0 auto; color: var(--color-navy-deep); font-size: 16px; line-height: 1.75; }
+.qp-rules__sign { margin-top: var(--space-6); }
+.qp-rules__sign-line { display: block; width: 48px; height: 3px; border-radius: 2px; background: var(--color-teal); margin: 0 auto var(--space-3); }
+.qp-rules__sign b { font: 700 16px/1.3 var(--font-primary); color: var(--color-navy); }
+.qp-rules__sign small { display: block; margin-top: 2px; color: var(--color-teal-dark); font-size: 13px; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .qp-rules-grid { grid-template-columns: 1fr; }
+  .qp-rules__lead { flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+  .qp-rules__outro { padding: var(--space-8) var(--space-5); }
+}
