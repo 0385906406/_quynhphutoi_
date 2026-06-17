@@ -31,6 +31,7 @@ export const PAGE_SEO_DEFS: { key: string; label: string }[] = [
   { key: "/tong-quan", label: "Tổng quan" },
   { key: "/sap-nhap", label: "Sáp nhập 2025" },
   { key: "/lien-he", label: "Liên hệ" },
+  { key: "/noi-quy", label: "Nội quy" },
   { key: "/quang-cao", label: "Quảng cáo" },
   { key: "/tim-kiem", label: "Tìm kiếm" },
 ];

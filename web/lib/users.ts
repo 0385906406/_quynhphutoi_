@@ -18,6 +18,8 @@ export type UserDoc = {
   verifyTokenExp?: Date | null;
   resetToken?: string | null;
   resetTokenExp?: Date | null;
+  rulesAgreedAt?: Date | null;    // thời điểm đồng ý nội quy cộng đồng
+  rulesAgreedVersion?: number;    // phiên bản nội quy đã đồng ý (so với RULES_VERSION)
   createdAt: Date;
 };
 
@@ -183,6 +185,17 @@ export async function updateUserProfile(
   const col = await users();
   if (Object.keys(set).length) await col.updateOne({ _id }, { $set: set });
   return col.findOne({ _id });
+}
+
+// Ghi nhận người dùng đã đồng ý nội quy cộng đồng (kèm phiên bản đang hiển thị).
+export async function setRulesAgreed(id: string | ObjectId, version: number) {
+  if (typeof id === "string" && !ObjectId.isValid(id)) return 0;
+  const _id = typeof id === "string" ? new ObjectId(id) : id;
+  const res = await (await users()).updateOne(
+    { _id },
+    { $set: { rulesAgreedAt: new Date(), rulesAgreedVersion: version } },
+  );
+  return res.matchedCount;
 }
 
 // Đổi mật khẩu (mật khẩu cũ đã được xác thực ở tầng route).

@@ -66,6 +66,7 @@ export type ArticleDoc = {
   postedByName?: string;
   approved?: boolean;        // false = chờ admin duyệt; thiếu/true = đã duyệt
   active?: boolean;          // false = đã ẩn/gỡ; thiếu/true = đang hiển thị
+  flags?: string[];          // cờ kiểm duyệt tự động (từ cấm + vi phạm chính sách) — báo admin xem
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -274,6 +275,7 @@ export type ArticleInput = {
   postedByName?: string;
   approved?: boolean;        // mặc định true (admin); route đăng tin truyền false để chờ duyệt
   active?: boolean;          // mặc định true
+  flags?: string[];          // cờ kiểm duyệt tự động (báo admin)
 };
 
 export async function createArticle(input: ArticleInput) {
@@ -293,6 +295,7 @@ export async function createArticle(input: ArticleInput) {
     postedByName: input.postedByName,
     approved: input.approved ?? true,
     active: input.active ?? true,
+    flags: input.flags?.length ? input.flags : undefined,
     publishedAt: status === "published" ? now : null, createdAt: now, updatedAt: now,
   };
   const { insertedId } = await col.insertOne(doc);
@@ -378,6 +381,7 @@ export type ArticleRow = {
   bodyHtml: string; featured: boolean; status: ArticleStatus;
   seo: ArticleSeo; views: number; publishedAt: string | null;
   approved: boolean; pending: boolean; postedByName: string;   // bài người dùng gửi
+  flags: string[];   // cờ kiểm duyệt tự động (từ cấm + vi phạm chính sách)
 };
 // Map sang shape Article tĩnh (lib/news.ts) để tái dùng NewsCard / NewsBrowser ở trang public.
 export function toNewsCardArticle(d: ArticleDoc): import("@/lib/news").Article {
@@ -402,6 +406,7 @@ export function toArticleRow(d: ArticleDoc): ArticleRow {
     seo: d.seo ?? {}, views: d.views ?? 0,
     publishedAt: d.publishedAt ? d.publishedAt.toISOString() : null,
     approved: d.approved !== false, pending: d.approved === false, postedByName: d.postedByName ?? "",
+    flags: d.flags ?? [],
   };
 }
 

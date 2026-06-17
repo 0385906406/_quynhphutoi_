@@ -234,6 +234,11 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
                   <td>
                     <b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
                     {r.pending && r.postedByName ? <div className="type-body-small text-muted">Người gửi: {r.postedByName}</div> : null}
+                    {r.flags?.length ? (
+                      <div className="type-body-small" style={{ color: "var(--color-danger, #c0392b)", marginTop: 2 }}>
+                        ⚠️ Cần kiểm duyệt: {r.flags.join("; ")}
+                      </div>
+                    ) : null}
                   </td>
                   <td>{r.category}{r.scope === "ngoai-xa" ? <> <span className="qp-badge-g4">Ngoài xã</span></> : null}</td>
                   <td>

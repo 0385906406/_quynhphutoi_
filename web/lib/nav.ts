@@ -17,6 +17,7 @@ export const NAV: NavItem[] = [
   { id: "di-tich", label: "Di tích", href: "/di-tich" },
   { id: "sap-nhap", label: "Sáp nhập xã 2025", href: "/sap-nhap" },
   { id: "tin-tuc", label: "Tin tức", href: "/tin-tuc" },
+  { id: "noi-quy", label: "Nội quy", href: "/noi-quy" },
   { id: "lien-he", label: "Liên hệ", href: "/lien-he" },
 ];
 
@@ -52,6 +53,7 @@ export const NAV_TREE: NavNode[] = [
     ],
   },
   { id: "tin-tuc", label: "Tin tức", href: "/tin-tuc" },
+  { id: "noi-quy", label: "Nội quy", href: "/noi-quy" },
   { id: "lien-he", label: "Liên hệ", href: "/lien-he" },
 ];
 

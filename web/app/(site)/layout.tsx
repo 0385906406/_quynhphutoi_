@@ -8,12 +8,23 @@ import { StickyAdBar } from "@/components/ads/StickyAdBar";
 import { getSession } from "@/lib/auth";
 import { isCurrentUserStaff } from "@/lib/admin";
 import { getSettings } from "@/lib/settings";
+import { findById } from "@/lib/users";
+import { RULES_VERSION } from "@/lib/rules";
+import { RulesGate } from "@/components/site/RulesGate";
 
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   // "staff" = admin hoặc biên tập viên → hiện lối tắt vào khu /admin trên menu tài khoản.
   const [user, staff, settings] = await Promise.all([getSession(), isCurrentUserStaff(), getSettings()]);
+
+  // Người dùng đã đăng nhập nhưng chưa đồng ý nội quy (hoặc đồng ý phiên bản cũ) → hiện modal.
+  let needsRules = false;
+  if (user?.id) {
+    const doc = await findById(user.id);
+    needsRules = !!doc && (doc.rulesAgreedVersion ?? 0) < RULES_VERSION;
+  }
+
   return (
     <>
       <a className="skip-link" href="#main">
@@ -25,6 +36,7 @@ export default async function SiteLayout({
       <Footer />
       <BackToTop />
       <StickyAdBar />
+      {user ? <RulesGate needsAgreement={needsRules} /> : null}
     </>
   );
 }

@@ -11,6 +11,7 @@ import { checkPostQuota, recordPost } from "@/lib/post-quota";
 import { getSettings } from "@/lib/settings";
 import { slugify } from "@/lib/slug";
 import { createArticle } from "@/lib/articles";
+import { maskIdNumbers, maskIdNumbersInHtml, hasIdNumber } from "@/lib/content-policy";
 
 // Chuyên mục cho phép người dùng chọn (đồng bộ với admin ArticleManager).
 const CATEGORIES = ["Thông báo", "Đời sống", "Kinh tế", "Giáo dục"];
@@ -51,19 +52,39 @@ export async function POST(req: Request) {
     ? b.tags.map((t: unknown) => stripHtml(String(t)).trim()).filter(Boolean).slice(0, 10)
     : [];
 
+  const bodyText = stripHtml(bodyHtml);
+
+  // Phát hiện số giấy tờ tuỳ thân (CCCD 12 số / CMND 9 số) TRƯỚC khi che — để báo admin.
+  const hadIdNumber = hasIdNumber(`${title}\n${excerpt}\n${bodyText}`);
+
+  // Che số giấy tờ trước khi lưu: chỉ giữ 3 số đầu + 4 số cuối, phần giữa thành "****".
+  const safeTitle = maskIdNumbers(title);
+  const safeExcerpt = maskIdNumbers(excerpt);
+  const safeBodyHtml = maskIdNumbersInHtml(bodyHtml);
+
+  // Cờ kiểm duyệt: chỉ cảnh báo khi bài có số giấy tờ tuỳ thân (đã tự động che) → báo admin.
+  const flags = hadIdNumber ? ["Có số giấy tờ tuỳ thân (đã tự động che)"] : [];
+
   try {
     const article = await createArticle({
-      title, excerpt, category, categorySlug: slugify(category), scope, tags,
+      title: safeTitle, excerpt: safeExcerpt, category, categorySlug: slugify(category), scope, tags,
       coverImage, coverAlt: stripHtml(String(b.coverAlt ?? "")).trim() || undefined,
       author: { name: session.name },
-      bodyHtml,
-      status: "published",                       // sẽ công khai NGAY khi được duyệt
-      approved: !settings.postRequireApproval,    // mặc định chờ duyệt
+      bodyHtml: safeBodyHtml,
+      status: "published",   // sẽ công khai khi được duyệt
+      approved: false,        // bài người dùng LUÔN chờ duyệt — chỉ admin/editor mới duyệt
       postedBy: session.id, postedByName: session.name,
+      flags,
     });
     await recordPost(session.id);
     await notifyAdmins(
-      { type: "post_pending", title: `Bài viết mới chờ duyệt: “${article.title}”`, href: "/admin/tin-tuc", actorName: session.name, module: "tin-tuc" },
+      {
+        type: "post_pending",
+        title: flags.length
+          ? `⚠️ Bài viết cần kiểm duyệt (${flags.slice(0, 3).join("; ")}): “${article.title}”`
+          : `Bài viết mới chờ duyệt: “${article.title}”`,
+        href: "/admin/tin-tuc", actorName: session.name, module: "tin-tuc",
+      },
       session.id,
     );
     return NextResponse.json({ ok: true, slug: article.slug });
