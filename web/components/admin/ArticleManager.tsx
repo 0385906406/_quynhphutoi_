@@ -22,7 +22,7 @@ type Form = {
   seoMetaTitle: string; seoMetaDescription: string; seoKeywords: string; seoOgImage: string; seoNoindex: boolean;
 };
 const EMPTY: Form = {
-  slug: "", title: "", excerpt: "", category: "Thông báo", scope: "trong-tinh", tags: "", coverImage: "", coverAlt: "",
+  slug: "", title: "", excerpt: "", category: "Thông báo", scope: "trong-xa", tags: "", coverImage: "", coverAlt: "",
   authorName: "Ban biên tập", authorTitle: "", bodyHtml: "", featured: false, status: "draft",
   seoMetaTitle: "", seoMetaDescription: "", seoKeywords: "", seoOgImage: "", seoNoindex: false,
 };
@@ -161,8 +161,8 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
                   </select></div>
                 <div className="qp-form-group"><label className="qp-label">Phạm vi <span className="req">*</span></label>
                   <select className="qp-select" value={form.scope} onChange={(e) => set("scope", e.target.value as ArticleScope)}>
-                    <option value="trong-tinh">Trong tỉnh</option>
-                    <option value="ngoai-tinh">Ngoài tỉnh</option>
+                    <option value="trong-xa">Trong xã</option>
+                    <option value="ngoai-xa">Ngoài xã</option>
                   </select></div>
               </div>
               <div className="qp-form-group"><label className="qp-label">Thẻ (cách nhau dấu phẩy)</label>
@@ -235,7 +235,7 @@ export function ArticleManager({ initial, externalEnabled, categories }: { initi
                     <b>{r.title}</b>{r.featured ? <> <span className="qp-badge-g4">Nổi bật</span></> : null}
                     {r.pending && r.postedByName ? <div className="type-body-small text-muted">Người gửi: {r.postedByName}</div> : null}
                   </td>
-                  <td>{r.category}{r.scope === "ngoai-tinh" ? <> <span className="qp-badge-g4">Ngoài tỉnh</span></> : null}</td>
+                  <td>{r.category}{r.scope === "ngoai-xa" ? <> <span className="qp-badge-g4">Ngoài xã</span></> : null}</td>
                   <td>
                     {r.pending
                       ? <span className="qp-acc-badge is-pending">Chờ duyệt</span>

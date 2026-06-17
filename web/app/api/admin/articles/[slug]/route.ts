@@ -17,7 +17,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
   if (typeof b.title === "string") patch.title = b.title;
   if (typeof b.excerpt === "string") patch.excerpt = b.excerpt;
   if (typeof b.category === "string") { patch.category = b.category; if (typeof b.categorySlug === "string") patch.categorySlug = b.categorySlug; }
-  if (b.scope === "trong-tinh" || b.scope === "ngoai-tinh") patch.scope = b.scope;
+  if (b.scope === "trong-xa" || b.scope === "ngoai-xa") patch.scope = b.scope;
   if (Array.isArray(b.tags)) patch.tags = b.tags.map((t: unknown) => String(t).trim()).filter(Boolean);
   if (typeof b.coverImage === "string") patch.coverImage = b.coverImage;
   if (typeof b.coverAlt === "string") patch.coverAlt = b.coverAlt;

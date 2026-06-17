@@ -49,7 +49,7 @@ export type ArticleDoc = {
   excerpt: string;         // sapo / tóm tắt
   category: string;        // "Thông báo" | "Đời sống" | "Kinh tế" | "Giáo dục"
   categorySlug: string;    // "thong-bao" | "doi-song" | ...
-  scope?: ArticleScope;    // trong-tinh (mặc định) | ngoai-tinh. Thiếu = trong-tinh (bài cũ).
+  scope?: ArticleScope;    // trong-xa (mặc định) | ngoai-xa. Thiếu = trong-xa (bài cũ).
   tags: string[];
   coverImage: string;
   coverAlt?: string;
@@ -99,7 +99,7 @@ export async function getArticleBySlug(slug: string) {
 
 export type ListOpts = {
   category?: string;        // lọc theo categorySlug
-  scope?: ArticleScope;     // lọc theo phạm vi (trong/ngoài tỉnh)
+  scope?: ArticleScope;     // lọc theo phạm vi (trong/ngoài xã)
   status?: ArticleStatus;   // mặc định "published"
   search?: string;
   featured?: boolean;
@@ -113,9 +113,9 @@ export type ListOpts = {
 // Dùng $ne:false để bài admin cũ (thiếu field) vẫn coi như công khai — không cần migrate.
 const PUBLIC_GATE = { approved: { $ne: false as const }, active: { $ne: false as const } };
 
-// Lọc theo phạm vi: "ngoai-tinh" khớp đúng; "trong-tinh" gồm cả bài cũ thiếu field.
+// Lọc theo phạm vi: "ngoai-xa" khớp đúng; "trong-xa" gồm cả bài cũ thiếu field.
 const scopeFilter = (scope: ArticleScope) =>
-  scope === "ngoai-tinh" ? "ngoai-tinh" as const : { $ne: "ngoai-tinh" as const };
+  scope === "ngoai-xa" ? "ngoai-xa" as const : { $ne: "ngoai-xa" as const };
 
 export async function listArticles(opts: ListOpts = {}) {
   const col = await articles();
@@ -285,7 +285,7 @@ export async function createArticle(input: ArticleInput) {
   const doc: ArticleDoc = {
     slug, title: input.title.trim(), excerpt: input.excerpt.trim(),
     category: input.category, categorySlug: input.categorySlug || slugify(input.category),
-    scope: input.scope === "ngoai-tinh" ? "ngoai-tinh" : "trong-tinh",
+    scope: input.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa",
     tags: input.tags ?? [], coverImage: input.coverImage, coverAlt: input.coverAlt,
     author: input.author, body, readingMinutes: estimateReadingMinutes(body), views: 0,
     featured: input.featured ?? false, status, seo: input.seo ?? {},
@@ -305,7 +305,7 @@ export async function updateArticle(slug: string, patch: Partial<ArticleInput>) 
   if (patch.title !== undefined) set.title = patch.title.trim();
   if (patch.excerpt !== undefined) set.excerpt = patch.excerpt.trim();
   if (patch.category !== undefined) { set.category = patch.category; set.categorySlug = patch.categorySlug || slugify(patch.category); }
-  if (patch.scope !== undefined) set.scope = patch.scope === "ngoai-tinh" ? "ngoai-tinh" : "trong-tinh";
+  if (patch.scope !== undefined) set.scope = patch.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa";
   if (patch.tags !== undefined) set.tags = patch.tags;
   if (patch.coverImage !== undefined) set.coverImage = patch.coverImage;
   if (patch.coverAlt !== undefined) set.coverAlt = patch.coverAlt;
@@ -385,7 +385,7 @@ export function toNewsCardArticle(d: ArticleDoc): import("@/lib/news").Article {
   const date = dd ? formatDate(dd, "") : "";
   return {
     id: d.slug, slug: d.slug, category: d.category as import("@/lib/news").NewsCategory,
-    scope: d.scope === "ngoai-tinh" ? "ngoai-tinh" : "trong-tinh",
+    scope: d.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa",
     title: d.title, excerpt: d.excerpt, image: d.coverImage, date,
     readTime: `${d.readingMinutes} phút đọc`, author: d.author?.name ?? "", tags: d.tags ?? [],
     views: d.views ?? 0,
@@ -395,7 +395,7 @@ export function toNewsCardArticle(d: ArticleDoc): import("@/lib/news").Article {
 export function toArticleRow(d: ArticleDoc): ArticleRow {
   return {
     slug: d.slug, title: d.title, excerpt: d.excerpt, category: d.category, categorySlug: d.categorySlug,
-    scope: d.scope === "ngoai-tinh" ? "ngoai-tinh" : "trong-tinh",
+    scope: d.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa",
     tags: d.tags ?? [], coverImage: d.coverImage, coverAlt: d.coverAlt ?? "",
     authorName: d.author?.name ?? "", authorTitle: d.author?.title ?? "", authorAvatar: d.author?.avatarUrl ?? "",
     bodyHtml: blocksToHtml(d.body ?? []), featured: d.featured, status: d.status,

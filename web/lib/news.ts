@@ -4,12 +4,12 @@
 
 export type NewsCategory = "Thông báo" | "Đời sống" | "Kinh tế" | "Giáo dục";
 
-// Phạm vi tin: trong tỉnh (địa phương) hay ngoài tỉnh (tin báo quốc gia, nhập từ RSS…).
-// Bài cũ/không gắn → coi như "trong-tinh".
-export type ArticleScope = "trong-tinh" | "ngoai-tinh";
+// Phạm vi tin: trong xã (địa phương) hay ngoài xã (tin báo ngoài, nhập từ RSS…).
+// Bài cũ/không gắn → coi như "trong-xa".
+export type ArticleScope = "trong-xa" | "ngoai-xa";
 export const SCOPE_LABEL: Record<ArticleScope, string> = {
-  "trong-tinh": "Trong tỉnh",
-  "ngoai-tinh": "Ngoài tỉnh",
+  "trong-xa": "Trong xã",
+  "ngoai-xa": "Ngoài xã",
 };
 
 export type Article = {

@@ -36,6 +36,8 @@ export async function POST(req: Request) {
   const category = String(b.category ?? "").trim();
   if (!CATEGORIES.includes(category)) return NextResponse.json({ error: "Vui lòng chọn chuyên mục hợp lệ." }, { status: 400 });
 
+  const scope = b.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa";
+
   const excerpt = stripHtml(String(b.excerpt ?? "")).trim();
   if (excerpt.length > 400) return NextResponse.json({ error: "Tóm tắt quá dài (tối đa 400 ký tự)." }, { status: 400 });
 
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
 
   try {
     const article = await createArticle({
-      title, excerpt, category, categorySlug: slugify(category), tags,
+      title, excerpt, category, categorySlug: slugify(category), scope, tags,
       coverImage, coverAlt: stripHtml(String(b.coverAlt ?? "")).trim() || undefined,
       author: { name: session.name },
       bodyHtml,

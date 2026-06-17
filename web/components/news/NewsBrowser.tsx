@@ -78,13 +78,13 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"all" | "cho-duyet">("all");
-  const [scopeTab, setScopeTab] = useState<"all" | "trong-tinh" | "ngoai-tinh">("all");
+  const [scopeTab, setScopeTab] = useState<"trong-xa" | "ngoai-xa">("trong-xa");
   const [postOpen, setPostOpen] = useState(false);
   const router = useRouter();
   const isPending = view === "cho-duyet";
 
-  const countLocal = useMemo(() => items.filter((a) => a.scope !== "ngoai-tinh").length, [items]);
-  const countOutside = useMemo(() => items.filter((a) => a.scope === "ngoai-tinh").length, [items]);
+  const countLocal = useMemo(() => items.filter((a) => a.scope !== "ngoai-xa").length, [items]);
+  const countOutside = useMemo(() => items.filter((a) => a.scope === "ngoai-xa").length, [items]);
   const CATEGORIES = useMemo(() => ["Tất cả", ...Array.from(new Set(items.map((a) => a.category)))], [items]);
   const catOptions = useMemo(() => CATEGORIES.map((c) => ({ value: c, label: c })), [CATEGORIES]);
   const sortOptions = useMemo(() => SORTS.map((s) => ({ value: s.value, label: s.label })), []);
@@ -93,7 +93,7 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
     const q = query.trim().toLowerCase();
     const filtered = items.filter((a) => {
       const okCat = category === "Tất cả" || a.category === category;
-      const okScope = scopeTab === "all" || (scopeTab === "ngoai-tinh" ? a.scope === "ngoai-tinh" : a.scope !== "ngoai-tinh");
+      const okScope = scopeTab === "ngoai-xa" ? a.scope === "ngoai-xa" : a.scope !== "ngoai-xa";
       const okQ = !q || a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
       return okCat && okScope && okQ;
     });
@@ -116,13 +116,12 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const pageItems = pager.items;
   const reset = pager.reset;
 
-  const defaultMode = scopeTab === "all" && category === "Tất cả" && !query.trim() && pager.page === 1;
-  // Tiêu đề lưới: mặc định / theo phạm vi đang lọc / theo số kết quả.
-  const headingTitle = defaultMode
-    ? "Tất cả tin tức"
-    : scopeTab !== "all" && category === "Tất cả" && !query.trim()
-      ? `Tin ${SCOPE_LABEL[scopeTab].toLowerCase()}`
-      : `${sorted.length} bài viết`;
+  // Mặc định = tab Trong xã, không lọc danh mục/từ khoá, trang 1 → hiện vùng nổi bật + Đọc nhiều.
+  const defaultMode = scopeTab === "trong-xa" && category === "Tất cả" && !query.trim() && pager.page === 1;
+  // Tiêu đề lưới: theo phạm vi đang xem / theo số kết quả khi có lọc.
+  const headingTitle = category === "Tất cả" && !query.trim()
+    ? `Tin ${SCOPE_LABEL[scopeTab].toLowerCase()}`
+    : `${sorted.length} bài viết`;
   const featured = defaultMode ? featuredList[0] : undefined;
   const levelTwo = defaultMode ? featuredList.slice(1, 4) : [];
   const showPopular = defaultMode && popular.length > 0;
@@ -133,14 +132,11 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
       {/* Tabs + nút gửi bài */}
       <div className="qp-lf-head">
         <div className="qp-tabs" role="tablist" aria-label="Lọc tin tức">
-          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "all"} className={`qp-tab${view === "all" && scopeTab === "all" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("all"); reset(); }}>
-            Tất cả tin <span className="qp-tab__count">{items.length}</span>
+          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "trong-xa"} className={`qp-tab${view === "all" && scopeTab === "trong-xa" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("trong-xa"); reset(); }}>
+            Trong xã <span className="qp-tab__count">{countLocal}</span>
           </button>
-          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "trong-tinh"} className={`qp-tab${view === "all" && scopeTab === "trong-tinh" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("trong-tinh"); reset(); }}>
-            Trong tỉnh <span className="qp-tab__count">{countLocal}</span>
-          </button>
-          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "ngoai-tinh"} className={`qp-tab${view === "all" && scopeTab === "ngoai-tinh" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("ngoai-tinh"); reset(); }}>
-            Ngoài tỉnh <span className="qp-tab__count">{countOutside}</span>
+          <button type="button" role="tab" aria-selected={view === "all" && scopeTab === "ngoai-xa"} className={`qp-tab${view === "all" && scopeTab === "ngoai-xa" ? " is-active" : ""}`} onClick={() => { setView("all"); setScopeTab("ngoai-xa"); reset(); }}>
+            Ngoài xã <span className="qp-tab__count">{countOutside}</span>
           </button>
           {isLoggedIn && (
             <button type="button" role="tab" aria-selected={isPending} className={`qp-tab qp-tab--pending${isPending ? " is-active" : ""}`} onClick={() => { setView("cho-duyet"); reset(); }}>

@@ -8,6 +8,7 @@ import { ImageUploader } from "@/components/common/ImageUploader";
 import { CharCount } from "@/components/common/CharCount";
 import { useAdaptiveCaptcha } from "@/components/common/useAdaptiveCaptcha";
 import { useToast } from "@/components/common/Toast";
+import type { ArticleScope } from "@/lib/news";
 
 const CATEGORIES = ["Thông báo", "Đời sống", "Kinh tế", "Giáo dục"];
 
@@ -16,6 +17,7 @@ type Props = { open: boolean; onClose: () => void; isLoggedIn: boolean; onSucces
 export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Props) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [scope, setScope] = useState<ArticleScope>("trong-xa");
   const [excerpt, setExcerpt] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [tags, setTags] = useState("");
@@ -51,7 +53,7 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
       const res = await fetch("/api/articles", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title.trim(), category, excerpt: excerpt.trim(), coverImage,
+          title: title.trim(), category, scope, excerpt: excerpt.trim(), coverImage,
           tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
           bodyHtml, recaptchaToken: cap.token(),
         }),
@@ -104,6 +106,14 @@ export function ArticleSubmitModal({ open, onClose, isLoggedIn, onSuccess }: Pro
               <select id="ar-cat" className="qp-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
+            </div>
+
+            <div className="qp-form-group">
+              <span className="qp-label">Phạm vi <span className="req">*</span></span>
+              <div style={{ display: "flex", gap: 20 }}>
+                <label className="qp-check"><input type="radio" name="ar-scope" checked={scope === "trong-xa"} onChange={() => setScope("trong-xa")} /> Trong xã</label>
+                <label className="qp-check"><input type="radio" name="ar-scope" checked={scope === "ngoai-xa"} onChange={() => setScope("ngoai-xa")} /> Ngoài xã</label>
+              </div>
             </div>
 
             <div className="qp-form-group">

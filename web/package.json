@@ -12,6 +12,7 @@
     "lint": "eslint",
     "seed:categories": "node --experimental-strip-types --env-file=.env.local seeds/categories.ts",
     "seed:articles": "node --experimental-strip-types --env-file=.env.local seeds/articles.ts",
+    "seed:migrate-scope": "node --experimental-strip-types --env-file=.env.local seeds/migrate-scope.ts",
     "seed:admin-units": "node --experimental-strip-types --env-file=.env.local seeds/admin-units.ts",
     "seed:schools": "node --experimental-strip-types --env-file=.env.local seeds/schools.ts",
     "seed:health": "node --experimental-strip-types --env-file=.env.local seeds/health.ts",
