@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { TimeAgo } from "@/components/common/TimeAgo";
+import { Pagination } from "@/components/common/Pagination";
+
+const PAGE_SIZE = 20;
 
 export type NotifItem = {
   id: string;
@@ -65,6 +68,7 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
   const [items, setItems]       = useState<NotifItem[]>(initial);
   const [query, setQuery]       = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const [page, setPage]         = useState(1);
 
   const unread = items.filter((n) => !n.read).length;
 
@@ -89,6 +93,13 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
       return true;
     });
   }, [items, activeTab, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function pickTab(k: TabKey) { setActiveTab(k); setPage(1); }
+  function pickQuery(q: string) { setQuery(q); setPage(1); }
 
   function openItem(n: NotifItem) {
     if (!n.read) {
@@ -127,11 +138,11 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
             type="search"
             placeholder="Tìm trong thông báo..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => pickQuery(e.target.value)}
             autoComplete="off"
           />
           {query && (
-            <button type="button" className="qp-notif-searchbox__clear" onClick={() => setQuery("")} aria-label="Xóa">
+            <button type="button" className="qp-notif-searchbox__clear" onClick={() => pickQuery("")} aria-label="Xóa">
               <IconClose />
             </button>
           )}
@@ -155,7 +166,7 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
               role="tab"
               aria-selected={activeTab === tab.key}
               className={`qp-notif-tab${activeTab === tab.key ? " is-active" : ""}`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => pickTab(tab.key)}
             >
               {tab.label}
               {count > 0 && (
@@ -188,32 +199,35 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
               : "Không có thông báo nào trong mục này"}
           </p>
           {query && (
-            <button type="button" className="qp-notif-empty__reset" onClick={() => setQuery("")}>
+            <button type="button" className="qp-notif-empty__reset" onClick={() => pickQuery("")}>
               Xóa tìm kiếm
             </button>
           )}
         </div>
       ) : (
-        <ul className="qp-notif-list">
-          {filtered.map((n) => (
-            <li key={n.id}>
-              <button
-                type="button"
-                className={`qp-notif-item is-btn${n.read ? "" : " is-unread"}`}
-                onClick={() => openItem(n)}
-              >
-                <span className={`qp-notif-item__icon is-${n.type}`}>
-                  <TypeIcon type={n.type} />
-                </span>
-                <span className="qp-notif-item__text">
-                  <span className="qp-notif-item__title">{n.title}</span>
-                  <TimeAgo iso={n.createdAt} className="qp-notif-item__time" />
-                </span>
-                {!n.read && <span className="qp-notif-item__dot" aria-label="Chưa đọc" />}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="qp-notif-list">
+            {pageItems.map((n) => (
+              <li key={n.id}>
+                <button
+                  type="button"
+                  className={`qp-notif-item is-btn${n.read ? "" : " is-unread"}`}
+                  onClick={() => openItem(n)}
+                >
+                  <span className={`qp-notif-item__icon is-${n.type}`}>
+                    <TypeIcon type={n.type} />
+                  </span>
+                  <span className="qp-notif-item__text">
+                    <span className="qp-notif-item__title">{n.title}</span>
+                    <TimeAgo iso={n.createdAt} className="qp-notif-item__time" />
+                  </span>
+                  {!n.read && <span className="qp-notif-item__dot" aria-label="Chưa đọc" />}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+        </>
       )}
     </div>
   );
