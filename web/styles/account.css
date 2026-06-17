@@ -270,7 +270,7 @@ a.qp-addetail__row:hover { color: var(--color-teal-dark); }
 .qp-search-all:hover { background: var(--color-indigo-pale); }
 
 /* ===== Trang kết quả /tim-kiem ===== */
-.qp-searchpage-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: min(720px, 100%); margin-top: var(--space-6); padding: 8px 8px 8px 18px; background: #fff; border: 1.5px solid var(--color-gray-border); border-radius: 999px; box-shadow: 0 6px 22px -10px rgba(15,76,129,0.22); transition: border-color var(--duration-default) ease, box-shadow var(--duration-default) ease; }
+.qp-searchpage-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; margin-top: var(--space-6); padding: 8px 8px 8px 18px; background: #fff; border: 1.5px solid var(--color-gray-border); border-radius: 999px; box-shadow: 0 6px 22px -10px rgba(15,76,129,0.22); transition: border-color var(--duration-default) ease, box-shadow var(--duration-default) ease; }
 .qp-searchpage-form:focus-within { border-color: var(--color-teal); box-shadow: 0 0 0 4px rgba(0,169,143,0.14), 0 8px 24px -10px rgba(15,76,129,0.28); }
 .qp-searchpage-form > svg { color: var(--color-teal-dark); flex-shrink: 0; }
 .qp-searchpage-form input { flex: 1 1 200px; min-width: 0; border: none; outline: none; background: transparent; font: 500 15.5px/1.4 var(--font-primary); color: var(--color-text); }
