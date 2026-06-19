@@ -1574,31 +1574,38 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
 .qp-pagehead p { color: var(--color-gray-text); max-width: 640px; }
 
 /* ============================================================
-   BACK TO TOP (nút cuộn lên đầu trang)
+   BACK TO TOP (nút cuộn lên đầu trang — progress ring)
    ============================================================ */
 .qp-totop {
   position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 150;
-  width: 48px; height: 48px;
+  width: 52px; height: 52px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--color-teal); color: #fff;
+  background: #fff; color: var(--color-teal);
   border: none; border-radius: var(--radius-full);
-  box-shadow: var(--shadow-lift); cursor: pointer;
-  opacity: 0; transform: translateY(16px) scale(0.9); pointer-events: none;
+  box-shadow: 0 4px 24px -6px rgba(6,35,64,0.18), 0 1px 4px rgba(6,35,64,0.07);
+  cursor: pointer; padding: 0;
+  opacity: 0; transform: translateY(20px) scale(0.82); pointer-events: none;
   transition: opacity var(--duration-fast) var(--ease-soft),
               transform var(--duration-fast) var(--ease-soft),
-              background var(--duration-fast) ease;
+              box-shadow var(--duration-fast) ease;
 }
 .qp-totop.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-.qp-totop:hover { background: var(--color-teal-dark); transform: translateY(-2px) scale(1); }
+.qp-totop:hover {
+  box-shadow: 0 10px 32px -8px rgba(0,169,143,0.32), 0 2px 8px rgba(6,35,64,0.08);
+  transform: translateY(-3px) scale(1);
+}
+.qp-totop:active { transform: translateY(-1px) scale(0.96); }
 .qp-totop:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 3px; }
+.qp-totop-ring { transition: stroke-dashoffset 0.18s ease; }
 
 @media (max-width: 560px) {
-  .qp-totop { right: var(--space-4); bottom: var(--space-4); width: 44px; height: 44px; }
+  .qp-totop { right: var(--space-4); bottom: var(--space-4); width: 48px; height: 48px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .qp-totop { transition: opacity var(--duration-fast) ease; transform: none; }
   .qp-totop.is-visible { transform: none; }
   .qp-totop:hover { transform: none; }
+  .qp-totop-ring { transition: none; }
 }
 
 /* ============================================================
