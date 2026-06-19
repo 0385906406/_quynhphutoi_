@@ -32,6 +32,7 @@ import DetailsContent from "@tiptap/extension-details-content";
 import { RteLinkModal } from "./rte/RteLinkModal";
 import { RteVideoModal } from "./rte/RteVideoModal";
 import { RteColorPicker } from "./rte/RteColorPicker";
+import { GalleryNode } from "./rte/RteGalleryNode";
 
 // ── Type helper cho các command extension chưa có trong @types ──
 interface RteChain {
@@ -42,7 +43,7 @@ interface RteChain {
   toggleSuperscript(): RteChain; toggleSubscript(): RteChain;
   toggleBulletList(): RteChain; toggleOrderedList(): RteChain; toggleBlockquote(): RteChain; toggleCodeBlock(): RteChain;
   setImage(attrs: { src: string; alt: string }): RteChain; setHorizontalRule(): RteChain;
-  undo(): RteChain; redo(): RteChain;
+  undo(): RteChain; redo(): RteChain; insertGallery(): RteChain;
   insertTable(opts: { rows: number; cols: number; withHeaderRow: boolean }): RteChain;
   addRowBefore(): RteChain; addRowAfter(): RteChain; addColumnBefore(): RteChain; addColumnAfter(): RteChain;
   deleteRow(): RteChain; deleteColumn(): RteChain; deleteTable(): RteChain; mergeOrSplit(): RteChain;
@@ -83,6 +84,7 @@ const IcCodeBlock = () => <svg {...I({})}><rect x="2" y="3" width="20" height="1
 const IcTable = () => <svg {...I({})}><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>;
 const IcUndo = () => <svg {...I({})}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
 const IcRedo = () => <svg {...I({})}><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>;
+const IcGallery = () => <svg {...I({})}><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
 const IcFull = () => <svg {...I({})}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>;
 const IcExitFull = () => <svg {...I({})}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>;
 const IcTextColor = () => <svg {...I({})}><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>;
@@ -134,6 +136,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
       TextStyle, Color, Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: false }), TableRow, TableHeader, TableCell,
       CharacterCount, Superscript, Subscript, Typography,
+      GalleryNode,
       TaskList, TaskItem.configure({ nested: true }),
       Details.configure({ persist: true, HTMLAttributes: { class: "rte-details" } }), DetailsSummary, DetailsContent,
     ],
@@ -304,6 +307,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                 </div>
               )}
             </div>
+            <Btn label="Bộ ảnh (gallery)" active={active("gallery")} onClick={() => r.chain().focus().insertGallery().run()}><IcGallery /></Btn>
             <Btn label="Chèn video YouTube" onClick={() => setShowVideoModal(true)}><IcVideo /></Btn>
             <Btn label="Đường kẻ ngang" onClick={() => r.chain().focus().setHorizontalRule().run()}><IcHr /></Btn>
           </Group>

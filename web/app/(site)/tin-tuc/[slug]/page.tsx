@@ -117,7 +117,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <div className="container-wide qp-lf-body">
         <div className="qp-article-layout is-lf">
           <div className="qp-lf-main">
-            <div className="qp-prose qp-prose--wide">
+            <div className="qp-article-body">
+              <div className="rich-text-editor__content qp-rte-view">
               {body.map((b, i) => {
                 switch (b.type) {
                   case "h2": return <h2 id={`sec-${i}`} key={i}>{b.text}</h2>;
@@ -137,6 +138,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   default: return <p key={i}>{b.text}</p>;
                 }
               })}
+              </div>
 
               {/* "… Xem thêm" affiliate (random link Shopee) — cuối phần mô tả; ẩn nếu admin chưa bật */}
               <AffiliateCTA />

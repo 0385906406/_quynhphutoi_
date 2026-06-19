@@ -92,6 +92,8 @@
 .rich-text-editor__content pre code { background: transparent; color: inherit; padding: 0; }
 .rich-text-editor__content a { color: var(--color-primary); text-decoration: underline; }
 .rich-text-editor__content img, .rich-text-editor__content .rte-image { max-width: 100%; height: auto; border-radius: 6px; margin: 12px 0; display: block; }
+.rich-text-editor__content .rte-gallery > img,
+.rich-text-editor__content .rte-gallery > .rte-gallery__img { margin: 0; border-radius: 6px; }
 .rich-text-editor__content iframe { width: 100%; aspect-ratio: 16 / 9; border: none; border-radius: 8px; margin: 12px 0; }
 .rich-text-editor__content hr { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
 
@@ -175,6 +177,69 @@
   min-height: 0; max-height: none; overflow: visible; padding: 0;
   font-size: 15px; line-height: 1.75; color: var(--gray-800);
 }
+
+/* ── Gallery block ──────────────────────────────────────────────── */
+/* figure.rte-gallery — dùng cả trên frontend và trong editor */
+.rte-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  gap: 6px;
+  margin: 14px 0; border: 0; padding: 0;
+}
+/* NodeView editor: mỗi ảnh bọc trong .rte-gallery__item để có nút xóa */
+.rte-gallery__grid { display: contents; }
+.rte-gallery__item { position: relative; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; background: var(--gray-100); }
+.rte-gallery__item .rte-gallery__img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 0; margin: 0; }
+/* Frontend: ảnh là con trực tiếp của figure */
+.rte-gallery > img,
+.rte-gallery > .rte-gallery__img {
+  width: 100%; aspect-ratio: 16/9; object-fit: cover;
+  display: block; border-radius: 6px; margin: 0; height: auto;
+}
+
+/* Remove button — visible on hover in editor */
+.rte-gallery__remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; border-radius: 50%; border: 0;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 14px; line-height: 1;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+  padding: 0;
+}
+.rte-gallery__item:hover .rte-gallery__remove { display: flex; }
+
+/* Toolbar (editing only) */
+.rte-gallery__toolbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 2px 2px;
+}
+.rte-gallery__add-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 6px; border: 1.5px dashed var(--gray-300);
+  background: var(--gray-50); color: var(--gray-600); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.rte-gallery__add-btn svg { width: 14px; height: 14px; }
+.rte-gallery__add-btn:hover { border-color: var(--color-primary); background: rgba(0,210,255,.05); color: var(--color-primary); }
+
+.rte-gallery__add-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; }
+.rte-gallery__url-input {
+  flex: 1; min-width: 180px; padding: 6px 10px; border: 1px solid var(--gray-200);
+  border-radius: 6px; font-size: 13px; outline: none;
+}
+.rte-gallery__url-input:focus { border-color: var(--color-accent-cyan); }
+.rte-gallery__add-confirm {
+  padding: 6px 14px; border-radius: 6px; border: 0; background: var(--color-primary);
+  color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.rte-gallery__add-confirm:disabled { opacity: .45; cursor: not-allowed; }
+.rte-gallery__add-cancel {
+  padding: 6px 10px; border-radius: 6px; border: 1px solid var(--gray-200);
+  background: #fff; color: var(--gray-600); font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.rte-gallery__count { font-size: 11.5px; color: var(--gray-400); margin-left: auto; }
+
+/* Selected state in editor */
+.rte-gallery--editing.is-selected .rte-gallery__grid { outline: 2px solid var(--color-accent-cyan); border-radius: 8px; outline-offset: 2px; }
 
 /* ── Mobile (≤640px) ────────────────────────────────────────────── */
 @media (max-width: 640px) {
