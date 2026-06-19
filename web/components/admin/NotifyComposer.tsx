@@ -29,7 +29,7 @@ export function NotifyComposer() {
   }
 
   return (
-    <form className="qp-acc-card" onSubmit={submit} style={{ maxWidth: 640 }}>
+    <form className="qp-acc-card" onSubmit={submit}>
       <div className="qp-acc-card__title">Soạn thông báo</div>
       <div className="qp-form-group">
         <label className="qp-label">Nội dung <span className="req">*</span></label>
