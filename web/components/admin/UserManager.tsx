@@ -187,13 +187,18 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
             </thead>
             <tbody>
               {pg.paged.map((r) => (
-                <tr key={r.id} style={r.banned ? { opacity: .6 } : undefined}>
+                <tr
+                  key={r.id}
+                  style={{
+                    ...(r.banned ? { opacity: .6 } : {}),
+                    ...(r.id === me ? { background: "var(--color-teal-pale)" } : {}),
+                  }}
+                >
 
-                  {/* Email + Tên */}
-                  <td>
-                    <div style={{ fontWeight: 600, color: "var(--color-navy)" }}>
+                  {/* Email + Tên — nếu là tài khoản đang đăng nhập thì highlight border trái */}
+                  <td style={r.id === me ? { borderLeft: "3px solid var(--color-teal)" } : undefined}>
+                    <div style={{ fontWeight: 600, color: r.id === me ? "var(--color-teal-dark)" : "var(--color-navy)" }}>
                       {r.email}
-                      {r.id === me && <> <span className="qp-badge-g4">Bạn</span></>}
                     </div>
                     <div className="type-body-small text-muted">{r.name}</div>
                   </td>
