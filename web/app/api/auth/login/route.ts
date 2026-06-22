@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findByEmail, checkPassword, normEmail } from "@/lib/users";
 import { createSession } from "@/lib/auth";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -18,12 +19,15 @@ export async function POST(req: Request) {
 
   const u = await findByEmail(email || "");
   if (!u || !(await checkPassword(u, password || ""))) {
+    void logActivity({ userId: null, userName: email || "", userEmail: email || "", userRole: "unknown", category: "auth", action: "auth.login", success: false, detail: "Sai thông tin đăng nhập", ip });
     return NextResponse.json({ error: "Email hoặc mật khẩu không đúng." }, { status: 401 });
   }
   if (u.banned) {
+    void logActivity({ userId: String(u._id), userName: u.name, userEmail: u.email, userRole: u.role ?? "user", category: "auth", action: "auth.login", success: false, detail: "Tài khoản bị khóa", ip });
     return NextResponse.json({ error: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên." }, { status: 403 });
   }
 
   await createSession({ id: String(u._id), email: u.email, name: u.name, avatar: u.avatar || "" });
+  void logActivity({ userId: String(u._id), userName: u.name, userEmail: u.email, userRole: u.role ?? "user", category: "auth", action: "auth.login", success: true, ip });
   return NextResponse.json({ ok: true });
 }

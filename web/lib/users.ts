@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-export type UserRole = "admin" | "editor" | "user";
+export type UserRole = "admin" | "editor" | "user" | "custom";
 
 export type UserDoc = {
   _id?: ObjectId;
@@ -15,7 +15,8 @@ export type UserDoc = {
   banned?: boolean;            // true = tài khoản bị khóa, không thể đăng nhập.
   warnCount?: number;          // số lần bị cảnh báo vi phạm nội quy.
   avatar?: string | null;     // URL ảnh đại diện (Cloudinary). Trống = dùng chữ cái đầu.
-  role?: UserRole;            // thiếu = "user". "admin" toàn quyền; "editor" làm nội dung + kiểm duyệt.
+  role?: UserRole;            // thiếu = "user". "admin" toàn quyền; "editor" làm nội dung + kiểm duyệt; "custom" = vai trò tùy chỉnh.
+  customRoleId?: string;      // ID của custom role khi role === "custom".
   verifyToken?: string | null;
   verifyTokenExp?: Date | null;
   resetToken?: string | null;
@@ -28,8 +29,8 @@ export type UserDoc = {
 export const isAdmin = (u: Pick<UserDoc, "role"> | null | undefined) => u?.role === "admin";
 // Biên tập viên: làm nội dung + kiểm duyệt, KHÔNG đụng quản trị hệ thống.
 export const isEditor = (u: Pick<UserDoc, "role"> | null | undefined) => u?.role === "editor";
-// Nhân sự khu quản trị = admin ∪ editor (được vào /admin).
-export const isStaff = (u: Pick<UserDoc, "role"> | null | undefined) => isAdmin(u) || isEditor(u);
+// Nhân sự khu quản trị = admin ∪ editor ∪ custom role (được vào /admin).
+export const isStaff = (u: Pick<UserDoc, "role"> | null | undefined) => isAdmin(u) || isEditor(u) || u?.role === "custom";
 
 async function users() {
   const db = await getDb();
@@ -85,8 +86,22 @@ export async function countUsers(opts: UserListOpts = {}) {
 export async function setUserRole(id: string | ObjectId, role: UserRole) {
   if (typeof id === "string" && !ObjectId.isValid(id)) return 0;
   const _id = typeof id === "string" ? new ObjectId(id) : id;
-  const res = await (await users()).updateOne({ _id }, { $set: { role } });
+  // Khi set vai trò hệ thống, xóa customRoleId nếu có
+  const res = await (await users()).updateOne({ _id }, { $set: { role }, $unset: { customRoleId: "" } });
   return res.matchedCount;
+}
+
+export async function setUserCustomRole(id: string | ObjectId, customRoleId: string) {
+  if (typeof id === "string" && !ObjectId.isValid(id)) return 0;
+  const _id = typeof id === "string" ? new ObjectId(id) : id;
+  const res = await (await users()).updateOne({ _id }, { $set: { role: "custom" as UserRole, customRoleId } });
+  return res.matchedCount;
+}
+
+// Khi xóa custom role: reset tất cả user đang dùng role đó về "user"
+export async function clearCustomRoleFromUsers(customRoleId: string) {
+  const col = await users();
+  await col.updateMany({ customRoleId }, { $set: { role: "user" as UserRole }, $unset: { customRoleId: "" } });
 }
 
 export async function setUserVerified(id: string | ObjectId, verified: boolean) {
@@ -104,11 +119,12 @@ export async function deleteUser(id: string | ObjectId) {
 }
 
 // Bản ghi phẳng cho client admin (KHÔNG kèm passwordHash / token).
-export type UserRow = { id: string; email: string; name: string; role: UserRole; verified: boolean; banned: boolean; warnCount: number; createdAt: string };
+export type UserRow = { id: string; email: string; name: string; role: UserRole; customRoleId?: string; verified: boolean; banned: boolean; warnCount: number; createdAt: string };
 export function toUserRow(u: UserDoc): UserRow {
   return {
     id: u._id!.toString(), email: u.email, name: u.name,
-    role: u.role === "admin" ? "admin" : u.role === "editor" ? "editor" : "user",
+    role: u.role === "admin" ? "admin" : u.role === "editor" ? "editor" : u.role === "custom" ? "custom" : "user",
+    customRoleId: u.customRoleId,
     verified: u.verified,
     banned: u.banned === true,
     warnCount: u.warnCount ?? 0,

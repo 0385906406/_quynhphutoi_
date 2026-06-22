@@ -1,4 +1,4 @@
-// API Tin tức (công khai): người dùng gửi bài viết (POST — cần đăng nhập).
+﻿// API Tin tức (công khai): người dùng gửi bài viết (POST — cần đăng nhập).
 // Bài gửi lên ở trạng thái CHỜ DUYỆT (approved=false) cho tới khi admin duyệt,
 // giống luồng đăng tin Việc làm / Mua bán / Tìm đồ rơi.
 import { NextResponse } from "next/server";
@@ -15,6 +15,7 @@ import { maskIdNumbers, maskIdNumbersInHtml, hasIdNumber } from "@/lib/content-p
 import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { addWarning } from "@/lib/users";
 import { createWarning } from "@/lib/user-warnings";
+import { logActivity } from "@/lib/activity-log";
 
 // Chuyên mục cho phép người dùng chọn (đồng bộ với admin ArticleManager).
 const CATEGORIES = ["Thông báo", "Đời sống", "Kinh tế", "Giáo dục"];
@@ -110,12 +111,13 @@ export async function POST(req: Request) {
       {
         type: "post_pending",
         title: flags.length
-          ? `⚠️ Bài viết cần kiểm duyệt (${flags.slice(0, 3).join("; ")}): “${article.title}”`
-          : `Bài viết mới chờ duyệt: “${article.title}”`,
+          ? `⚠️ Bài viết cần kiểm duyệt (${flags.slice(0, 3).join("; ")}): "${article.title}"`
+          : `Bài viết mới chờ duyệt: "${article.title}"`,
         href: "/admin/tin-tuc", actorName: session.name, module: "tin-tuc",
       },
       session.id,
     );
+    void logActivity({ userId: session.id, userName: session.name, userEmail: "", userRole: "user", category: "user", action: "article.submit", target: { type: "bài viết", id: article.slug, label: article.title }, success: true, detail: flags.length ? flags.slice(0, 2).join("; ") : undefined });
     return NextResponse.json({ ok: true, slug: article.slug });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Gửi bài thất bại." }, { status: 400 });

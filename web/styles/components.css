@@ -97,7 +97,7 @@
 .qp-category-badge.is-navy    { background: var(--color-navy-pale); color: var(--color-navy); }
 .qp-category-badge.overlay {
   background: rgba(255,255,255,0.85); color: var(--color-navy-deep);
-  backdrop-filter: blur(6px); box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: var(--shadow-sm);
 }
 
 /* Tag — small neutral chip */
@@ -122,7 +122,7 @@
 .qp-topbar {
   position: sticky; top: 0; z-index: 100;
   background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-gray-border);
 }
 .qp-topbar__inner {
@@ -302,8 +302,8 @@
    MODAL (overlay giữa màn) — dùng cho Thông báo
    ============================================================ */
 .qp-modal-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(6,35,64,0.45); backdrop-filter: blur(2px);
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 200;
+  background: rgba(6,35,64,0.45); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   display: flex; align-items: flex-start; justify-content: center;
   padding: 80px 16px 16px;
   animation: qp-overlay-in var(--duration-fast) ease;
@@ -396,7 +396,7 @@
 
 @media (max-width: 1180px) {
   .qp-nav {
-    position: fixed; inset: var(--topbar-height) 0 auto 0;
+    position: fixed; top: var(--topbar-height); right: 0; bottom: auto; left: 0; inset: var(--topbar-height) 0 auto 0;
     flex-direction: column; align-items: stretch; gap: 2px;
     background: #fff; border-bottom: 1px solid var(--color-gray-border);
     padding: 12px; margin: 0;
@@ -815,16 +815,18 @@
    ============================================================ */
 .qp-pagehero {
   position: relative; overflow: hidden; border-bottom: 1px solid var(--color-gray-border);
-  background:
-    radial-gradient(at 20% 30%, rgba(240,247,255,1) 0%, transparent 60%),
-    radial-gradient(at 80% 70%, rgba(234,241,248,1) 0%, transparent 60%),
-    linear-gradient(135deg, #F0F7FF 0%, #E6F7F3 60%, #EAF1F8 100%);
+  background: linear-gradient(135deg,
+    #E8F4FF 0%, #E0F2EE 20%, #EEF0FF 40%,
+    #E4F5F0 60%, #F0F2FF 80%, #E8F4FF 100%);
+  background-size: 300% 300%;
+  animation: qp-hero-shift 20s ease-in-out infinite;
 }
 .qp-pagehero__blob { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(70px); animation: qp-blob-drift 18s ease-in-out infinite; }
 .qp-pagehero__blob.is-teal   { width: 320px; height: 320px; top: -100px; left: 8%; background: var(--color-teal); opacity: 0.18; }
 .qp-pagehero__blob.is-indigo { width: 220px; height: 220px; top: 30%; left: 32%; background: var(--color-indigo); opacity: 0.16; animation-delay: -8s; }
 .qp-pagehero__blob.is-yellow { width: 240px; height: 240px; bottom: -80px; left: 58%; background: var(--color-yellow); opacity: 0.16; animation-delay: -12s; }
 @keyframes qp-blob-drift { 0%, 100% { transform: translate(0,0); } 33% { transform: translate(20px,-18px); } 66% { transform: translate(-14px,12px); } }
+@keyframes qp-hero-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 .qp-pagehero__art {
   position: absolute; top: -20px; bottom: -20px; right: 0; width: 230px; z-index: 1; pointer-events: none;
   background: url('/img/vectors/rice-halftone.svg') no-repeat right center / contain; opacity: 0.9;
@@ -846,7 +848,7 @@
   .qp-pagehero__lead { font-size: 14px; margin-bottom: 18px; }
 }
 @media (max-width: 540px) { .qp-pagehero__art { display: none; } }
-@media (prefers-reduced-motion: reduce) { .qp-pagehero__blob { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .qp-pagehero, .qp-pagehero__blob { animation: none; } }
 
 /* Khu nội dung tin tức: padding 40px (py-10) thay cho .section 80px */
 .qp-newsmain { padding-block: 40px; }
@@ -856,6 +858,7 @@
    NEWS TOOLBAR (search + 2 select) — innovation: gap 16, py 8
    ============================================================ */
 .qp-toolbar { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 28px; }
+.qp-toolbar__searchrow { flex: 1; min-width: 0; }
 .qp-toolbar__search { position: relative; flex: 1; min-width: 0; }
 .qp-toolbar__search svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--color-gray-text); pointer-events: none; }
 .qp-toolbar__search input {
@@ -929,7 +932,7 @@
   box-shadow: var(--shadow-card); transition: border-color var(--duration-default) ease, box-shadow var(--duration-default) ease;
 }
 .qp-featured:hover { border-color: var(--color-teal); box-shadow: 0 4px 12px -2px rgba(15,76,129,0.12); }
-.qp-featured__link { position: absolute; inset: 0; z-index: 1; }
+.qp-featured__link { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 1; }
 .qp-featured__body { position: relative; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 20px; }
 .qp-featured__title { font: 700 20px/1.3 var(--font-primary); letter-spacing: -0.4px; color: var(--color-navy-deep); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .qp-featured__excerpt { font: 400 13px/1.65 var(--font-primary); color: var(--color-gray-text); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
@@ -956,7 +959,7 @@
 .qp-cardmedia__img.is-active { opacity: 1; }
 .qp-newscard:hover .qp-cardmedia__img.is-active { transform: scale(1.04); }
 /* Nhãn số ảnh (góc dưới phải) */
-.qp-cardmedia__count { position: absolute; right: 10px; bottom: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 4px; font: 700 10px/1 var(--font-mono-sans); letter-spacing: 0.6px; padding: 5px 8px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.72); color: #fff; backdrop-filter: blur(4px); }
+.qp-cardmedia__count { position: absolute; right: 10px; bottom: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 4px; font: 700 10px/1 var(--font-mono-sans); letter-spacing: 0.6px; padding: 5px 8px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.72); color: #fff; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 /* Chấm chỉ vị trí ảnh (giữa dưới) */
 .qp-cardmedia__dots { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 3; display: flex; gap: 5px; opacity: 0; transition: opacity var(--duration-default) ease; }
 .qp-newscard:hover .qp-cardmedia__dots { opacity: 1; }
@@ -965,10 +968,10 @@
 /* Thiết bị cảm ứng (không hover): hiện sẵn chấm + bọc nền pill, phóng vùng chạm để bấm lật ảnh.
    background-clip: content-box giữ chấm nhỏ nhưng padding tạo vùng chạm ~20px. */
 @media (hover: none) {
-  .qp-cardmedia__dots { opacity: 1; gap: 3px; bottom: 8px; padding: 4px 7px; border-radius: var(--radius-pill); background: rgba(6,35,64,0.42); backdrop-filter: blur(3px); }
+  .qp-cardmedia__dots { opacity: 1; gap: 3px; bottom: 8px; padding: 4px 7px; border-radius: var(--radius-pill); background: rgba(6,35,64,0.42); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
   .qp-cardmedia__dot { box-sizing: content-box; width: 7px; height: 7px; padding: 6px 5px; background-clip: content-box; cursor: pointer; }
 }
-.qp-newscard__badge { position: absolute; top: 12px; left: 12px; z-index: 3; display: inline-flex; align-items: center; font: 700 10px/1.4 var(--font-mono-sans); letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 10px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.85); color: var(--color-teal-light); backdrop-filter: blur(6px); }
+.qp-newscard__badge { position: absolute; top: 12px; left: 12px; z-index: 3; display: inline-flex; align-items: center; font: 700 10px/1.4 var(--font-mono-sans); letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 10px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.85); color: var(--color-teal-light); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .qp-newscard__badge.is-found { background: rgba(0,125,105,0.92); color: #fff; }
 .qp-newscard__badge.is-lost  { background: rgba(180,83,9,0.92); color: #fff; }
 /* Media dạng icon (cho tin đồ rơi — không có ảnh) */
@@ -977,7 +980,7 @@
 .qp-newscard__body { display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 20px; flex: 1; }
 .qp-newscard__title { font: 700 20px/1.3 var(--font-primary); letter-spacing: -0.4px; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
 .qp-newscard__title a { position: relative; color: inherit; }
-.qp-newscard__title a::before { content: ''; position: absolute; inset: 0; z-index: 1; }
+.qp-newscard__title a::before { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 1; }
 .qp-newscard:hover .qp-newscard__title { color: var(--color-navy); }
 .qp-newscard__excerpt { font: 400 13px/1.65 var(--font-primary); color: var(--color-gray-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .qp-newscard__meta { margin-top: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font: 400 11px/1.4 var(--font-monospace); letter-spacing: 0.2px; color: var(--color-gray-text); }
@@ -999,7 +1002,7 @@
 /* LEVEL-TWO CARD (3 card cấp 2) — gọn: ảnh + title 14px + meta */
 .qp-l2card { position: relative; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--color-gray-border); border-radius: var(--radius-card); overflow: hidden; transition: border-color var(--duration-default) ease, box-shadow var(--duration-default) ease; }
 .qp-l2card:hover { border-color: var(--color-teal); box-shadow: 0 4px 12px -2px rgba(15,76,129,0.12); }
-.qp-l2card__link { position: absolute; inset: 0; z-index: 2; }
+.qp-l2card__link { position: absolute; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 2; }
 .qp-l2card__media { position: relative; aspect-ratio: 16/9; overflow: hidden; background: var(--color-navy-pale); }
 .qp-l2card__media img { object-fit: cover; }
 .qp-l2card__body { display: flex; flex-direction: column; gap: 6px; padding: 14px; flex: 1; }
@@ -1097,36 +1100,35 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
   }
 }
 
-/* ── Thanh lọc dùng chung (FilterBar) — GIỮ NGUYÊN .qp-toolbar gốc cho desktop.
-   Chỉ MOBILE: icon lọc đè lên cuối ô input; bấm để hiện/ẩn các select (không khung mới). ── */
+/* ── Thanh lọc dùng chung (FilterBar) ── */
 .qp-toolbar__filtericon { display: none; }   /* desktop: ẩn icon, toolbar y như gốc */
 @media (max-width: 767px) {
-  .qp-toolbar--filterable .qp-toolbar__search { position: relative; }
-  /* Đối xứng với icon kính lúp bên trái: glyph 16px, tâm cách mép phải 24px (= left:16px + 16/2),
-     padding phải 42px = padding trái. Nút 34px (vùng chạm) → right:7px để tâm nút ở 24px. */
-  .qp-toolbar--filterable .qp-toolbar__search input { padding-right: 42px; }
-  .qp-toolbar__filtericon {
-    position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
-    width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
-    border: none; border-radius: var(--radius-pill); background: transparent;
-    color: var(--color-gray-text); cursor: pointer;
-    transition: color var(--duration-fast) ease, background var(--duration-fast) ease;
+  /* Search row: input chiếm trái, nút lọc sát phải — cùng 1 hàng, có gap */
+  .qp-toolbar--filterable .qp-toolbar__searchrow {
+    flex: 1 1 100%; display: flex; align-items: center; gap: 12px;
   }
-  /* Reset rule .qp-toolbar__search svg (vốn đặt absolute/left:16px cho icon kính lúp)
-     để glyph nút lọc được flex căn GIỮA nút, không bị hút sang trái. */
+  .qp-toolbar--filterable .qp-toolbar__search { flex: 1; min-width: 0; position: relative; }
+  /* Nút lọc nằm ngoài input, bên phải */
+  .qp-toolbar__filtericon {
+    flex-shrink: 0; position: relative;
+    width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--color-gray-border); border-radius: var(--radius-md); background: #fff;
+    color: var(--color-gray-text); cursor: pointer;
+    transition: color var(--duration-fast) ease, border-color var(--duration-fast) ease, background var(--duration-fast) ease;
+  }
   .qp-toolbar__filtericon svg {
     position: static; left: auto; top: auto; transform: none;
     width: 16px; height: 16px; display: block; pointer-events: none;
   }
-  .qp-toolbar__filtericon.has-active { color: var(--color-teal-dark); }
-  .qp-toolbar__filtericon.is-open { background: var(--color-teal-pale); color: var(--color-teal-dark); }
+  .qp-toolbar__filtericon.has-active { color: var(--color-teal-dark); border-color: var(--color-teal); }
+  .qp-toolbar__filtericon.is-open { background: var(--color-teal-pale); color: var(--color-teal-dark); border-color: var(--color-teal); }
   .qp-toolbar__filterdot {
-    position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; padding: 0 4px;
+    position: absolute; top: -4px; right: -4px; min-width: 15px; height: 15px; padding: 0 4px;
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--color-teal); color: #fff; border-radius: 999px;
     font: 700 9px/1 var(--font-mono-sans); border: 1.5px solid #fff;
   }
-  /* Các select: ẩn mặc định, bấm icon mới hiện (vẫn nằm trong luồng toolbar gốc) */
+  /* Các field: ẩn mặc định, bấm icon mới hiện */
   .qp-toolbar--filterable .qp-toolbar__field { display: none; }
   .qp-toolbar--filterable.is-filters-open .qp-toolbar__field { display: flex; }
 }
@@ -1166,6 +1168,7 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
 .qp-hint { font: 400 12px/1.4 var(--font-primary); color: var(--color-gray-text); }
 
 .qp-input, .qp-select, .qp-textarea {
+  -webkit-appearance: none; appearance: none;
   width: 100%; padding: 11px 14px;
   border: 1px solid var(--color-gray-border); border-radius: var(--radius-sm);
   background: #fff; color: var(--color-text);
@@ -1183,7 +1186,7 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
 /* overflow-wrap: bẻ được tên file dài không dấu cách trong thông báo lỗi → khỏi tràn ngang trên điện thoại. */
 .qp-error-text { font: 500 12px/1.4 var(--font-primary); color: var(--color-error); overflow-wrap: anywhere; }
 
-.qp-select { appearance: none;
+.qp-select { -webkit-appearance: none; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23334155' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 38px;
 }
@@ -1441,7 +1444,7 @@ a.qp-contactrow__value:hover { color: var(--color-teal-dark); }
   position: relative; z-index: 2; width: 100%; max-width: 360px;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);
   background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
-  border-radius: var(--radius-lg); padding: var(--space-6); backdrop-filter: blur(4px);
+  border-radius: var(--radius-lg); padding: var(--space-6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
 .qp-split__stat { text-align: center; }
 .qp-split__stat b { display: block; font: 700 28px/1 var(--font-mono-sans); color: var(--color-teal-light); letter-spacing: -0.5px; }
@@ -1951,7 +1954,7 @@ a.qp-school-card__name:hover { color: var(--color-teal-dark); }
 .qp-gallery { display: flex; gap: 14px; align-items: flex-start; margin-bottom: var(--space-6); }
 .qp-gallery__main { position: relative; flex: 1; min-width: 0; aspect-ratio: 4/3; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-gray-border); background: var(--color-navy-pale); }
 .qp-gallery__main img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.qp-gallery__counter { position: absolute; right: 12px; bottom: 12px; z-index: 2; font: 700 11px/1 var(--font-mono-sans); letter-spacing: 0.6px; padding: 6px 10px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.72); color: #fff; backdrop-filter: blur(4px); }
+.qp-gallery__counter { position: absolute; right: 12px; bottom: 12px; z-index: 2; font: 700 11px/1 var(--font-mono-sans); letter-spacing: 0.6px; padding: 6px 10px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.72); color: #fff; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 .qp-gallery__thumbs { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 2px; scrollbar-width: thin; }
 .qp-gallery__thumb { flex: 0 0 auto; width: 92px; height: 70px; padding: 0; border: 2px solid transparent; border-radius: var(--radius-md); overflow: hidden; cursor: pointer; background: var(--color-navy-pale); opacity: 0.7; transition: opacity var(--duration-default) ease, border-color var(--duration-default) ease; }
 .qp-gallery__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2111,6 +2114,9 @@ a.qp-school-card__name:hover { color: var(--color-teal-dark); }
   /* Trang tìm đồ rơi: 2 bộ lọc xếp dọc full-width + hiện lại nhãn cho rõ ràng */
   .qp-lf-toolbar .qp-toolbar__field { flex: 1 1 100%; }
   .qp-lf-toolbar .qp-toolbar__label { display: block; }
+  /* Trang trường học: 3 bộ lọc, mỗi cái 1 dòng riêng + hiện nhãn */
+  .qp-school-toolbar .qp-toolbar__field { flex: 1 1 100%; }
+  .qp-school-toolbar .qp-toolbar__label { display: block; }
 }
 
 /* ── Bộ lọc "Tuổi của bạn" (trang Việc làm) — ô nhập riêng, gọn & rõ ── */

@@ -104,12 +104,6 @@ export function PostModerationManager({ initial, config, perm = "full" }: { init
 
   return (
     <div className="qp-acc-page">
-      <div className="qp-admin-statline">
-        <div className="qp-admin-statline__item"><span className={`qp-admin-statline__num${counts.pending ? " is-warn" : ""}`}>{counts.pending}</span><span className="qp-admin-statline__lbl">Chờ duyệt</span></div>
-        <div className="qp-admin-statline__item"><span className="qp-admin-statline__num">{counts.approved}</span><span className="qp-admin-statline__lbl">Đã duyệt</span></div>
-        <div className="qp-admin-statline__item"><span className="qp-admin-statline__num">{counts.all}</span><span className="qp-admin-statline__lbl">Tổng tin</span></div>
-      </div>
-
       <div className="qp-tabs" style={{ marginBottom: "var(--space-4)" }}>
         {(["pending", "approved", "all"] as const).map((v) => (
           <button key={v} type="button" className={`qp-tab${view === v ? " is-active" : ""}`} onClick={() => setView(v)}>

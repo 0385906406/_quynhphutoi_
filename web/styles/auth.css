@@ -139,10 +139,11 @@
   pointer-events:none; transition:color .2s;
 }
 .wm-login input[type="text"], .wm-login input[type="email"], .wm-login input[type="password"] {
+  -webkit-appearance: none; appearance: none;
   width:100%; padding:10px 12px 10px 40px;
   border:1.5px solid #d8eede; border-radius:10px;
   font-family:'DM Sans',sans-serif; font-size:.88rem; color:#1a3d28;
-  background:rgba(240,250,244,.7); outline:none; backdrop-filter:blur(2px);
+  background:rgba(240,250,244,.7); outline:none; -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
   transition:border-color .2s, box-shadow .2s, background .2s;
 }
 .wm-login input:focus { border-color:var(--g3); background:#fff; box-shadow:0 0 0 3px rgba(63,168,94,.13); }
@@ -150,7 +151,9 @@
 
 /* Nút mắt ẩn/hiện mật khẩu */
 .wm-login .ico-eye {
+  -webkit-appearance: none; appearance: none;
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  z-index: 2;
   width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none; cursor: pointer; padding: 0;
@@ -162,6 +165,10 @@
 .wm-login .ico-eye svg { width: 15px; height: 15px; pointer-events: none; }
 /* Input có nút mắt bên phải — chừa khoảng cho icon */
 .wm-login .input-wrap--has-eye input { padding-right: 40px; }
+/* Ẩn nút mắt native của Safari/Edge để tránh chồng icon custom */
+.wm-login input[type="password"]::-webkit-textfield-decoration-container { display: none; }
+.wm-login input::-ms-reveal { display: none; }
+.wm-login input::-ms-clear { display: none; }
 
 .wm-login .row-extra {
   display:flex; justify-content:space-between; align-items:center;

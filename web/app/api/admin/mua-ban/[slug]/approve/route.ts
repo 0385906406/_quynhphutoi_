@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { approveClassified, getClassifiedBySlug } from "@/lib/classifieds";
 import { notifyUser } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const g = await requirePerm("mua-ban", "edit");
@@ -13,7 +14,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const approved = body.approved !== false;
   await approveClassified(slug, approved, approved ? { id: g.user._id!.toString(), name: g.user.name } : undefined);
   if (approved) {
-    await notifyUser(ad.postedBy, { type: "post_approved", title: `Tin mua bán “${ad.title}” của bạn đã được duyệt`, href: `/mua-ban/${slug}`, module: "mua-ban" });
+    await notifyUser(ad.postedBy, { type: "post_approved", title: `Tin mua bán "${ad.title}" của bạn đã được duyệt`, href: `/mua-ban/${slug}`, module: "mua-ban" });
   }
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: approved ? "mua-ban.approve" : "mua-ban.reject", target: { type: "mua bán", id: slug, label: ad.title }, success: true });
   return NextResponse.json({ ok: true, approved });
 }

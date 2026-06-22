@@ -182,7 +182,7 @@ export default async function HomePage() {
 
       {/* TIN TỨC & THÔNG BÁO — theo cấu hình admin (Trang chủ) */}
       {home.news.length > 0 && (
-        <section className="section section-alt">
+        <section className="section section-alt qp-section--news-bg">
           <div className="container-wide">
             <SectionHead eyebrow="Cập nhật" title="Tin tức & thông báo" href="/tin-tuc" />
             <div className="qp-grid-news qp-scroller">

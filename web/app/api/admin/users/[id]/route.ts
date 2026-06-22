@@ -2,7 +2,9 @@
 // An toàn: không cho tự gỡ quyền admin của chính mình, không cho tự xoá.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
-import { setUserRole, setUserVerified, setBanned, addWarning, clearWarnings, deleteUser, findById } from "@/lib/users";
+import { setUserRole, setUserCustomRole, setUserVerified, setBanned, addWarning, clearWarnings, deleteUser, findById } from "@/lib/users";
+import { getCustomRoleById } from "@/lib/custom-roles";
+import { logActivity } from "@/lib/activity-log";
 
 const SUPERADMIN_EMAIL = "duongnv10504@gmail.com";
 
@@ -17,12 +19,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!target) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
   if (target.email === SUPERADMIN_EMAIL) return NextResponse.json({ error: "Tài khoản này được bảo vệ, không thể chỉnh sửa." }, { status: 403 });
 
-  if (b.role !== undefined) {
+  const actor = { userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin" as const };
+  const tgt = { type: "user", id, label: target.email };
+
+  const actorIsSuperAdmin = g.user.email === SUPERADMIN_EMAIL;
+
+  if (b.customRoleId !== undefined) {
+    if (isSelf) return NextResponse.json({ error: "Không thể tự đổi vai trò của mình." }, { status: 400 });
+    if (!isSelf && target.role === "admin" && !actorIsSuperAdmin) return NextResponse.json({ error: "Không thể đổi quyền của tài khoản admin khác." }, { status: 403 });
+    const cr = await getCustomRoleById(b.customRoleId);
+    if (!cr) return NextResponse.json({ error: "Vai trò tùy chỉnh không tồn tại." }, { status: 404 });
+    const n = await setUserCustomRole(id, b.customRoleId);
+    if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+    void logActivity({ ...actor, action: "user.setRole", target: tgt, success: true, detail: `${target.role ?? "user"} → custom:${cr.label}` });
+  } else if (b.role !== undefined) {
     if (!["admin", "editor", "user"].includes(b.role)) return NextResponse.json({ error: "Vai trò không hợp lệ." }, { status: 400 });
     if (isSelf && b.role !== "admin") return NextResponse.json({ error: "Không thể tự gỡ quyền admin của chính mình." }, { status: 400 });
-    if (!isSelf && target.role === "admin") return NextResponse.json({ error: "Không thể đổi quyền của tài khoản admin khác." }, { status: 403 });
+    if (!isSelf && target.role === "admin" && !actorIsSuperAdmin) return NextResponse.json({ error: "Không thể đổi quyền của tài khoản admin khác." }, { status: 403 });
     const n = await setUserRole(id, b.role);
     if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+    void logActivity({ ...actor, action: "user.setRole", target: tgt, success: true, detail: `${target.role ?? "user"} → ${b.role}` });
   }
   if (typeof b.verified === "boolean") {
     const n = await setUserVerified(id, b.verified);
@@ -32,16 +48,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (isSelf) return NextResponse.json({ error: "Không thể tự khóa tài khoản của mình." }, { status: 400 });
     const n = await setBanned(id, b.banned);
     if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+    void logActivity({ ...actor, action: b.banned ? "user.ban" : "user.unban", target: tgt, success: true });
   }
   if (b.warn === "add") {
     if (isSelf) return NextResponse.json({ error: "Không thể tự cảnh báo chính mình." }, { status: 400 });
     const result = await addWarning(id);
     if (!result) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+    void logActivity({ ...actor, action: "user.warn.add", target: tgt, success: true, detail: result.autoBanned ? `Cảnh báo lần ${result.warnCount} — tự động khóa` : `Cảnh báo lần ${result.warnCount}` });
     return NextResponse.json({ ok: true, warnCount: result.warnCount, autoBanned: result.autoBanned });
   }
   if (b.warn === "clear") {
     const u = await clearWarnings(id);
     if (!u) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+    void logActivity({ ...actor, action: "user.warn.clear", target: tgt, success: true });
     return NextResponse.json({ ok: true, warnCount: 0 });
   }
   return NextResponse.json({ ok: true });
@@ -57,5 +76,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (target.email === SUPERADMIN_EMAIL) return NextResponse.json({ error: "Tài khoản này được bảo vệ, không thể xoá." }, { status: 403 });
   const n = await deleteUser(id);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "user.delete", target: { type: "user", id, label: target.email }, success: true });
   return NextResponse.json({ ok: true });
 }

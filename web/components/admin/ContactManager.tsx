@@ -47,12 +47,6 @@ export function ContactManager({ initial }: { initial: ContactRow[] }) {
 
   return (
     <div className="qp-acc-page">
-      <div className="qp-admin-statline">
-        <div className="qp-admin-statline__item"><span className={`qp-admin-statline__num${counts.pending ? " is-warn" : ""}`}>{counts.pending}</span><span className="qp-admin-statline__lbl">Chờ xử lý</span></div>
-        <div className="qp-admin-statline__item"><span className="qp-admin-statline__num">{counts.handled}</span><span className="qp-admin-statline__lbl">Đã xử lý</span></div>
-        <div className="qp-admin-statline__item"><span className="qp-admin-statline__num">{counts.all}</span><span className="qp-admin-statline__lbl">Tổng</span></div>
-      </div>
-
       <div className="qp-tabs" style={{ marginBottom: "var(--space-4)" }}>
         {(["pending", "handled", "all"] as const).map((v) => (
           <button key={v} type="button" className={`qp-tab${view === v ? " is-active" : ""}`} onClick={() => setView(v)}>

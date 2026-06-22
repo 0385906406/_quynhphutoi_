@@ -28,7 +28,7 @@
   flex-direction: column;
   position: relative;
 }
-.rich-text-editor--fullscreen { position: fixed; inset: 0; z-index: 9990; border-radius: 0; border: none; }
+.rich-text-editor--fullscreen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 9990; border-radius: 0; border: none; }
 
 /* ── Toolbar ────────────────────────────────────────────────────── */
 .rich-text-editor__toolbar {
@@ -114,7 +114,7 @@
 .rich-text-editor--loading { padding: 16px; min-height: 200px; }
 
 /* ── Modal overlay ──────────────────────────────────────────────── */
-.rte-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 9995; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.rte-modal-overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 9995; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .rte-modal { background: white; border-radius: 14px; padding: 24px; width: 440px; max-width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; gap: 16px; }
 .rte-modal__title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin: 0; }
 .rte-modal__field { display: flex; flex-direction: column; gap: 6px; }

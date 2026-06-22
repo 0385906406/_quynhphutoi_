@@ -16,7 +16,7 @@ type Item = { href: string; label: string; icon: IconName; countKey?: keyof Admi
 type Group = { title: string; items: Item[]; adminOnly?: boolean };
 
 const GROUPS: Group[] = [
-  { title: "Tổng quan", items: [{ href: "/admin", label: "Bảng điều khiển", icon: "home" }] },
+  { title: "Tổng quan", items: [{ href: "/admin", label: "Bảng điều khiển", icon: "home" }, { href: "/admin/hoat-dong", label: "Nhật ký hoạt động", icon: "clock" }] },
   {
     title: "Kiểm duyệt",
     items: [
@@ -132,7 +132,7 @@ export function AdminSidebar({ counts, logo, role }: { counts: AdminCounts; logo
 
 type IconName =
   | "home" | "briefcase" | "search" | "bag" | "news" | "cap" | "health"
-  | "store" | "bus" | "landmark" | "folder" | "map" | "users" | "megaphone" | "bell" | "mail" | "gear" | "layout" | "globe" | "cart" | "shield";
+  | "store" | "bus" | "landmark" | "folder" | "map" | "users" | "megaphone" | "bell" | "mail" | "gear" | "layout" | "globe" | "cart" | "shield" | "clock";
 
 function Icon({ name }: { name: IconName }) {
   const p = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24", "aria-hidden": true };
@@ -158,5 +158,6 @@ function Icon({ name }: { name: IconName }) {
     case "cart": return <svg {...p}><circle cx="9" cy="21" r="1" /><circle cx="18" cy="21" r="1" /><path d="M1 1h4l2.7 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L23 6H6" /></svg>;
     case "shield": return <svg {...p}><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>;
     case "gear": return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>;
+    case "clock": return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>;
   }
 }

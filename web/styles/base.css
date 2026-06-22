@@ -104,6 +104,7 @@ textarea:focus-visible,
 .section-header .type-h2 + p { margin-top: var(--space-3); max-width: 640px; }
 
 .section-alt { background: var(--color-navy-pale); }
+.qp-section--news-bg { background: url('/img/patterns/partner-bg.png') center / cover; }
 
 /* ============================================================
    GRID HELPERS (3→2→1 responsive)

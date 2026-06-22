@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin, isStaff, type UserDoc } from "@/lib/users";
 import { getRolePermissions, hasPerm, type ModuleKey, type PermLevel } from "@/lib/role-permissions";
+import { getCustomRoleById } from "@/lib/custom-roles";
 
 export async function requireAdmin(): Promise<{ user: UserDoc } | NextResponse> {
   const user = await getCurrentUser();
@@ -12,24 +13,33 @@ export async function requireAdmin(): Promise<{ user: UserDoc } | NextResponse> 
   return { user };
 }
 
-// Guard cho API nội dung + kiểm duyệt: cho cả admin và editor (biên tập viên).
+// Guard cho API nội dung + kiểm duyệt: cho cả admin, editor và custom role.
 export async function requireStaff(): Promise<{ user: UserDoc } | NextResponse> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin hoặc biên tập viên." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Không có quyền truy cập." }, { status: 403 });
   return { user };
 }
 
 // Guard theo module: kiểm tra người dùng có quyền tối thiểu cho module đó không.
-// Admin luôn full; editor tra cứu config DB.
+// Admin luôn full; editor tra cứu config DB; custom role tra cứu custom role doc.
 export async function requirePerm(
   module: ModuleKey,
   minLevel: PermLevel,
 ): Promise<{ user: UserDoc; perm: PermLevel } | NextResponse> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Vui lòng đăng nhập." }, { status: 401 });
-  if (!isStaff(user)) return NextResponse.json({ error: "Chỉ admin hoặc biên tập viên." }, { status: 403 });
+  if (!isStaff(user)) return NextResponse.json({ error: "Không có quyền truy cập." }, { status: 403 });
   if (isAdmin(user)) return { user, perm: "full" };
+
+  if (user.role === "custom" && user.customRoleId) {
+    const cr = await getCustomRoleById(user.customRoleId);
+    const perm: PermLevel = (cr?.perms[module] ?? "none") as PermLevel;
+    if (!hasPerm(perm, minLevel)) {
+      return NextResponse.json({ error: "Bạn không có quyền thực hiện thao tác này." }, { status: 403 });
+    }
+    return { user, perm };
+  }
 
   const config = await getRolePermissions();
   const rolePerms = user.role === "editor" ? config.editor : config.user;
@@ -46,6 +56,12 @@ export async function getModulePerm(module: ModuleKey): Promise<PermLevel | null
   const user = await getCurrentUser();
   if (!user || !isStaff(user)) return null;
   if (isAdmin(user)) return "full";
+
+  if (user.role === "custom" && user.customRoleId) {
+    const cr = await getCustomRoleById(user.customRoleId);
+    return (cr?.perms[module] ?? "none") as PermLevel;
+  }
+
   const config = await getRolePermissions();
   const rolePerms = user.role === "editor" ? config.editor : config.user;
   return rolePerms[module] ?? "none";

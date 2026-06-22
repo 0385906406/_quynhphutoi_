@@ -263,8 +263,8 @@
 }
 
 .qp-admin-search-overlay {
-  position: fixed; inset: 0; z-index: 9100;
-  background: rgba(10,15,30,.45); backdrop-filter: blur(4px);
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 9100;
+  background: rgba(10,15,30,.45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   display: flex; align-items: flex-start; justify-content: center;
   padding-top: 80px;
 }
@@ -356,11 +356,34 @@
    (toolbar, filter-strip, table row). Không ảnh hưởng form bài viết / cài đặt.
    ============================================================ */
 
+/* Card cài đặt admin (affiliate, trang-chu, settings…) → compact 34px như toolbar
+   Dùng qp-acc-card làm ranh giới để không ảnh hưởng form soạn bài (qp-editform). */
+.qp-acc-card .qp-form-group .qp-input,
+.qp-acc-card .qp-form-group .qp-select {
+  height: 34px;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 12px;
+  font-size: 13px;
+  line-height: 34px;
+}
+.qp-acc-card .qp-form-group .qp-input:focus,
+.qp-acc-card .qp-form-group .qp-select:focus {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 3px rgba(0,169,143,0.12);
+}
+/* Ẩn spinner number input trong card cài đặt — tránh làm lệch chiều cao */
+.qp-acc-card .qp-form-group input[type="number"]::-webkit-inner-spin-button,
+.qp-acc-card .qp-form-group input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.qp-acc-card .qp-form-group input[type="number"] { -moz-appearance: textfield; }
+
 /* Select + Input trong toolbar và bảng → compact 34px */
 .qp-admin-toolbar .qp-select,
 .qp-admin-toolbar .qp-input,
-.qp-filter-strip   .qp-select,
-.qp-table          .qp-select,
+.qp-filter-strip  .qp-select,
+.qp-filter-strip  .qp-input,
+.qp-table         .qp-select,
+.qp-table         .qp-input,
 .qp-admin-pagesize .qp-select {
   height: 34px;
   padding-top: 0;
@@ -368,6 +391,32 @@
   padding-left: 12px;
   font-size: 13px;
   line-height: 34px;
+}
+
+/* Focus teal nhất quán cho input trong admin (base dùng indigo) */
+.qp-admin-toolbar .qp-input:focus,
+.qp-filter-strip  .qp-input:focus,
+.qp-table         .qp-input:focus {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 3px rgba(0,169,143,0.12);
+}
+
+/* qp-btn-outline và qp-btn-primary compact 34px trong toolbar / filter-strip */
+.qp-admin-toolbar .qp-btn-outline,
+.qp-admin-toolbar .qp-btn-primary,
+.qp-filter-strip  .qp-btn-outline,
+.qp-filter-strip  .qp-btn-primary {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  /* reset transform/box-shadow của qp-btn-primary base */
+  transform: none !important;
+  box-shadow: none !important;
+}
+.qp-admin-toolbar .qp-btn-primary,
+.qp-filter-strip  .qp-btn-primary {
+  border-radius: var(--radius-md);
 }
 
 /* RowActions select — đồng bộ 34px, font đậm hơn chút */
@@ -813,14 +862,14 @@
 @media (max-width: 1024px) {
   .qp-admin-shell { grid-template-columns: 1fr; }
   .qp-admin-sidebar {
-    position: fixed; inset: 0 auto 0 0; z-index: 50;
+    position: fixed; top: 0; right: auto; bottom: 0; left: 0; inset: 0 auto 0 0; z-index: 50;
     width: 264px; transform: translateX(-100%);
     transition: transform var(--duration-default) var(--ease-soft);
     box-shadow: var(--shadow-lift);
   }
   .qp-admin-sidebar.is-open { transform: translateX(0); }
   .qp-admin-backdrop {
-    position: fixed; inset: 0; z-index: 40;
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 40;
     background: rgba(6,35,64,.45); border: 0;
   }
   .qp-admin-burger {

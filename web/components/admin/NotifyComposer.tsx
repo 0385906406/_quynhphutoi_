@@ -216,7 +216,7 @@ function ReceivedTab() {
         )}
         <span className="qp-filter-strip__spacer" />
         {counts.unread > 0 && (
-          <button type="button" className="qp-btn-outline" style={{ fontSize: 13, padding: "4px 12px", whiteSpace: "nowrap" }} onClick={markAllRead}>
+          <button type="button" className="qp-btn-outline" style={{ whiteSpace: "nowrap" }} onClick={markAllRead}>
             Đọc tất cả
           </button>
         )}

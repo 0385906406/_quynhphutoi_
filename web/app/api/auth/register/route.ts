@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUser, findByEmail } from "@/lib/users";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
+import { logActivity } from "@/lib/activity-log";
 import { validatePassword } from "@/lib/password";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { getSettings } from "@/lib/settings";
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
   }
 
   await createUser(email, name, password);
+  void logActivity({ userId: null, userName: String(name), userEmail: String(email), userRole: "user", category: "auth", action: "auth.register", success: true, ip: clientIp(req) });
 
   // Không xác nhận email — tài khoản dùng được ngay, client điều hướng về trang đăng nhập.
   return NextResponse.json({ ok: true });

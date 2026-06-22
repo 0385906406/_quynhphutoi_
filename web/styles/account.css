@@ -118,7 +118,7 @@
 .qp-ad--banner { aspect-ratio: 21 / 5; }
 @media (max-width: 640px) { .qp-ad--banner { aspect-ratio: 16 / 7; } }
 .qp-ad--box { aspect-ratio: 6 / 5; margin: 0 0 var(--space-5); }
-.qp-ad__label { position: absolute; top: 8px; right: 8px; z-index: 2; font: 700 9px/1 var(--font-mono-sans); letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 7px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.6); color: rgba(255,255,255,0.92); backdrop-filter: blur(4px); }
+.qp-ad__label { position: absolute; top: 8px; right: 8px; z-index: 2; font: 700 9px/1 var(--font-mono-sans); letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 7px; border-radius: var(--radius-sm); background: rgba(6,35,64,0.6); color: rgba(255,255,255,0.92); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 /* Thẻ tài trợ trong feed (giống card tin tức) */
 .qp-ad-native { position: relative; }
 .qp-ad-native .qp-ad__label { background: var(--color-yellow); color: var(--color-navy-deep); }
@@ -431,8 +431,8 @@ a.qp-addetail__row:hover { color: var(--color-teal-dark); }
 
 /* ── Warning Modal (cảnh báo vi phạm) ────────────────────── */
 .wm-overlay {
-  position: fixed; inset: 0; z-index: 9000;
-  background: rgba(10,15,30,.55); backdrop-filter: blur(3px);
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; z-index: 9000;
+  background: rgba(10,15,30,.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
 }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { UserRow } from "@/lib/users";
+import type { CustomRoleRow } from "@/lib/custom-roles";
 import { Pagination } from "@/components/common/Pagination";
 import { usePagination, PageSizeControl } from "@/components/admin/AdminPaging";
 import { RowActions } from "@/components/admin/RowActions";
@@ -17,7 +18,7 @@ const STATUS_TABS: { value: string; label: string }[] = [
   { value: "banned",  label: "Đã khóa" },
 ];
 
-export function UserManager({ initial, me }: { initial: UserRow[]; me: string }) {
+export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [] }: { initial: UserRow[]; me: string; isSuperAdmin?: boolean; customRoles?: CustomRoleRow[] }) {
   const [rows, setRows] = useState<UserRow[]>(initial);
   const [q, setQ]             = useState("");
   const [fRole, setFRole]     = useState("");
@@ -67,11 +68,24 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
     return res.json().catch(() => ({}));
   }
 
-  function changeRole(r: UserRow, next: UserRow["role"]) {
-    if (next === r.role) return;
+  function roleSelectValue(r: UserRow): string {
+    return r.role === "custom" && r.customRoleId ? `custom:${r.customRoleId}` : r.role;
+  }
+
+  function changeRole(r: UserRow, next: string) {
     if (r.id === me) { toast.error("Không thể tự đổi quyền của chính mình."); return; }
-    if (next === "admin" && !confirm(`Cấp quyền ADMIN (toàn quyền) cho ${r.email}?`)) return;
-    patch(r, { role: next }, { role: next });
+    if (next === roleSelectValue(r)) return;
+
+    if (next.startsWith("custom:")) {
+      const customRoleId = next.slice(7);
+      const cr = customRoles.find((c) => c.id === customRoleId);
+      if (!cr) return;
+      if (!confirm(`Gán vai trò "${cr.label}" cho ${r.email}?`)) return;
+      patch(r, { customRoleId }, { role: "custom", customRoleId });
+    } else {
+      if (next === "admin" && !confirm(`Cấp quyền ADMIN (toàn quyền) cho ${r.email}?`)) return;
+      patch(r, { role: next }, { role: next as UserRow["role"], customRoleId: undefined });
+    }
   }
 
   function toggleVerified(r: UserRow) {
@@ -163,6 +177,7 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
           <option value="admin">Admin</option>
           <option value="editor">Biên tập viên</option>
           <option value="user">Người dùng</option>
+          {customRoles.length > 0 && <option value="custom">Vai trò tùy chỉnh</option>}
         </select>
         <span className="qp-admin-toolbar__spacer" />
         <PageSizeControl value={pg.pageSize} onChange={pg.setPageSize} total={filtered.length} />
@@ -191,30 +206,36 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
               {pg.paged.map((r) => {
                 const isSelf       = r.id === me;
                 const isProtected  = r.email === SUPERADMIN_EMAIL;
-                const isOtherAdmin = r.role === "admin" && !isSelf;
-                // Role select bị khóa nếu: chính mình, tài khoản bảo vệ, hoặc admin khác
+                // Super admin có thể edit admin khác; admin thường thì không
+                const isOtherAdmin = r.role === "admin" && !isSelf && !isSuperAdmin;
                 const roleDisabled = isSelf || isProtected || isOtherAdmin;
-                // Không hiện dropdown thao tác nếu: chính mình hoặc tài khoản bảo vệ
+                // Ẩn thao tác nếu: chính mình hoặc đang xem tài khoản super admin được bảo vệ
                 const hideActions  = isSelf || isProtected;
+
+                // Màu sắc theo độ ưu tiên: super admin > bản thân > bình thường
+                const rowBg = isProtected
+                  ? "rgba(217,119,6,0.07)"
+                  : isSelf ? "var(--color-teal-pale)" : undefined;
+                const rowBorderLeft = isProtected
+                  ? "3px solid #d97706"
+                  : isSelf ? "3px solid var(--color-teal)" : undefined;
+                const emailColor = isProtected
+                  ? "#92400e"
+                  : isSelf ? "var(--color-teal-dark)" : "var(--color-navy)";
 
                 return (
                 <tr
                   key={r.id}
                   style={{
                     ...(r.banned ? { opacity: .6 } : {}),
-                    ...(isSelf ? { background: "var(--color-teal-pale)" } : {}),
+                    ...(rowBg ? { background: rowBg } : {}),
                   }}
                 >
 
                   {/* Email + Tên */}
-                  <td style={isSelf ? { borderLeft: "3px solid var(--color-teal)" } : undefined}>
-                    <div style={{ fontWeight: 600, color: isSelf ? "var(--color-teal-dark)" : "var(--color-navy)" }}>
+                  <td style={rowBorderLeft ? { borderLeft: rowBorderLeft } : undefined}>
+                    <div style={{ fontWeight: 600, color: emailColor }}>
                       {r.email}
-                      {isProtected && (
-                        <svg style={{ marginLeft: 6, verticalAlign: "middle", color: "var(--color-gray-text)", flexShrink: 0 }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label="Tài khoản được bảo vệ">
-                          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                      )}
                     </div>
                     <div className="type-body-small text-muted">{r.name}</div>
                   </td>
@@ -265,23 +286,44 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
 
                   {/* Vai trò */}
                   <td>
-                    <select
-                      className="qp-select"
-                      style={{ maxWidth: 170 }}
-                      value={r.role}
-                      disabled={roleDisabled}
-                      onChange={(e) => changeRole(r, e.target.value as UserRow["role"])}
-                      title={
-                        isProtected  ? "Tài khoản được bảo vệ, không thể thay đổi" :
-                        isSelf       ? "Không thể tự đổi quyền của mình" :
-                        isOtherAdmin ? "Không thể đổi quyền của admin khác" :
-                        "Đổi vai trò"
-                      }
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="editor">Biên tập viên</option>
-                      <option value="user">Người dùng</option>
-                    </select>
+                    {isProtected ? (
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        fontSize: 11, fontWeight: 700, letterSpacing: ".5px", textTransform: "uppercase",
+                        background: "#d97706", color: "#fff", borderRadius: 4, padding: "3px 8px",
+                      }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+                          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Super Admin
+                      </span>
+                    ) : (
+                      <select
+                        className="qp-select"
+                        style={{ maxWidth: 190 }}
+                        value={roleSelectValue(r)}
+                        disabled={roleDisabled}
+                        onChange={(e) => changeRole(r, e.target.value)}
+                        title={
+                          isSelf       ? "Không thể tự đổi quyền của mình" :
+                          isOtherAdmin ? "Không thể đổi quyền của admin khác" :
+                          "Đổi vai trò"
+                        }
+                      >
+                        <optgroup label="Hệ thống">
+                          <option value="admin">Admin</option>
+                          <option value="editor">Biên tập viên</option>
+                          <option value="user">Người dùng</option>
+                        </optgroup>
+                        {customRoles.length > 0 && (
+                          <optgroup label="Tùy chỉnh">
+                            {customRoles.map((cr) => (
+                              <option key={cr.id} value={`custom:${cr.id}`}>{cr.label}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                    )}
                   </td>
 
                   {/* Xác minh */}
@@ -301,14 +343,40 @@ export function UserManager({ initial, me }: { initial: UserRow[]; me: string })
                   <td className="type-body-small text-muted">{formatDate(r.createdAt)}</td>
 
                   {/* Actions — ẩn hoàn toàn nếu là chính mình hoặc tài khoản được bảo vệ */}
-                  <td className="qp-admin-actions">
+                  <td className="qp-admin-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "nowrap" }}>
                     {!hideActions && (
-                      <RowActions actions={[
-                        { value: "warn",   label: "Cảnh báo (+1)",                    hidden: r.banned,          run: () => warn(r) },
-                        { value: "unwarn", label: "Xoá cảnh báo",                    hidden: r.warnCount === 0, run: () => clearWarn(r) },
-                        { value: "ban",    label: r.banned ? "Mở khóa" : "Khóa tài khoản",                    run: () => toggleBanned(r) },
-                        { value: "delete", label: "Xoá",                                                       run: () => remove(r) },
-                      ]} />
+                      <>
+                        {/* Lock/Unlock icon button trực tiếp */}
+                        <button
+                          type="button"
+                          title={r.banned ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                          onClick={() => toggleBanned(r)}
+                          style={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            width: 36, height: 36, borderRadius: 8, border: "1.5px solid",
+                            cursor: "pointer", flexShrink: 0, background: "transparent",
+                            borderColor: r.banned ? "var(--color-error)" : "var(--color-gray-border)",
+                            color: r.banned ? "var(--color-error)" : "var(--color-gray-text)",
+                          }}
+                        >
+                          {r.banned ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                              <rect x="3" y="11" width="18" height="11" rx="2"/>
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                              <rect x="3" y="11" width="18" height="11" rx="2"/>
+                              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                            </svg>
+                          )}
+                        </button>
+                        <RowActions actions={[
+                          { value: "warn",   label: "Cảnh báo (+1)",  hidden: r.banned,          run: () => warn(r) },
+                          { value: "unwarn", label: "Xoá cảnh báo",   hidden: r.warnCount === 0, run: () => clearWarn(r) },
+                          { value: "delete", label: "Xoá tài khoản",                             run: () => remove(r) },
+                        ]} />
+                      </>
                     )}
                   </td>
                 </tr>
