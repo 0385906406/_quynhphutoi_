@@ -56,6 +56,10 @@ export type AppSettings = {
   newsGnewsKey: string;           // khoá API (GNews.io). Để trống = lấy từ env GNEWS_API_KEY
   newsApiKeySet?: boolean;        // SUY DIỄN (không lưu DB): đã có khoá NewsAPI chưa — để UI báo "đã lưu"
   newsGnewsKeySet?: boolean;      // SUY DIỄN (không lưu DB): đã có khoá GNews chưa
+
+  // --- AI tạo nội dung ---
+  geminiApiKey: string;           // khoá API Gemini. Để trống = lấy từ env GEMINI_API_KEY
+  geminiApiKeySet?: boolean;      // SUY DIỄN (không lưu DB): đã có khoá Gemini chưa
 };
 
 const DEFAULTS: AppSettings = {
@@ -107,6 +111,8 @@ const DEFAULTS: AppSettings = {
   newsApiUrl: process.env.NEWS_API_URL || "",
   newsApiQuery: process.env.NEWS_API_QUERY || "", // trống = tin mới nhất VN (GNews top-headlines)
   newsGnewsKey: "",
+
+  geminiApiKey: "",
 };
 
 type SettingsDoc = { _id: string; values: Partial<AppSettings> };
@@ -133,6 +139,8 @@ const redact = (s: AppSettings): AppSettings => ({
   newsApiKeySet: !!s.newsApiKey,
   newsGnewsKey: "",
   newsGnewsKeySet: !!s.newsGnewsKey,
+  geminiApiKey: "",
+  geminiApiKeySet: !!s.geminiApiKey || !!process.env.GEMINI_API_KEY,
 });
 
 // Bản DÙNG CHUNG — đã che newsApiKey. Mọi trang/route public dùng hàm này (an toàn).
@@ -204,6 +212,8 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     newsApiQuery: str(patch.newsApiQuery ?? c.newsApiQuery, 120, c.newsApiQuery),
     newsGnewsKey: typeof patch.newsGnewsKey === "string" && patch.newsGnewsKey.trim()
       ? patch.newsGnewsKey.trim().slice(0, 200) : c.newsGnewsKey,
+    geminiApiKey: typeof patch.geminiApiKey === "string" && patch.geminiApiKey.trim()
+      ? patch.geminiApiKey.trim().slice(0, 200) : c.geminiApiKey,
   };
   if (next.postCooldownMax < next.postCooldownMin) next.postCooldownMax = next.postCooldownMin;
   await (await col()).updateOne({ _id: "app" }, { $set: { values: next } }, { upsert: true });

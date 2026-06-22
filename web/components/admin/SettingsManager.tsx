@@ -6,7 +6,7 @@ import type { AppSettings } from "@/lib/settings";
 import { useToast } from "@/components/common/Toast";
 import { ImageUploader } from "@/components/common/ImageUploader";
 
-type Tab = "post" | "comment" | "security" | "contact" | "seo" | "brand" | "news" | "data";
+type Tab = "post" | "comment" | "security" | "contact" | "seo" | "brand" | "news" | "ai" | "data";
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "post", label: "Đăng tin", icon: "📝" },
   { key: "comment", label: "Bình luận & tương tác", icon: "💬" },
@@ -15,6 +15,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "seo", label: "SEO toàn site", icon: "🔎" },
   { key: "brand", label: "Thương hiệu (Logo)", icon: "🖼️" },
   { key: "news", label: "Nguồn tin ngoài", icon: "🌐" },
+  { key: "ai", label: "AI & nội dung", icon: "✨" },
   { key: "data", label: "Dữ liệu mẫu", icon: "🌱" },
 ];
 
@@ -280,6 +281,20 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
                 </p>
               </div>
             )}
+          </Card>
+        )}
+
+        {tab === "ai" && (
+          <Card title="Tạo nội dung bằng AI (Gemini)" desc="Tích hợp Google Gemini để tự động soạn thảo nội dung bài viết từ tiêu đề và tóm tắt. Lấy API key miễn phí tại aistudio.google.com → Get API key.">
+            <Field label="Khoá API (Gemini API key)" hint="Khoá lưu phía máy chủ và KHÔNG gửi lại trình duyệt. Để trống = giữ khoá đã lưu (hoặc dùng env GEMINI_API_KEY nếu chưa lưu). Nhập khoá mới để thay. Lấy khoá miễn phí: aistudio.google.com → Get API key.">
+              {form.geminiApiKeySet && (
+                <span className="qp-acc-badge is-active" style={{ marginBottom: 8, display: "inline-flex" }}>🔑 Đã lưu khoá API</span>
+              )}
+              <input type="password" autoComplete="off" maxLength={200} className="qp-input" value={form.geminiApiKey} onChange={txt("geminiApiKey")} placeholder={form.geminiApiKeySet ? "Đã có khoá • nhập để thay khoá mới" : "Dán khoá API Gemini tại đây…"} />
+            </Field>
+            <p className="qp-form-tip" style={{ marginTop: 12 }}>
+              Gói miễn phí: 15 lượt/phút · 1 triệu token/ngày — đủ cho ban biên tập nội bộ. Sau khi lưu khoá, nút <strong>✨ Tạo bằng AI</strong> sẽ xuất hiện trong trang soạn thảo bài viết.
+            </p>
           </Card>
         )}
 

@@ -35,6 +35,40 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
   const [busy, setBusy] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
 
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiTone, setAiTone] = useState<"chinh-thong" | "than-thien" | "thong-tin">("chinh-thong");
+  const [aiLength, setAiLength] = useState<"ngan" | "vua" | "dai">("vua");
+  const [aiCustom, setAiCustom] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  function openAi() { setAiOpen(true); setAiResult(null); setAiError(null); }
+  function closeAi() { setAiOpen(false); setAiResult(null); setAiError(null); }
+
+  async function generateAI() {
+    setAiGenerating(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/admin/ai/generate-article", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: form.title, excerpt: form.excerpt, category: form.category, scope: form.scope, tone: aiTone, length: aiLength, customPrompt: aiCustom }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setAiError(data.error || "Có lỗi xảy ra."); return; }
+      setAiResult(data.html ?? "");
+    } catch { setAiError("Không thể kết nối server."); }
+    finally { setAiGenerating(false); }
+  }
+
+  function insertAIContent() {
+    if (!aiResult) return;
+    set("bodyHtml", aiResult);
+    closeAi();
+    toast.success("Đã chèn nội dung AI vào bài viết.");
+  }
+
   function set<K extends keyof ArticleForm>(k: K, v: ArticleForm[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
@@ -139,6 +173,12 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
               </svg>
               Nội dung bài viết
+              <button type="button" className="qp-ae__ai-btn" onClick={openAi} title="Tạo nội dung bài viết bằng Gemini AI">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                Tạo bằng AI
+              </button>
             </div>
             <RichTextEditor value={form.bodyHtml} onChange={(html) => set("bodyHtml", html)}
               placeholder="Soạn nội dung bài viết…" />
@@ -305,6 +345,118 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
 
         </aside>
       </div>
+
+      {/* ── AI Content Generator Modal ── */}
+      {aiOpen && (
+        <div className="qp-ai-modal" role="dialog" aria-modal="true" aria-label="Tạo nội dung bằng AI">
+          <div className="qp-ai-modal__backdrop" onClick={closeAi} />
+          <div className="qp-ai-modal__dialog">
+
+            <div className="qp-ai-modal__head">
+              <svg className="qp-ai-modal__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="qp-ai-modal__title">Tạo nội dung bằng AI</span>
+              <button type="button" className="qp-ai-modal__close" onClick={closeAi} aria-label="Đóng">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+              </button>
+            </div>
+
+            <div className="qp-ai-modal__body">
+
+              {/* Context: tiêu đề + sapo */}
+              <div className="qp-ai-modal__ctx">
+                <div className="qp-ai-modal__ctx-label">Bài viết</div>
+                <div className="qp-ai-modal__ctx-title">
+                  {form.title.trim() || <em style={{ fontWeight: 400, color: "var(--color-gray-text)" }}>Chưa có tiêu đề</em>}
+                </div>
+                {form.excerpt.trim() && <div className="qp-ai-modal__ctx-excerpt">{form.excerpt}</div>}
+              </div>
+
+              {!aiResult && (
+                <>
+                  {/* Giọng văn */}
+                  <div>
+                    <div className="qp-ai-modal__label">Giọng văn</div>
+                    <div className="qp-ai-modal__seg">
+                      {(["chinh-thong", "than-thien", "thong-tin"] as const).map((v) => {
+                        const labels = { "chinh-thong": "Chính thống", "than-thien": "Thân thiện", "thong-tin": "Thông tin" };
+                        return (
+                          <button key={v} type="button" className={`qp-ai-modal__seg-btn${aiTone === v ? " is-on" : ""}`} onClick={() => setAiTone(v)}>
+                            {labels[v]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Độ dài */}
+                  <div>
+                    <div className="qp-ai-modal__label">Độ dài</div>
+                    <div className="qp-ai-modal__seg">
+                      {(["ngan", "vua", "dai"] as const).map((v) => {
+                        const labels = { "ngan": "Ngắn (~500 từ)", "vua": "Vừa (~900 từ)", "dai": "Dài (~1500 từ)" };
+                        return (
+                          <button key={v} type="button" className={`qp-ai-modal__seg-btn${aiLength === v ? " is-on" : ""}`} onClick={() => setAiLength(v)}>
+                            {labels[v]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom prompt */}
+                  <div>
+                    <div className="qp-ai-modal__label">
+                      Hướng dẫn thêm&nbsp;<span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(tuỳ chọn)</span>
+                    </div>
+                    <textarea
+                      className="qp-textarea"
+                      rows={2}
+                      placeholder="VD: Nêu rõ lợi ích cho người dân địa phương, tránh dùng từ ngữ kỹ thuật…"
+                      value={aiCustom}
+                      onChange={(e) => setAiCustom(e.target.value)}
+                    />
+                  </div>
+
+                  {form.bodyHtml && (
+                    <p style={{ fontSize: 12, color: "var(--color-warning)", fontWeight: 600, margin: 0 }}>
+                      ⚠ Nội dung hiện tại sẽ bị thay thế khi bấm "Chèn vào bài".
+                    </p>
+                  )}
+
+                  {aiError && <p style={{ fontSize: 13, color: "var(--color-error)", margin: 0 }}>{aiError}</p>}
+
+                  <div className="qp-ai-modal__actions">
+                    <button type="button" className="qp-btn-primary" onClick={generateAI} disabled={aiGenerating || !form.title.trim()}>
+                      {aiGenerating ? "Đang tạo…" : "✨ Tạo nội dung"}
+                    </button>
+                    <button type="button" className="qp-btn-outline" onClick={closeAi} disabled={aiGenerating}>Huỷ</button>
+                  </div>
+                </>
+              )}
+
+              {aiResult && (
+                <>
+                  <div className="qp-ai-modal__insert-row">
+                    <span className="qp-ai-modal__badge">✓ Đã tạo xong</span>
+                    <span style={{ fontSize: 12, color: "var(--color-gray-text)" }}>
+                      ~{aiResult.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length} từ
+                    </span>
+                  </div>
+                  <div className="qp-ai-modal__preview" dangerouslySetInnerHTML={{ __html: aiResult }} />
+                  <div className="qp-ai-modal__actions">
+                    <button type="button" className="qp-btn-primary" onClick={insertAIContent}>Chèn vào bài</button>
+                    <button type="button" className="qp-btn-outline" onClick={() => setAiResult(null)}>Thử lại</button>
+                    <button type="button" className="qp-btn-outline" onClick={closeAi}>Đóng</button>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
