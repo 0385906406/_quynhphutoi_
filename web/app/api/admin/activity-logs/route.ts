@@ -24,6 +24,8 @@ export async function GET(req: Request) {
   if (from) filter.dateFrom = new Date(from);
   const to = url.searchParams.get("to");
   if (to) filter.dateTo = new Date(to);
+  const search = url.searchParams.get("search");
+  if (search) filter.search = search;
 
   const result = await getActivityLogs(filter, page, pageSize);
   return NextResponse.json({ ...result, page, pageSize });

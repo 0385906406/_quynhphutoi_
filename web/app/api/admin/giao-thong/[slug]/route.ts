@@ -1,9 +1,10 @@
-// Admin: cập nhật (PATCH) & xoá (DELETE) một tuyến giao thông.
+﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một tuyến giao thông.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { updateTransit, deleteTransit, type TransitInput } from "@/lib/transit";
 import { listActiveCategoryOptions } from "@/lib/categories";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
+import { logActivity } from "@/lib/activity-log";
 
 function toStops(v: unknown): string[] {
   const arr = Array.isArray(v) ? v.map(String) : typeof v === "string" ? v.split(/[\n,]/) : [];
@@ -31,6 +32,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
   const n = await updateTransit(slug, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "giao-thong.update", target: { type: "giao-thong", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -40,5 +42,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
   const { slug } = await params;
   const n = await deleteTransit(slug);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "giao-thong.delete", target: { type: "giao-thong", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }

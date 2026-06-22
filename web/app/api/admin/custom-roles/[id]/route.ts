@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getCustomRoleById, updateCustomRole, deleteCustomRole } from "@/lib/custom-roles";
 import { clearCustomRoleFromUsers } from "@/lib/users";
 import type { RolePerms } from "@/lib/role-permissions";
 import { PERM_MODULES } from "@/lib/role-permissions";
+import { logActivity } from "@/lib/activity-log";
 
 const MODULE_KEYS = PERM_MODULES.map((m) => m.key);
 
@@ -42,6 +43,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   try {
     await updateCustomRole(id, update);
+      void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "custom-role.update", target: { type: "vai-tro", id: id }, success: true });
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     if (err && typeof err === "object" && "code" in err && (err as { code: number }).code === 11000) {
@@ -63,5 +65,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   await clearCustomRoleFromUsers(id);
   await deleteCustomRole(id);
 
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "custom-role.delete", target: { type: "vai-tro", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }

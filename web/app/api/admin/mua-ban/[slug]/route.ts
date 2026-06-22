@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { deleteClassified, getClassifiedBySlug, updateClassified, type ClassifiedPatch, type ClassifiedStatus } from "@/lib/classifieds";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { notifyUser } from "@/lib/notifications";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
+import { logActivity } from "@/lib/activity-log";
 
 const CL_STATUSES: ClassifiedStatus[] = ["open", "sold", "closed"];
 
@@ -34,6 +35,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
   const n = await updateClassified(slug, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy tin." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "mua-ban.update", target: { type: "mua-ban", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -45,7 +47,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
   const deleted = await deleteClassified(slug);
   if (!deleted) return NextResponse.json({ error: "Không tìm thấy tin." }, { status: 404 });
   if (ad) {
-    await notifyUser(ad.postedBy, { type: "post_rejected", title: `Tin mua bán “${ad.title}” của bạn không được duyệt`, href: "/tai-khoan/bai-dang", module: "mua-ban" });
+    await notifyUser(ad.postedBy, { type: "post_rejected", title: `Tin mua bán "${ad.title}" của bạn không được duyệt`, href: "/tai-khoan/bai-dang", module: "mua-ban" });
   }
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "mua-ban.delete", target: { type: "mua-ban", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }

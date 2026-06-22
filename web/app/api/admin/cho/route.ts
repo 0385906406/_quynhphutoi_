@@ -1,9 +1,10 @@
-// Admin: liệt kê (GET) & tạo (POST) mục Chợ & Mua bán.
+﻿// Admin: liệt kê (GET) & tạo (POST) mục Chợ & Mua bán.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { listMarket, createMarket, toMarketRow } from "@/lib/market";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
+import { logActivity } from "@/lib/activity-log";
 
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
@@ -33,5 +34,6 @@ export async function POST(req: Request) {
     seo: sanitizeSeoFields(b.seo),
     verified: !!b.verified, featured: !!b.featured, active: b.active !== false,
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "cho.create", target: { type: "cho", label: name }, success: true });
   return NextResponse.json({ ok: true, item: toMarketRow(created) });
 }

@@ -1,4 +1,4 @@
-// API Mua bán: liệt kê (GET) & đăng tin (POST — cần đăng nhập).
+﻿// API Mua bán: liệt kê (GET) & đăng tin (POST — cần đăng nhập).
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
@@ -11,6 +11,7 @@ import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { createClassified, listClassifieds, countClassifieds, type ClassifiedStatus, type ClassifiedCondition } from "@/lib/classifieds";
 import { listActiveCategoryOptions, categoryLabelMap } from "@/lib/categories";
+import { logActivity } from "@/lib/activity-log";
 
 const STATUSES: ClassifiedStatus[] = ["open", "sold", "closed"];
 
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
       },
       session.id,
     );
+    void logActivity({ userId: session.id, userName: session.name, userEmail: "", userRole: "user", category: "user", action: "mua-ban.create", target: { type: "mua-ban", id: ad.slug, label: ad.title }, success: true });
     return NextResponse.json({ ok: true, slug: ad.slug, approved });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Đăng tin thất bại." }, { status: 400 });

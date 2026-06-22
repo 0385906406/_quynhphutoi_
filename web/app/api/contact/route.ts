@@ -1,10 +1,11 @@
-// Nhận liên hệ / phản ánh từ form công khai → lưu DB + báo admin. Có rate-limit theo IP.
+﻿// Nhận liên hệ / phản ánh từ form công khai → lưu DB + báo admin. Có rate-limit theo IP.
 import { NextResponse } from "next/server";
 import { createContact } from "@/lib/contact";
 import { notifyAdmins } from "@/lib/notifications";
 import { stripHtml } from "@/lib/strip-html";
 import { rateLimit, tooMany, clientIp } from "@/lib/ratelimit";
 import { adaptiveRecaptcha } from "@/lib/recaptcha";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
@@ -27,5 +28,6 @@ export async function POST(req: Request) {
   await createContact({ name, email, phone, type, message });
   await notifyAdmins({ type: "announcement", title: `Liên hệ mới (${type}) từ ${name}`, href: "/admin/lien-he", module: "lien-he" });
 
+  void logActivity({ userId: null, userName: name, userEmail: email, userRole: "user", category: "user", action: "contact.submit", success: true, ip });
   return NextResponse.json({ ok: true });
 }

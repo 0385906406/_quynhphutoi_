@@ -1,10 +1,11 @@
-// Admin: liệt kê (GET) & tạo (POST) trường học.
+﻿// Admin: liệt kê (GET) & tạo (POST) trường học.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { listSchools, createSchool, toSchoolRow } from "@/lib/schools";
 import { listActiveCategoryOptions } from "@/lib/categories";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
+import { logActivity } from "@/lib/activity-log";
 
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
@@ -44,5 +45,6 @@ export async function POST(req: Request) {
     verified: !!b.verified, active: b.active !== false,
     seo: sanitizeSeoFields(b.seo),
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "truong-hoc.create", target: { type: "truong-hoc", label: name }, success: true });
   return NextResponse.json({ ok: true, item: toSchoolRow(created) });
 }

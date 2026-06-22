@@ -1,10 +1,11 @@
-// Admin: liệt kê (GET) & tạo (POST) cơ sở y tế.
+﻿// Admin: liệt kê (GET) & tạo (POST) cơ sở y tế.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { listHealth, createHealth, toHealthRow } from "@/lib/health";
 import { listActiveCategoryOptions } from "@/lib/categories";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
+import { logActivity } from "@/lib/activity-log";
 
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
@@ -40,5 +41,6 @@ export async function POST(req: Request) {
     verified: !!b.verified, active: b.active !== false,
     seo: sanitizeSeoFields(b.seo),
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "y-te.create", target: { type: "y-te", label: name }, success: true });
   return NextResponse.json({ ok: true, item: toHealthRow(created) });
 }

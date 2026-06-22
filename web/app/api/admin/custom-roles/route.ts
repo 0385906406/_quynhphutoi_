@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { listCustomRoles, createCustomRole, buildDefaultPerms } from "@/lib/custom-roles";
 import type { RolePerms } from "@/lib/role-permissions";
 import { PERM_MODULES } from "@/lib/role-permissions";
+import { logActivity } from "@/lib/activity-log";
 
 const MODULE_KEYS = PERM_MODULES.map((m) => m.key);
 
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
 
   try {
     const role = await createCustomRole(label, perms);
+      void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "custom-role.create", target: { type: "vai-tro", label: label }, success: true });
     return NextResponse.json({ role }, { status: 201 });
   } catch (err: unknown) {
     if (err && typeof err === "object" && "code" in err && (err as { code: number }).code === 11000) {

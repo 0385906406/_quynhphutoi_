@@ -1,9 +1,10 @@
-// Admin: cập nhật trạng thái (PATCH) & xoá (DELETE) một broadcast.
+﻿// Admin: cập nhật trạng thái (PATCH) & xoá (DELETE) một broadcast.
 // PATCH { status: "ok" } → nếu chưa từng gửi → gửi ngay + cập nhật sentAt.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getDb } from "@/lib/db";
 import { ObjectId } from "mongodb";
+import { logActivity } from "@/lib/activity-log";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const g = await requireAdmin();
@@ -59,6 +60,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   await db.collection("broadcasts").updateOne({ _id: new ObjectId(id) }, { $set: update });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "notification.send", target: { type: "thong-bao", id: id }, success: true });
   return NextResponse.json({ ok: true, status: newStatus, sentCount });
 }
 
@@ -72,5 +74,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const db = await getDb();
   const result = await db.collection("broadcasts").deleteOne({ _id: new ObjectId(id) });
   if (!result.deletedCount) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "notification.delete", target: { type: "thong-bao", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }

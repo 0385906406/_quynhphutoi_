@@ -1,10 +1,11 @@
-// Admin: quản lý thông báo broadcast.
+﻿// Admin: quản lý thông báo broadcast.
 //   GET  → danh sách draft / đã gửi
 //   POST → lưu draft (status: "off"), chưa gửi
 //   Kích hoạt (PATCH [id] status:"ok") → mới thực sự gửi tới người nhận
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getDb } from "@/lib/db";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET(_req: Request) {
   const g = await requireAdmin();
@@ -106,5 +107,6 @@ export async function POST(req: Request) {
     sentAt: null,
   });
 
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "notification.create", target: { type: "thong-bao", label: title }, success: true });
   return NextResponse.json({ ok: true, id: result.insertedId.toString() });
 }

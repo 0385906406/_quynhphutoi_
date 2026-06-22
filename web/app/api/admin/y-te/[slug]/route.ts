@@ -1,10 +1,11 @@
-// Admin: cập nhật (PATCH) & xoá (DELETE) một cơ sở y tế.
+﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một cơ sở y tế.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { updateHealth, deleteHealth, type HealthInput } from "@/lib/health";
 import { listActiveCategoryOptions } from "@/lib/categories";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { WARDS } from "@/lib/wards";
+import { logActivity } from "@/lib/activity-log";
 
 const WARD_SET = new Set(WARDS.map((w) => w.slug));
 
@@ -37,6 +38,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
   const n = await updateHealth(slug, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "y-te.update", target: { type: "y-te", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -46,5 +48,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
   const { slug } = await params;
   const n = await deleteHealth(slug);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "y-te.delete", target: { type: "y-te", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }

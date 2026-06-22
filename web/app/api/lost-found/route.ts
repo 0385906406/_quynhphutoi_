@@ -1,4 +1,4 @@
-// API tin Tìm đồ rơi: liệt kê (GET) & đăng tin mới (POST — yêu cầu đăng nhập).
+﻿// API tin Tìm đồ rơi: liệt kê (GET) & đăng tin mới (POST — yêu cầu đăng nhập).
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
@@ -16,6 +16,7 @@ import {
   type LostFoundKind,
   type LostFoundStatus,
 } from "@/lib/lostfound";
+import { logActivity } from "@/lib/activity-log";
 
 const KINDS: LostFoundKind[] = ["tim-do", "nhat-duoc"];
 const STATUSES: LostFoundStatus[] = ["open", "matched", "resolved", "closed"];
@@ -149,6 +150,7 @@ export async function POST(req: Request) {
       },
       session.id,
     );
+    void logActivity({ userId: session.id, userName: session.name, userEmail: "", userRole: "user", category: "user", action: "lost-found.create", target: { type: "tim-do-roi", id: post.slug, label: post.title }, success: true });
     return NextResponse.json({ ok: true, slug: post.slug, approved });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Đăng tin thất bại.";

@@ -1,4 +1,4 @@
-// Admin sửa nội dung / từ chối / xoá hẳn 1 tin. PATCH + DELETE.
+﻿// Admin sửa nội dung / từ chối / xoá hẳn 1 tin. PATCH + DELETE.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { deletePost, getPostBySlug, updatePost, type LostFoundPatch, type LostFoundStatus } from "@/lib/lostfound";
@@ -6,6 +6,7 @@ import { notifyUser } from "@/lib/notifications";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
+import { logActivity } from "@/lib/activity-log";
 
 const LF_STATUSES: LostFoundStatus[] = ["open", "matched", "resolved", "closed"];
 
@@ -35,6 +36,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
   const n = await updatePost(slug, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy tin." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "lost-found.update", target: { type: "tim-do-roi", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -53,10 +55,11 @@ export async function DELETE(
   if (post) {
     await notifyUser(post.postedBy, {
       type: "post_rejected",
-      title: `Tin “${post.title}” của bạn không được duyệt`,
+      title: `Tin "${post.title}" của bạn không được duyệt`,
       href: "/tai-khoan/bai-dang",
       module: "tim-do-roi",
     });
   }
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "lost-found.delete", target: { type: "tim-do-roi", id: slug }, success: true });
   return NextResponse.json({ ok: true });
 }

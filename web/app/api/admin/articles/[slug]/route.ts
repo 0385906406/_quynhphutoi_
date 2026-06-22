@@ -1,9 +1,10 @@
-// Admin: cập nhật (PATCH) & xoá (DELETE) một bài viết.
+﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một bài viết.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { updateArticle, deleteArticle, getArticleBySlug, type ArticleInput, type ArticleStatus } from "@/lib/articles";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { notifyUser } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-log";
 
 const STATUSES: ArticleStatus[] = ["draft", "published"];
 
@@ -35,6 +36,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
 
   const n = await updateArticle(slug, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  const details: string[] = [];
+  if (patch.status) details.push(`Trạng thái: ${patch.status}`);
+  if (patch.featured !== undefined) details.push(patch.featured ? "Đánh dấu nổi bật" : "Bỏ nổi bật");
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "article.update", target: { type: "bài viết", id: slug, label: patch.title ?? slug }, success: true, detail: details.join(" · ") || undefined });
   return NextResponse.json({ ok: true });
 }
 
@@ -47,7 +52,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
   const n = await deleteArticle(slug);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
   if (article?.postedBy && article.approved === false) {
-    await notifyUser(article.postedBy, { type: "post_rejected", title: `Bài viết “${article.title}” của bạn chưa được duyệt`, href: "/tai-khoan/bai-dang", module: "tin-tuc" });
+    await notifyUser(article.postedBy, { type: "post_rejected", title: `Bài viết "${article.title}" của bạn chưa được duyệt`, href: "/tai-khoan/bai-dang", module: "tin-tuc" });
   }
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "article.delete", target: { type: "bài viết", id: slug, label: article?.title ?? slug }, success: true });
   return NextResponse.json({ ok: true });
 }

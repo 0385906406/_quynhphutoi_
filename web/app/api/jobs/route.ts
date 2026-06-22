@@ -1,4 +1,4 @@
-// API Việc làm: liệt kê (GET) & đăng tin tuyển dụng (POST — cần đăng nhập).
+﻿// API Việc làm: liệt kê (GET) & đăng tin tuyển dụng (POST — cần đăng nhập).
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { notifyAdmins } from "@/lib/notifications";
@@ -10,6 +10,7 @@ import { getSettings } from "@/lib/settings";
 import { scanProfanity, getActiveProfanityWords } from "@/lib/profanity";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { createJob, listJobs, countJobs, type JobStatus } from "@/lib/jobs";
+import { logActivity } from "@/lib/activity-log";
 
 const STATUSES: JobStatus[] = ["open", "closed", "filled"];
 
@@ -143,6 +144,7 @@ export async function POST(req: Request) {
       },
       session.id,
     );
+    void logActivity({ userId: session.id, userName: session.name, userEmail: "", userRole: "user", category: "user", action: "job.create", target: { type: "viec-lam", id: job.slug, label: job.title }, success: true });
     return NextResponse.json({ ok: true, slug: job.slug, approved });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Đăng tin thất bại." }, { status: 400 });

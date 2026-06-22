@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { listAllArticles, createArticle, toArticleRow, type ArticleStatus } from "@/lib/articles";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { logActivity } from "@/lib/activity-log";
 
 const STATUSES: ArticleStatus[] = ["draft", "published"];
 
@@ -38,5 +39,6 @@ export async function POST(req: Request) {
       ogImage: b.seoOgImage || undefined, noindex: !!b.seoNoindex,
     },
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "article.create", target: { type: "bài viết", id: created.slug, label: title }, success: true, detail: `Trạng thái: ${status}` });
   return NextResponse.json({ ok: true, item: toArticleRow(created) });
 }

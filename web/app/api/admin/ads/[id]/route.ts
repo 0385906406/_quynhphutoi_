@@ -1,4 +1,4 @@
-// Admin: cập nhật (PATCH) & xoá (DELETE) một quảng cáo.
+﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một quảng cáo.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
@@ -8,6 +8,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { stripHtml } from "@/lib/strip-html";
 import { getSettings } from "@/lib/settings";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
+import { logActivity } from "@/lib/activity-log";
 
 async function guard() {
   const user = await getCurrentUser();
@@ -58,6 +59,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if ("seo" in b) patch.seo = sanitizeSeoFields(b.seo);
 
   await updateAd(id, patch);
+  const cu = await getCurrentUser();
+    void logActivity({ userId: cu?._id?.toString() ?? "unknown", userName: cu?.name ?? "", userEmail: cu?.email ?? "", userRole: "admin", category: "admin", action: "ad.update", target: { type: "quang-cao", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -67,5 +70,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const n = await deleteAd(id);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  const cu = await getCurrentUser();
+    void logActivity({ userId: cu?._id?.toString() ?? "unknown", userName: cu?.name ?? "", userEmail: cu?.email ?? "", userRole: "admin", category: "admin", action: "ad.delete", target: { type: "quang-cao", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }

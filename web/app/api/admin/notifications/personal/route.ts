@@ -1,8 +1,9 @@
-// Admin: gửi thông báo riêng tới 1 email cụ thể.
+﻿// Admin: gửi thông báo riêng tới 1 email cụ thể.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getDb } from "@/lib/db";
 import { notifyUser } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(req: Request) {
   const g = await requireAdmin();
@@ -30,5 +31,6 @@ export async function POST(req: Request) {
     actorName: g.user.name,
   });
 
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "notification.personal", target: { type: "thong-bao", label: email }, success: true });
   return NextResponse.json({ ok: true, recipientName: recipient.name });
 }

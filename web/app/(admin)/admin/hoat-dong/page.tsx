@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getModulePerm } from "@/lib/admin-guard";
 import { ActivityLogViewer } from "@/components/admin/ActivityLogViewer";
+import { AnomalyAlert } from "@/components/admin/AnomalyAlert";
 
 export const metadata: Metadata = { title: "Nhật ký hoạt động — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function ActivityLogPage() {
           Lịch sử toàn bộ thao tác của người dùng và ban quản trị: đăng nhập, gửi bài, duyệt nội dung, thay đổi vai trò…
         </p>
       </div>
+      <AnomalyAlert />
       <ActivityLogViewer />
     </>
   );

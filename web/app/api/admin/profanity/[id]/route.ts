@@ -1,7 +1,8 @@
-// Admin: sửa (PATCH) & xoá (DELETE) một từ cấm.
+﻿// Admin: sửa (PATCH) & xoá (DELETE) một từ cấm.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { updateProfanityWord, deleteProfanityWord, type ProfanityPatch } from "@/lib/profanity";
+import { logActivity } from "@/lib/activity-log";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePerm("loc-tu-ngu", "edit");
@@ -16,6 +17,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const n = await updateProfanityWord(id, patch);
     if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+      void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "profanity.update", target: { type: "tu-cam", id: id }, success: true });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Không lưu được." }, { status: 400 });
@@ -28,5 +30,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const n = await deleteProfanityWord(id);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "profanity.delete", target: { type: "tu-cam", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }

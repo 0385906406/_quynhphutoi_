@@ -1,8 +1,9 @@
-// Admin: cây danh mục theo module (GET ?module=) & tạo danh mục (POST).
+﻿// Admin: cây danh mục theo module (GET ?module=) & tạo danh mục (POST).
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getTree, createCategory, listModules, type CategoryNode } from "@/lib/categories";
 import { slugify } from "@/lib/slug";
+import { logActivity } from "@/lib/activity-log";
 
 // Cây phẳng-an-toàn cho client (ObjectId/Date → string).
 export type CatNode = {
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
       icon: b.icon || undefined, href: b.href || undefined, description: b.description || undefined,
       active: b.active !== false,
     });
+      void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "category.create", target: { type: "danh-muc", label: name }, success: true });
     return NextResponse.json({ ok: true, id: created._id!.toString() });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Không tạo được danh mục." }, { status: 400 });

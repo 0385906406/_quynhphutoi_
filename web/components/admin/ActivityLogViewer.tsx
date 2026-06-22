@@ -22,23 +22,99 @@ type LogRow = {
 type ApiResponse = { rows: LogRow[]; total: number; page: number; pageSize: number };
 
 const ACTION_LABELS: Record<string, string> = {
-  "auth.login":          "Đăng nhập",
-  "auth.register":       "Đăng ký",
-  "user.setRole":        "Đổi vai trò",
-  "user.ban":            "Khóa tài khoản",
-  "user.unban":          "Mở khóa tài khoản",
-  "user.warn.add":       "Thêm cảnh báo",
-  "user.warn.clear":     "Xóa cảnh báo",
-  "user.delete":         "Xóa tài khoản",
-  "article.approve":     "Duyệt bài viết",
-  "article.reject":      "Từ chối bài viết",
-  "article.submit":      "Gửi bài viết",
-  "job.approve":         "Duyệt việc làm",
-  "job.reject":          "Từ chối việc làm",
-  "mua-ban.approve":     "Duyệt tin mua bán",
-  "mua-ban.reject":      "Từ chối mua bán",
-  "lost-found.approve":  "Duyệt tìm đồ rơi",
-  "lost-found.reject":   "Từ chối tìm đồ rơi",
+  // auth
+  "auth.login":              "Đăng nhập",
+  "auth.register":           "Đăng ký",
+  // user management
+  "user.setRole":            "Đổi vai trò",
+  "user.ban":                "Khóa tài khoản",
+  "user.unban":              "Mở khóa tài khoản",
+  "user.warn.add":           "Thêm cảnh báo",
+  "user.warn.clear":         "Xóa cảnh báo",
+  "user.delete":             "Xóa tài khoản",
+  // articles
+  "article.approve":         "Duyệt bài viết",
+  "article.reject":          "Từ chối bài viết",
+  "article.submit":          "Gửi bài viết",
+  "article.update":          "Sửa bài viết",
+  "article.delete":          "Xóa bài viết",
+  "article.import":          "Import tin ngoài",
+  // jobs
+  "job.approve":             "Duyệt việc làm",
+  "job.reject":              "Từ chối việc làm",
+  "job.create":              "Đăng việc làm",
+  "job.update":              "Sửa việc làm",
+  "job.delete":              "Xóa việc làm",
+  // mua-ban
+  "mua-ban.approve":         "Duyệt mua bán",
+  "mua-ban.reject":          "Từ chối mua bán",
+  "mua-ban.create":          "Đăng mua bán",
+  "mua-ban.update":          "Sửa mua bán",
+  "mua-ban.delete":          "Xóa mua bán",
+  // lost-found
+  "lost-found.approve":      "Duyệt tìm đồ rơi",
+  "lost-found.reject":       "Từ chối tìm đồ rơi",
+  "lost-found.create":       "Đăng tìm đồ rơi",
+  "lost-found.update":       "Sửa tin tìm đồ rơi",
+  "lost-found.delete":       "Xóa tin tìm đồ rơi",
+  // contact
+  "contact.submit":          "Gửi liên hệ",
+  "contact.handle":          "Xử lý liên hệ",
+  "contact.delete":          "Xóa liên hệ",
+  // categories
+  "category.create":         "Tạo danh mục",
+  "category.update":         "Sửa danh mục",
+  "category.delete":         "Xóa danh mục",
+  // custom-roles
+  "custom-role.create":      "Tạo vai trò",
+  "custom-role.update":      "Sửa vai trò",
+  "custom-role.delete":      "Xóa vai trò",
+  // ads
+  "ad.create":               "Tạo quảng cáo",
+  "ad.update":               "Sửa quảng cáo",
+  "ad.delete":               "Xóa quảng cáo",
+  // notifications
+  "notification.create":     "Tạo thông báo",
+  "notification.personal":   "Gửi TB cá nhân",
+  "notification.send":       "Gửi thông báo",
+  "notification.delete":     "Xóa thông báo",
+  // newsletter
+  "newsletter.unsubscribe":  "Hủy đăng ký NL",
+  // settings
+  "settings.update":         "Cập nhật cài đặt",
+  "page-seo.update":         "Cập nhật SEO",
+  "home-sections.update":    "Cập nhật trang chủ",
+  "news-page.update":        "Cập nhật trang tin",
+  "role-permissions.update": "Cập nhật phân quyền",
+  "affiliate.update":        "Cập nhật liên kết",
+  // profanity
+  "profanity.add":           "Thêm từ cấm",
+  "profanity.update":        "Sửa từ cấm",
+  "profanity.delete":        "Xóa từ cấm",
+  "profanity.import":        "Import từ cấm",
+  "profanity.seed":          "Seed từ cấm",
+  // seed / ai
+  "seed.run":                "Chạy seed dữ liệu",
+  "ai.generate":             "Tạo nội dung AI",
+  // places
+  "truong-hoc.create":       "Tạo trường học",
+  "truong-hoc.update":       "Sửa trường học",
+  "truong-hoc.delete":       "Xóa trường học",
+  "y-te.create":             "Tạo cơ sở y tế",
+  "y-te.update":             "Sửa cơ sở y tế",
+  "y-te.delete":             "Xóa cơ sở y tế",
+  "cho.create":              "Tạo chợ",
+  "cho.update":              "Sửa chợ",
+  "cho.delete":              "Xóa chợ",
+  "giao-thong.create":       "Tạo giao thông",
+  "giao-thong.update":       "Sửa giao thông",
+  "giao-thong.delete":       "Xóa giao thông",
+  "di-tich.create":          "Tạo di tích",
+  "di-tich.update":          "Sửa di tích",
+  "di-tich.delete":          "Xóa di tích",
+  "admin-units.create":      "Tạo đơn vị HC",
+  "admin-units.update":      "Sửa đơn vị HC",
+  "admin-units.delete":      "Xóa đơn vị HC",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -48,20 +124,30 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const ROLE_LABELS: Record<string, string> = {
-  admin:  "Admin",
-  editor: "BTV",
-  user:   "User",
+  superadmin: "Super",
+  admin:      "Admin",
+  editor:     "BTV",
+  user:       "User",
 };
 
 const CAT_COLORS: Record<string, { bg: string; color: string }> = {
-  auth:  { bg: "rgba(59,130,246,0.1)",  color: "#2563eb" },
-  admin: { bg: "rgba(239,68,68,0.1)",   color: "#dc2626" },
-  user:  { bg: "rgba(16,185,129,0.1)",  color: "#059669" },
+  auth:  { bg: "rgba(59,130,246,0.12)",  color: "#1d4ed8" },
+  admin: { bg: "rgba(239,68,68,0.12)",   color: "#b91c1c" },
+  user:  { bg: "rgba(16,185,129,0.12)",  color: "#047857" },
+};
+
+const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
+  superadmin: { bg: "rgba(124,58,237,0.12)", color: "#6d28d9" },
+  admin:      { bg: "rgba(239,68,68,0.12)",  color: "#b91c1c" },
+  editor:     { bg: "rgba(59,130,246,0.12)", color: "#1d4ed8" },
+  user:       { bg: "rgba(156,163,175,0.2)", color: "#4b5563" },
 };
 
 export function ActivityLogViewer() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [success, setSuccess] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -69,22 +155,32 @@ export function ActivityLogViewer() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
+  // Debounce search input 400ms
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const doFetch = useCallback(async (signal: AbortSignal) => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search)   params.set("search", search);
     if (category) params.set("category", category);
-    if (success) params.set("success", success);
+    if (success)  params.set("success", success);
     if (dateFrom) params.set("from", dateFrom + "T00:00:00");
-    if (dateTo) params.set("to", dateTo + "T23:59:59");
+    if (dateTo)   params.set("to",   dateTo   + "T23:59:59");
     try {
       const res = await fetch(`/api/admin/activity-logs?${params}`, { signal });
       if (res.ok) setData(await res.json());
     } catch {
-      // aborted or error — ignore
+      // aborted or network error — ignore
     } finally {
       setLoading(false);
     }
-  }, [category, success, dateFrom, dateTo, page, pageSize]);
+  }, [search, category, success, dateFrom, dateTo, page, pageSize]);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -93,7 +189,8 @@ export function ActivityLogViewer() {
   }, [doFetch]);
 
   function resetFilters() {
-    setCategory(""); setSuccess(""); setDateFrom(""); setDateTo(""); setPage(1);
+    setSearchInput(""); setSearch(""); setCategory(""); setSuccess("");
+    setDateFrom(""); setDateTo(""); setPage(1);
   }
 
   function changeFilter<T>(setter: (v: T) => void) {
@@ -105,7 +202,21 @@ export function ActivityLogViewer() {
   return (
     <div>
       {/* ── Filter bar ── */}
-      <div className="qp-admin-toolbar" style={{ flexWrap: "wrap", gap: "var(--space-2)", marginBottom: "var(--space-4)" }}>
+      <div
+        className="qp-admin-toolbar"
+        style={{ flexWrap: "wrap", gap: "var(--space-2)", marginBottom: "var(--space-4)", alignItems: "center" }}
+      >
+        {/* Search */}
+        <input
+          type="search"
+          className="qp-input"
+          placeholder="Tìm theo tên, hành động, đối tượng…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          style={{ minWidth: 200, flex: "1 1 200px" }}
+        />
+
+        {/* Category */}
         <select
           className="qp-select"
           value={category}
@@ -117,6 +228,7 @@ export function ActivityLogViewer() {
           <option value="user">Người dùng</option>
         </select>
 
+        {/* Success/Fail */}
         <select
           className="qp-select"
           value={success}
@@ -127,6 +239,7 @@ export function ActivityLogViewer() {
           <option value="false">Thất bại</option>
         </select>
 
+        {/* Date range */}
         <input
           type="date"
           className="qp-input"
@@ -147,7 +260,8 @@ export function ActivityLogViewer() {
 
         <span className="qp-admin-toolbar__spacer" />
 
-        <label className="qp-admin-pagesize" style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+        {/* Page size */}
+        <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           <select
             className="qp-select"
             value={pageSize}
@@ -164,117 +278,133 @@ export function ActivityLogViewer() {
       </div>
 
       {/* ── Table ── */}
-      <div className="qp-table--wrap">
-        <table className="qp-table">
+      <div className="qp-table--wrap" style={{ overflowX: "auto" }}>
+        <table className="qp-table" style={{ minWidth: 900 }}>
           <thead>
             <tr>
-              <th>Thời gian</th>
+              <th style={{ whiteSpace: "nowrap" }}>Thời gian</th>
               <th>Người thực hiện</th>
+              <th>Vai trò</th>
               <th>Danh mục</th>
               <th>Hành động</th>
               <th>Đối tượng</th>
-              <th>Kết quả</th>
+              <th>IP</th>
+              <th style={{ textAlign: "center" }}>Kết quả</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-gray-muted)" }}>
+                <td colSpan={8} style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-gray-muted)" }}>
                   Đang tải…
                 </td>
               </tr>
             ) : !data || data.rows.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-gray-muted)" }}>
+                <td colSpan={8} style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-gray-muted)" }}>
                   Chưa có nhật ký nào.
                 </td>
               </tr>
             ) : (
-              data.rows.map((row) => (
-                <tr key={row.id}>
-                  {/* Thời gian */}
-                  <td style={{ whiteSpace: "nowrap", fontSize: 13, color: "var(--color-gray-muted)" }}>
-                    {formatDateTime(row.createdAt)}
-                  </td>
+              data.rows.map((row) => {
+                const rolec = ROLE_COLORS[row.userRole] ?? ROLE_COLORS.user;
+                const catc  = CAT_COLORS[row.category]  ?? { bg: "rgba(156,163,175,0.2)", color: "#6b7280" };
+                return (
+                  <tr
+                    key={row.id}
+                    style={{
+                      background: row.success
+                        ? "rgba(16,185,129,0.025)"
+                        : "rgba(239,68,68,0.035)",
+                    }}
+                  >
+                    {/* Thời gian */}
+                    <td style={{ whiteSpace: "nowrap", fontSize: 12, color: "var(--color-gray-muted)" }}>
+                      {formatDateTime(row.createdAt)}
+                    </td>
 
-                  {/* Người thực hiện */}
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>
-                      {row.userName || <span style={{ color: "var(--color-gray-muted)" }}>Ẩn danh</span>}
-                    </div>
-                    {row.userEmail && (
-                      <div style={{ fontSize: 12, color: "var(--color-gray-muted)" }}>{row.userEmail}</div>
-                    )}
-                    {row.userRole && row.userRole !== "unknown" && (
-                      <span style={{
-                        display: "inline-block", marginTop: 2,
-                        fontSize: 11, fontWeight: 600, padding: "1px 6px",
-                        borderRadius: 4,
-                        background: row.userRole === "admin" ? "rgba(239,68,68,0.1)" : row.userRole === "editor" ? "rgba(59,130,246,0.1)" : "rgba(156,163,175,0.2)",
-                        color: row.userRole === "admin" ? "#dc2626" : row.userRole === "editor" ? "#2563eb" : "#6b7280",
-                      }}>
-                        {ROLE_LABELS[row.userRole] || row.userRole}
-                      </span>
-                    )}
-                  </td>
+                    {/* Người thực hiện */}
+                    <td>
+                      <div style={{ fontWeight: 600, fontSize: 13, lineHeight: 1.3 }}>
+                        {row.userName || <span style={{ color: "var(--color-gray-muted)", fontWeight: 400 }}>Ẩn danh</span>}
+                      </div>
+                      {row.userEmail && (
+                        <div style={{ fontSize: 11, color: "var(--color-gray-muted)", marginTop: 1 }}>{row.userEmail}</div>
+                      )}
+                    </td>
 
-                  {/* Danh mục */}
-                  <td>
-                    {(() => {
-                      const c = CAT_COLORS[row.category] ?? { bg: "rgba(156,163,175,0.2)", color: "#6b7280" };
-                      return (
+                    {/* Vai trò */}
+                    <td>
+                      {row.userRole && row.userRole !== "unknown" && (
                         <span style={{
-                          display: "inline-block", fontSize: 11, fontWeight: 600,
-                          padding: "2px 8px", borderRadius: 4, whiteSpace: "nowrap",
-                          background: c.bg, color: c.color,
+                          display: "inline-block",
+                          fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                          background: rolec.bg, color: rolec.color,
                         }}>
-                          {CATEGORY_LABELS[row.category] || row.category}
+                          {ROLE_LABELS[row.userRole] || row.userRole}
                         </span>
-                      );
-                    })()}
-                  </td>
+                      )}
+                    </td>
 
-                  {/* Hành động */}
-                  <td>
-                    <div style={{ fontWeight: 500, fontSize: 14 }}>
-                      {ACTION_LABELS[row.action] || row.action}
-                    </div>
-                    {row.detail && (
-                      <div style={{ fontSize: 12, color: "var(--color-gray-muted)", marginTop: 2 }}>
-                        {row.detail}
+                    {/* Danh mục */}
+                    <td>
+                      <span style={{
+                        display: "inline-block", fontSize: 11, fontWeight: 600,
+                        padding: "2px 8px", borderRadius: 4, whiteSpace: "nowrap",
+                        background: catc.bg, color: catc.color,
+                      }}>
+                        {CATEGORY_LABELS[row.category] || row.category}
+                      </span>
+                    </td>
+
+                    {/* Hành động */}
+                    <td>
+                      <div style={{ fontWeight: 500, fontSize: 13 }}>
+                        {ACTION_LABELS[row.action] || row.action}
                       </div>
-                    )}
-                  </td>
-
-                  {/* Đối tượng */}
-                  <td>
-                    {row.target ? (
-                      <div>
-                        <div style={{ fontSize: 12, color: "var(--color-gray-muted)" }}>
-                          {row.target.type}
+                      {row.detail && (
+                        <div style={{ fontSize: 11, color: "var(--color-gray-muted)", marginTop: 2 }}>
+                          {row.detail}
                         </div>
-                        {row.target.label && (
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{row.target.label}</div>
-                        )}
-                      </div>
-                    ) : (
-                      <span style={{ color: "var(--color-gray-muted)" }}>—</span>
-                    )}
-                  </td>
+                      )}
+                    </td>
 
-                  {/* Kết quả */}
-                  <td>
-                    <span style={{
-                      display: "inline-block", fontSize: 12, fontWeight: 600,
-                      padding: "2px 8px", borderRadius: 4, whiteSpace: "nowrap",
-                      background: row.success ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
-                      color: row.success ? "#059669" : "#dc2626",
+                    {/* Đối tượng */}
+                    <td>
+                      {row.target ? (
+                        <div>
+                          <div style={{ fontSize: 11, color: "var(--color-gray-muted)" }}>
+                            {row.target.type}
+                          </div>
+                          {row.target.label && (
+                            <div style={{ fontSize: 12, fontWeight: 500, marginTop: 1 }}>{row.target.label}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ color: "var(--color-gray-muted)" }}>—</span>
+                      )}
+                    </td>
+
+                    {/* IP */}
+                    <td style={{
+                      fontFamily: "monospace", fontSize: 11,
+                      color: "var(--color-gray-muted)", whiteSpace: "nowrap",
+                    }}>
+                      {row.ip || <span>—</span>}
+                    </td>
+
+                    {/* Kết quả */}
+                    <td style={{
+                      background: row.success ? "rgba(16,185,129,0.18)" : "rgba(239,68,68,0.18)",
+                      color: row.success ? "#065f46" : "#991b1b",
+                      fontWeight: 700, fontSize: 12, textAlign: "center",
+                      whiteSpace: "nowrap", padding: "0 12px",
                     }}>
                       {row.success ? "Thành công" : "Thất bại"}
-                    </span>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -1,4 +1,4 @@
-// Admin: liệt kê (GET) & tạo (POST) quảng cáo.
+﻿// Admin: liệt kê (GET) & tạo (POST) quảng cáo.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
 import { isAdmin } from "@/lib/users";
@@ -8,6 +8,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { stripHtml } from "@/lib/strip-html";
 import { getSettings } from "@/lib/settings";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
+import { logActivity } from "@/lib/activity-log";
 
 // Lọc mảng URL ảnh hợp lệ, cắt theo giới hạn settings.adMaxImages.
 function parseImages(raw: unknown, max: number): string[] {
@@ -84,5 +85,7 @@ export async function POST(req: Request) {
     active: b.active !== false,
     seo: sanitizeSeoFields(b.seo),
   });
+  const cu = await getCurrentUser();
+    void logActivity({ userId: cu?._id?.toString() ?? "unknown", userName: cu?.name ?? "", userEmail: cu?.email ?? "", userRole: "admin", category: "admin", action: "ad.create", target: { type: "quang-cao", id: ad._id!.toString() }, success: true });
   return NextResponse.json({ ok: true, id: ad._id!.toString() });
 }

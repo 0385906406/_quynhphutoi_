@@ -1,7 +1,8 @@
-// Admin: cập nhật (PATCH) & xoá (DELETE) một danh mục.
+﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một danh mục.
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { updateCategory, deleteCategory, type CategoryPatch } from "@/lib/categories";
+import { logActivity } from "@/lib/activity-log";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const g = await requireAdmin();
@@ -19,6 +20,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const n = await updateCategory(id, patch);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "category.update", target: { type: "danh-muc", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }
 
@@ -31,5 +33,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (res.reason === "has-children") return NextResponse.json({ error: "Danh mục còn danh mục con — xoá/di chuyển con trước." }, { status: 409 });
     return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
   }
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "category.delete", target: { type: "danh-muc", id: id }, success: true });
   return NextResponse.json({ ok: true });
 }

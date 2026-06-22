@@ -1,10 +1,11 @@
-// Người dùng tự xóa bài viết của chính mình.
+﻿// Người dùng tự xóa bài viết của chính mình.
 // Nếu bài đó có cảnh báo chưa giải quyết → tự động giải quyết + giảm warnCount.
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getArticleBySlug, deleteArticle } from "@/lib/articles";
 import { resolveWarningByArticle } from "@/lib/user-warnings";
 import { removeWarning } from "@/lib/users";
+import { logActivity } from "@/lib/activity-log";
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const session = await getSession();
@@ -30,5 +31,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
     warnCount = result?.warnCount;
   }
 
+  void logActivity({ userId: session.id, userName: session.name, userEmail: "", userRole: "user", category: "user", action: "article.delete", target: { type: "tin-tuc", id: slug, label: article.title }, success: true });
   return NextResponse.json({ ok: true, resolvedWarning: hadWarning, warnCount });
 }

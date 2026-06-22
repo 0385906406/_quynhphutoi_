@@ -1,7 +1,8 @@
-// Admin: liệt kê (GET) & tạo (POST) đơn vị hành chính (xã / thị trấn).
+﻿// Admin: liệt kê (GET) & tạo (POST) đơn vị hành chính (xã / thị trấn).
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { listAdminUnits, createAdminUnit, toAdminUnitRow } from "@/lib/admin-units";
+import { logActivity } from "@/lib/activity-log";
 
 export async function GET() {
   const g = await requireAdmin();
@@ -28,5 +29,6 @@ export async function POST(req: Request) {
     newCommune, newCommuneSlug: b.newCommuneSlug,
     newProvince: String(b.newProvince || "Tỉnh Hưng Yên"),
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "admin-units.create", target: { type: "don-vi-hanh-chinh", label: name }, success: true });
   return NextResponse.json({ ok: true, item: toAdminUnitRow(created) });
 }

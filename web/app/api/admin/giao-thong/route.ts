@@ -1,9 +1,10 @@
-// Admin: liệt kê (GET) & tạo (POST) tuyến giao thông.
+﻿// Admin: liệt kê (GET) & tạo (POST) tuyến giao thông.
 import { NextResponse } from "next/server";
 import { requirePerm } from "@/lib/admin-guard";
 import { listTransit, createTransit, toTransitRow } from "@/lib/transit";
 import { listActiveCategoryOptions } from "@/lib/categories";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
+import { logActivity } from "@/lib/activity-log";
 
 // Chấp nhận stops dạng mảng chuỗi HOẶC chuỗi (tách theo xuống dòng/dấu phẩy) → string[].
 function toStops(v: unknown): string[] {
@@ -39,5 +40,6 @@ export async function POST(req: Request) {
     verified: !!b.verified, active: b.active !== false,
     seo: sanitizeSeoFields(b.seo),
   });
+  void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "giao-thong.create", target: { type: "giao-thong", label: name }, success: true });
   return NextResponse.json({ ok: true, item: toTransitRow(created) });
 }
