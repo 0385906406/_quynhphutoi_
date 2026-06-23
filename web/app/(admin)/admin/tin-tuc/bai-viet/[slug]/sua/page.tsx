@@ -21,11 +21,11 @@ export default async function EditArticlePage({ params }: { params: Promise<{ sl
   const categories = catOpts.map((c) => c.name);
 
   const initialForm: ArticleForm = {
-    title: row.title, excerpt: row.excerpt, category: row.category, scope: row.scope,
+    title: row.title ?? "", excerpt: row.excerpt ?? "", category: row.category ?? "", scope: row.scope,
     tags: (row.tags ?? []).join(", "),
-    coverImage: row.coverImage, coverAlt: row.coverAlt,
-    authorName: row.authorName, authorTitle: row.authorTitle,
-    bodyHtml: row.bodyHtml, featured: row.featured, status: row.status,
+    coverImage: row.coverImage ?? "", coverAlt: row.coverAlt ?? "",
+    authorName: row.authorName ?? "", authorTitle: row.authorTitle ?? "",
+    bodyHtml: row.bodyHtml ?? "", featured: row.featured, status: row.status,
     seoMetaTitle: row.seo.metaTitle ?? "", seoMetaDescription: row.seo.metaDescription ?? "",
     seoKeywords: (row.seo.keywords ?? []).join(", "),
     seoOgImage: row.seo.ogImage ?? "", seoNoindex: !!row.seo.noindex,

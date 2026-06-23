@@ -37,7 +37,7 @@ function badgeClass(cat: string) {
 // View model cho bài viết (DB articles do admin tạo).
 type ArticleView = {
   title: string; category: string; image: string; date: string; readTime: string;
-  author: string; tags: string[]; viewsText: string;
+  author: string; authorTitle: string; tags: string[]; viewsText: string;
 };
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -59,7 +59,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const view: ArticleView = {
     title: db.title, category: db.category, image: db.coverImage,
     date: dd ? `${String(dd.getDate()).padStart(2, "0")}/${String(dd.getMonth() + 1).padStart(2, "0")}/${dd.getFullYear()}` : "",
-    readTime: `${db.readingMinutes} phút đọc`, author: db.author?.name ?? "Ban biên tập",
+    readTime: `${db.readingMinutes} phút đọc`, author: db.author?.name ?? "Ban biên tập", authorTitle: db.author?.title ?? "",
     tags: db.tags ?? [], viewsText: fmtViews((db.views ?? 0) + 1),
   };
   const body: ArticleBlock[] = db.body ?? [];
@@ -170,7 +170,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <span className="qp-avatar-initials" aria-hidden>{initials}</span>
                 <div>
                   <div className="qp-author__name">{a.author}</div>
-                  <div className="qp-author__meta">Tác giả</div>
+                  <div className="qp-author__meta">{a.authorTitle || "Tác giả"}</div>
                 </div>
               </div>
               <div className="qp-lf-spec" style={{ marginTop: 14 }}>
