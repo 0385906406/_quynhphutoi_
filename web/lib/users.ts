@@ -10,7 +10,9 @@ export type UserDoc = {
   _id?: ObjectId;
   email: string;
   name: string;
-  passwordHash: string;
+  passwordHash?: string;       // undefined với tài khoản SSO (Google…)
+  provider?: "google" | "microsoft"; // nhà cung cấp OAuth
+  providerId?: string;         // ID từ nhà cung cấp (Google sub)
   verified: boolean;
   banned?: boolean;            // true = tài khoản bị khóa, không thể đăng nhập.
   warnCount?: number;          // số lần bị cảnh báo vi phạm nội quy.
@@ -228,6 +230,7 @@ export async function verifyByToken(token: string) {
 }
 
 export async function checkPassword(user: UserDoc, password: string) {
+  if (!user.passwordHash) return false; // tài khoản SSO không có mật khẩu
   return bcrypt.compare(password, user.passwordHash);
 }
 
@@ -297,4 +300,82 @@ export async function resetPasswordByToken(token: string, newPassword: string) {
     { $set: { passwordHash, verified: true }, $unset: { resetToken: "", resetTokenExp: "" } },
   );
   return u;
+}
+
+// Tìm hoặc tạo tài khoản qua Google OAuth.
+// Ưu tiên: (1) match providerId → (2) match email → (3) tạo mới.
+export async function findOrCreateGoogleUser(
+  googleId: string,
+  email: string,
+  name: string,
+  avatar?: string,
+): Promise<{ id: string; email: string; name: string; avatar?: string }> {
+  const col = await users();
+  const normE = normEmail(email);
+
+  // 1. Tìm theo providerId (đã từng đăng nhập bằng Google)
+  let u = await col.findOne({ provider: "google", providerId: googleId });
+  if (u) {
+    if (avatar) await col.updateOne({ _id: u._id }, { $set: { avatar } });
+    return { id: u._id!.toString(), email: u.email, name: u.name, avatar: avatar || u.avatar || undefined };
+  }
+
+  // 2. Tìm theo email (tài khoản email/password đang có) → link
+  u = await col.findOne({ email: normE });
+  if (u) {
+    await col.updateOne(
+      { _id: u._id },
+      { $set: { provider: "google", providerId: googleId, verified: true, ...(avatar ? { avatar } : {}) } },
+    );
+    return { id: u._id!.toString(), email: u.email, name: u.name, avatar: avatar || u.avatar || undefined };
+  }
+
+  // 3. Tạo mới
+  const res = await col.insertOne({
+    email: normE,
+    name: name.trim() || email.split("@")[0],
+    provider: "google",
+    providerId: googleId,
+    verified: true,
+    avatar: avatar || null,
+    createdAt: new Date(),
+  } as UserDoc);
+  return { id: res.insertedId.toString(), email: normE, name: name.trim() || email.split("@")[0], avatar };
+}
+
+// Tìm hoặc tạo tài khoản qua Microsoft OAuth.
+export async function findOrCreateMicrosoftUser(
+  microsoftId: string,
+  email: string,
+  name: string,
+  avatar?: string,
+): Promise<{ id: string; email: string; name: string; avatar?: string }> {
+  const col = await users();
+  const normE = normEmail(email);
+
+  let u = await col.findOne({ provider: "microsoft", providerId: microsoftId });
+  if (u) {
+    if (avatar) await col.updateOne({ _id: u._id }, { $set: { avatar } });
+    return { id: u._id!.toString(), email: u.email, name: u.name, avatar: avatar || u.avatar || undefined };
+  }
+
+  u = await col.findOne({ email: normE });
+  if (u) {
+    await col.updateOne(
+      { _id: u._id },
+      { $set: { provider: "microsoft", providerId: microsoftId, verified: true, ...(avatar ? { avatar } : {}) } },
+    );
+    return { id: u._id!.toString(), email: u.email, name: u.name, avatar: avatar || u.avatar || undefined };
+  }
+
+  const res = await col.insertOne({
+    email: normE,
+    name: name.trim() || email.split("@")[0],
+    provider: "microsoft",
+    providerId: microsoftId,
+    verified: true,
+    avatar: avatar || null,
+    createdAt: new Date(),
+  } as UserDoc);
+  return { id: res.insertedId.toString(), email: normE, name: name.trim() || email.split("@")[0], avatar };
 }
