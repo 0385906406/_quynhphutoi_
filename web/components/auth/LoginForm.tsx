@@ -21,6 +21,7 @@ export function LoginForm() {
     if (verify === "success") toast.success("Xác nhận email thành công! Bạn có thể đăng nhập.");
     else if (verify === "invalid") toast.error("Liên kết xác nhận không hợp lệ hoặc đã hết hạn.");
     if (oauthError === "banned") toast.error("Tài khoản của bạn đã bị khóa.");
+    else if (oauthError === "not_configured") toast.error("Tính năng này chưa được kích hoạt. Vui lòng đăng nhập bằng email.");
     else if (oauthError === "oauth_failed") toast.error("Đăng nhập bằng mạng xã hội thất bại. Vui lòng thử lại.");
     else if (oauthError === "invalid_state") toast.error("Phiên đăng nhập hết hạn. Vui lòng thử lại.");
     else if (oauthError === "oauth_cancelled") toast.info("Đăng nhập đã bị huỷ.");

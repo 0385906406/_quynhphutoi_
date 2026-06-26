@@ -4,7 +4,9 @@ import { cookies } from "next/headers";
 
 export async function GET() {
   if (!process.env.MICROSOFT_CLIENT_ID) {
-    return NextResponse.json({ error: "Microsoft OAuth chưa được cấu hình." }, { status: 503 });
+    return NextResponse.redirect(
+      new URL("/dang-nhap?error=not_configured", process.env.APP_URL || "http://localhost:3001"),
+    );
   }
 
   const state = crypto.randomUUID();
