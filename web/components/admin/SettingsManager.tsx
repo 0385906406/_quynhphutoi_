@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Cấu hình hệ thống — full trang, tab dọc + công tắc gạt. Lưu DB, áp dụng ngay.
 import { useState } from "react";
@@ -169,11 +169,11 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         {tab === "seo" && (
           <>
             <Card title="Nhận diện & metadata" desc="Áp dụng cho thẻ <title>, mô tả và ảnh chia sẻ của TOÀN site. Để trống ô nào → dùng giá trị mặc định cài sẵn. Có hiệu lực ngay, không cần build lại.">
-              <Field label=”Tên site” hint=”Dùng cho tiêu đề mặc định và hậu tố mọi trang: “Tên trang · Tên site”. Trống = “Trang cộng đồng Quỳnh Phụ”.”>
-                <input maxLength={80} className=”qp-input” value={form.seoSiteName} onChange={txt(“seoSiteName”)} placeholder=”Trang cộng đồng Quỳnh Phụ” />
+              <Field label="Tên site" hint={'Dùng cho tiêu đề mặc định và hậu tố mọi trang: "Tên trang · Tên site". Trống = "Trang cộng đồng Quỳnh Phụ".'}>
+                <input maxLength={80} className="qp-input" value={form.seoSiteName} onChange={txt("seoSiteName")} placeholder="Trang cộng đồng Quỳnh Phụ" />
               </Field>
-              <Field label=”Mô tả mặc định” hint=”Hiển thị dưới tiêu đề trên Google cho trang chủ và trang không có mô tả riêng (≈ 160 ký tự).”>
-                <textarea maxLength={300} className=”qp-textarea” value={form.seoSiteDescription} onChange={(e) => set(“seoSiteDescription”, e.target.value as never)} placeholder=”Trang cộng đồng Quỳnh Phụ — tin tức, việc làm, mua bán…” />
+              <Field label="Mô tả mặc định" hint="Hiển thị dưới tiêu đề trên Google cho trang chủ và trang không có mô tả riêng (≈ 160 ký tự).">
+                <textarea maxLength={300} className="qp-textarea" value={form.seoSiteDescription} onChange={(e) => set("seoSiteDescription", e.target.value as never)} placeholder="Trang cộng đồng Quỳnh Phụ — tin tức, việc làm, mua bán…" />
               </Field>
               <Field label="Từ khoá gốc (cách nhau dấu phẩy)" hint="Trống = bộ từ khoá mặc định về Quỳnh Phụ.">
                 <textarea maxLength={400} className="qp-textarea" value={form.seoDefaultKeywords} onChange={(e) => set("seoDefaultKeywords", e.target.value as never)} placeholder="Quỳnh Phụ, Thái Bình, tin tức Quỳnh Phụ, việc làm Quỳnh Phụ…" />
@@ -209,8 +209,8 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         )}
 
         {tab === "news" && (
-          <Card title="Tạo tin từ nguồn ngoài" desc="Bật để hiện nút “Tạo tin từ nguồn ngoài” ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản.">
-            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc="Phải BẬT công tắc này VÀ cấu hình nguồn bên dưới thì nút “Tạo tin từ nguồn ngoài” mới hiện ở trang Tin tức." />
+          <Card title="Tạo tin từ nguồn ngoài" desc={'Bật để hiện nút "Tạo tin từ nguồn ngoài" ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản.'}>
+            <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc={'Phải BẬT công tắc này VÀ cấu hình nguồn bên dưới thì nút "Tạo tin từ nguồn ngoài" mới hiện ở trang Tin tức.'} />
 
             <div style={{ marginTop: 16 }}>
               <Field label="Nguồn lấy tin" hint="RSS báo VN: miễn phí, không cần khoá, chạy trên web thật — khuyến nghị. GNews: cần khoá nhưng gói free chạy được web thật (tìm theo từ khoá toàn web). NewsAPI: cần khoá, gói free CHỈ chạy localhost.">
@@ -238,7 +238,7 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
                   <input maxLength={120} className="qp-input" value={form.newsApiQuery} onChange={txt("newsApiQuery")} placeholder="Để trống = tin mới nhất" />
                 </Field>
                 <p className="qp-form-tip" style={{ marginTop: 12 }}>
-                  Mẹo: dùng RSS chuyên mục để tin sát nhu cầu hơn (thời sự, địa phương…). Báo lớn thường có trang “RSS” liệt kê link từng chuyên mục.
+                  Mẹo: dùng RSS chuyên mục để tin sát nhu cầu hơn (thời sự, địa phương…). Báo lớn thường có trang "RSS" liệt kê link từng chuyên mục.
                 </p>
               </div>
             )}
