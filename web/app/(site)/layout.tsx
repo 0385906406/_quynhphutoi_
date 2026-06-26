@@ -4,7 +4,6 @@ import { TopBar } from "@/components/layout/TopBar";
 import { Marquee } from "@/components/layout/Marquee";
 import { Footer } from "@/components/layout/Footer";
 import { BackToTop } from "@/components/layout/BackToTop";
-import { ScrollRestoration } from "@/components/layout/ScrollRestoration";
 import { StickyAdBar } from "@/components/ads/StickyAdBar";
 import { getSession } from "@/lib/auth";
 import { isCurrentUserStaff } from "@/lib/admin";
@@ -45,7 +44,6 @@ export default async function SiteLayout({
       <Footer />
       <BackToTop />
       <StickyAdBar />
-      <ScrollRestoration />
       {user ? <RulesGate needsAgreement={needsRules} /> : null}
       {user && activeWarnings.length > 0
         ? <WarningModal initialWarnings={activeWarnings} isBanned={isBanned} />
