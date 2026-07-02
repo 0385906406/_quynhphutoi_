@@ -67,6 +67,14 @@ export type AppSettings = {
   customAiKey: string;            // khoá API tùy chỉnh
   customAiModel: string;          // tên model tùy chỉnh
   customAiKeySet?: boolean;       // SUY DIỄN
+
+  // --- Thời tiết (Open-Meteo — miễn phí, không cần khoá API) ---
+  weatherEnabled: boolean;        // bật/tắt tính năng (trang /thoi-tiet + widget trang chủ)
+  weatherShowOnHome: boolean;     // hiện widget gọn ở trang chủ
+  weatherLocationName: string;    // tên địa điểm hiển thị
+  weatherLat: number;             // vĩ độ
+  weatherLon: number;             // kinh độ
+  weatherForecastDays: number;    // số ngày dự báo (3/5/7)
 };
 
 const DEFAULTS: AppSettings = {
@@ -125,6 +133,13 @@ const DEFAULTS: AppSettings = {
   customAiEndpoint: "",
   customAiKey: "",
   customAiModel: "",
+
+  weatherEnabled: true,
+  weatherShowOnHome: true,
+  weatherLocationName: "Huyện Quỳnh Phụ, Thái Bình",
+  weatherLat: 20.55,
+  weatherLon: 106.34,
+  weatherForecastDays: 5,
 };
 
 type SettingsDoc = { _id: string; values: Partial<AppSettings> };
@@ -171,6 +186,10 @@ export async function getSettingsRaw(): Promise<AppSettings> {
 
 const int = (n: unknown, min: number, max: number, dflt: number) => {
   const v = Math.round(Number(n));
+  return Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : dflt;
+};
+const float = (n: unknown, min: number, max: number, dflt: number) => {
+  const v = Number(n);
   return Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : dflt;
 };
 const str = (s: unknown, max: number, dflt: string) =>
@@ -237,6 +256,13 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     customAiKey: typeof patch.customAiKey === "string" && patch.customAiKey.trim()
       ? patch.customAiKey.trim().slice(0, 200) : c.customAiKey,
     customAiModel: str(patch.customAiModel ?? c.customAiModel, 80, c.customAiModel),
+
+    weatherEnabled: bool(patch.weatherEnabled, c.weatherEnabled),
+    weatherShowOnHome: bool(patch.weatherShowOnHome, c.weatherShowOnHome),
+    weatherLocationName: str(patch.weatherLocationName ?? c.weatherLocationName, 120, c.weatherLocationName),
+    weatherLat: float(patch.weatherLat ?? c.weatherLat, -90, 90, c.weatherLat),
+    weatherLon: float(patch.weatherLon ?? c.weatherLon, -180, 180, c.weatherLon),
+    weatherForecastDays: int(patch.weatherForecastDays ?? c.weatherForecastDays, 3, 7, c.weatherForecastDays),
   };
   if (next.postCooldownMax < next.postCooldownMin) next.postCooldownMax = next.postCooldownMin;
   await (await col()).updateOne({ _id: "app" }, { $set: { values: next } }, { upsert: true });

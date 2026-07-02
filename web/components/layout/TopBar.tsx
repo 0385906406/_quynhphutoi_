@@ -52,6 +52,7 @@ function MenuIcon({ name }: { name?: string }) {
     case "landmark": return (<svg {...p}><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M12 3 4 8h16z" /></svg>);
     case "map": return (<svg {...p}><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>);
     case "tag": return (<svg {...p}><path d="M20.6 13.4 12 22l-9-9V3h10l8.6 8.6a2 2 0 0 1 0 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg>);
+    case "cloud": return (<svg {...p}><path d="M6.5 19h11a4 4 0 0 0 0-8 6 6 0 0 0-11.6-2A4.5 4.5 0 0 0 6.5 19z" /></svg>);
     default: return null;
   }
 }

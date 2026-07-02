@@ -14,6 +14,7 @@ export const NAV: NavItem[] = [
   { id: "mua-ban", label: "Mua bán", href: "/mua-ban" },
   { id: "cho", label: "Chợ", href: "/cho" },
   { id: "giao-thong", label: "Giao thông", href: "/giao-thong" },
+  { id: "thoi-tiet", label: "Thời tiết", href: "/thoi-tiet" },
   { id: "di-tich", label: "Di tích", href: "/di-tich" },
   { id: "sap-nhap", label: "Sáp nhập xã 2025", href: "/sap-nhap" },
   { id: "tin-tuc", label: "Tin tức", href: "/tin-tuc" },
@@ -41,6 +42,7 @@ export const NAV_TREE: NavNode[] = [
       { id: "viec-lam", label: "Việc làm", href: "/viec-lam", desc: "Tin tuyển dụng địa phương", icon: "job" },
       { id: "tim-do-roi", label: "Tìm đồ rơi", href: "/tim-do-roi", desc: "Đăng & tra tin nhặt được / bị mất", icon: "search" },
       { id: "mua-ban", label: "Mua bán", href: "/mua-ban", desc: "Rao vặt mua bán của người dân", icon: "tag" },
+      { id: "thoi-tiet", label: "Thời tiết", href: "/thoi-tiet", desc: "Nhiệt độ hiện tại & dự báo nhiều ngày", icon: "cloud" },
     ],
   },
   {

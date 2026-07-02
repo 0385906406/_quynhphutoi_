@@ -9,6 +9,9 @@ import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/se
 import { getPageSeoConfig, type PageSeoConfig } from "@/lib/page-seo";
 import { JsonLd } from "@/components/common/JsonLd";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
+import { getSettings } from "@/lib/settings";
+import { getWeather, type WeatherData } from "@/lib/weather";
+import { HomeWeatherWidget } from "@/components/weather/HomeWeatherWidget";
 
 // SEO trang chủ — admin chỉnh ở "SEO từng trang" (key "/"); ô trống = mặc định bên dưới.
 // Dùng title tuyệt đối để KHÔNG gắn hậu tố "· Tên site" cho trang gốc.
@@ -137,7 +140,9 @@ function toHeroSlide(d: ArticleDoc): HeroSlide {
 
 export default async function HomePage() {
   // Các khối trang chủ (Tin tức / Việc làm / Tìm đồ rơi / Mua bán) — đọc theo cấu hình admin.
-  const home = await loadHomeSections();
+  const [home, settings] = await Promise.all([loadHomeSections(), getSettings()]);
+  const weather: WeatherData | null =
+    settings.weatherEnabled && settings.weatherShowOnHome ? await getWeather(settings).catch(() => null) : null;
 
   const heroSlides: HeroSlide[] = home.sliderDocs.map(toHeroSlide);
   return (
@@ -159,6 +164,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <HomeWeatherWidget data={weather} forecastDays={settings.weatherForecastDays} />
 
       {/* TRUY CẬP NHANH */}
       <section className="section">

@@ -6,7 +6,7 @@ import type { AppSettings } from "@/lib/settings";
 import { useToast } from "@/components/common/Toast";
 import { ImageUploader } from "@/components/common/ImageUploader";
 
-type Tab = "post" | "comment" | "security" | "contact" | "seo" | "brand" | "news" | "ai" | "data";
+type Tab = "post" | "comment" | "security" | "contact" | "seo" | "brand" | "news" | "weather" | "ai" | "data";
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "post", label: "Đăng tin", icon: "📝" },
   { key: "comment", label: "Bình luận & tương tác", icon: "💬" },
@@ -15,6 +15,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "seo", label: "SEO toàn site", icon: "🔎" },
   { key: "brand", label: "Thương hiệu (Logo)", icon: "🖼️" },
   { key: "news", label: "Nguồn tin ngoài", icon: "🌐" },
+  { key: "weather", label: "Thời tiết", icon: "⛅" },
   { key: "ai", label: "AI & nội dung", icon: "✨" },
   { key: "data", label: "Dữ liệu mẫu", icon: "🌱" },
 ];
@@ -281,6 +282,39 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
                 </p>
               </div>
             )}
+          </Card>
+        )}
+
+        {tab === "weather" && (
+          <Card title="Thời tiết" desc={'Nguồn dữ liệu: Open-Meteo (miễn phí, không cần khoá API). Hiển thị ở trang "/thoi-tiet" và tuỳ chọn widget gọn trên trang chủ.'}>
+            <Toggle k="weatherEnabled" label="Bật tính năng thời tiết" desc="Tắt: ẩn trang /thoi-tiet (trả 404) và ẩn widget trang chủ." warn={!form.weatherEnabled} />
+            <div style={{ marginTop: 8 }}>
+              <Toggle k="weatherShowOnHome" label="Hiện widget ở trang chủ" desc="Bar gọn hiển thị nhiệt độ hiện tại, có link tới trang chi tiết." />
+            </div>
+
+            <div className="qp-acc-grid2" style={{ marginTop: 16 }}>
+              <Field label="Tên địa điểm hiển thị">
+                <input maxLength={120} className="qp-input" value={form.weatherLocationName} onChange={txt("weatherLocationName")} placeholder="Huyện Quỳnh Phụ, Thái Bình" />
+              </Field>
+              <Field label="Số ngày dự báo">
+                <select className="qp-input" value={form.weatherForecastDays} onChange={(e) => set("weatherForecastDays", Number(e.target.value) as never)}>
+                  <option value={3}>3 ngày</option>
+                  <option value={5}>5 ngày</option>
+                  <option value={7}>7 ngày</option>
+                </select>
+              </Field>
+              <Field label="Vĩ độ (latitude)" hint="Lấy toạ độ nhanh: mở Google Maps, chuột phải vào vị trí → chọn toạ độ để copy.">
+                <input type="number" step="0.0001" min={-90} max={90} className="qp-input" value={form.weatherLat} onChange={num("weatherLat")} />
+              </Field>
+              <Field label="Kinh độ (longitude)">
+                <input type="number" step="0.0001" min={-180} max={180} className="qp-input" value={form.weatherLon} onChange={num("weatherLon")} />
+              </Field>
+            </div>
+            <p className="qp-form-tip" style={{ marginTop: 12 }}>
+              Sau khi lưu, mở{" "}
+              <a href="/thoi-tiet" target="_blank" rel="noreferrer" style={{ color: "var(--color-navy)", fontWeight: 600, textDecoration: "underline" }}>trang Thời tiết</a>{" "}
+              ở tab mới để kiểm tra dữ liệu hiển thị đúng vị trí.
+            </p>
           </Card>
         )}
 
