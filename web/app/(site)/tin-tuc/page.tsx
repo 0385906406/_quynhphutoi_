@@ -18,14 +18,20 @@ export async function generateMetadata() {
 
 export const dynamic = "force-dynamic";
 
+// Số bài tối đa mỗi tab (Trong xã / Ngoài xã) — lọc & phân trang làm ở client.
+const SCOPE_LIMIT = 300;
+
 export default async function TinTucPage() {
   // Chỉ hiển thị bài đã xuất bản + đã duyệt (DB) — bài người dùng chờ duyệt không lọt ra đây.
-  const [dbDocs, newsConfig, session] = await Promise.all([
-    listArticles({ status: "published", limit: 60 }).catch(() => []),
+  // Lấy RIÊNG từng phạm vi: nếu gộp chung 1 limit, tin ngoài xã nhập hàng loạt (mới hơn)
+  // sẽ chiếm hết suất và đẩy bài trong xã cũ ra khỏi danh sách.
+  const [localDocs, outsideDocs, newsConfig, session] = await Promise.all([
+    listArticles({ status: "published", scope: "trong-xa", limit: SCOPE_LIMIT }).catch(() => []),
+    listArticles({ status: "published", scope: "ngoai-xa", limit: SCOPE_LIMIT }).catch(() => []),
     getNewsPageConfig().catch(() => null),
     getSession().catch(() => null),
   ]);
-  const items: Article[] = dbDocs.map(toNewsCardArticle);
+  const items: Article[] = [...localDocs, ...outsideDocs].map(toNewsCardArticle);
   // Bài người dùng đang chờ duyệt (chỉ của chính họ) — hiển thị ở tab "Chờ duyệt".
   const pendingItems: Article[] = session
     ? (await listMyArticles(session.id).catch(() => []))
