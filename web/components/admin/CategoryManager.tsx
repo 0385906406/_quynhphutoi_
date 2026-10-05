@@ -1,6 +1,7 @@
 "use client";
 
 // Quản trị Danh mục phân cấp (cây) theo từng module/phân hệ.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import { RowActions } from "@/components/admin/RowActions";
@@ -90,7 +91,7 @@ export function CategoryManager() {
   }
 
   async function remove(n: CatNode) {
-    if (!confirm(`Xoá danh mục "${n.name}"?`)) return;
+    if (!(await confirmDialog(`Xoá danh mục "${n.name}"?`))) return;
     const res = await fetch(`/api/admin/categories/${n.id}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { toast.error(data.error || "Không xoá được."); return; }

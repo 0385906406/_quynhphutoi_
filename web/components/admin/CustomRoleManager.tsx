@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import React, { useMemo, useState } from "react";
 import type { CustomRoleRow } from "@/lib/custom-roles";
 import type { PermLevel, RolePerms } from "@/lib/role-permissions";
@@ -119,7 +120,7 @@ export function CustomRoleManager({ initial, modules }: { initial: CustomRoleRow
   }
 
   async function deleteRole(role: CustomRoleRow) {
-    if (!confirm(`Xóa vai trò "${role.label}"?\nTất cả người dùng đang dùng vai trò này sẽ được reset về "Người dùng".`)) return;
+    if (!(await confirmDialog(`Xóa vai trò "${role.label}"?\nTất cả người dùng đang dùng vai trò này sẽ được reset về "Người dùng".`))) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/admin/custom-roles/${role.id}`, { method: "DELETE" });

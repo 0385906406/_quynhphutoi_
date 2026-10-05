@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { saveImage } from "@/lib/storage";
+import { processUploadImage, InvalidImageError } from "@/lib/image-process";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
 import { MAX_IMAGE_BYTES, MAX_IMAGE_MB, MAX_FILES_PER_UPLOAD, isAllowedImageType } from "@/lib/upload-limits";
 
@@ -27,8 +28,15 @@ export async function POST(req: Request) {
   for (const f of files.slice(0, MAX_FILES_PER_UPLOAD)) {
     if (!isAllowedImageType(f.type)) return NextResponse.json({ error: "Chỉ chấp nhận ảnh JPG/PNG/WEBP/GIF." }, { status: 400 });
     if (f.size > MAX_IMAGE_BYTES) return NextResponse.json({ error: `Mỗi ảnh tối đa ${MAX_IMAGE_MB}MB.` }, { status: 400 });
-    const ext = (f.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
-    const url = await saveImage(Buffer.from(await f.arrayBuffer()), ext, f.type, subfolder);
+    // Xoá EXIF (vị trí GPS), xoay đúng chiều, thu nhỏ + WebP; chặn tệp giả ảnh.
+    let img;
+    try {
+      img = await processUploadImage(Buffer.from(await f.arrayBuffer()), f.type);
+    } catch (e) {
+      if (e instanceof InvalidImageError) return NextResponse.json({ error: `${f.name || "Ảnh"}: ${e.message}` }, { status: 400 });
+      throw e;
+    }
+    const url = await saveImage(img.buf, img.ext, img.contentType, subfolder);
     urls.push(url);
   }
   return NextResponse.json({ urls });

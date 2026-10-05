@@ -195,7 +195,7 @@ export function NotifList({ initial }: { initial: NotifItem[] }) {
           </span>
           <p className="qp-notif-empty__msg">
             {query
-              ? <>Không tìm thấy kết quả cho <strong>"{query}"</strong></>
+              ? <>Không tìm thấy kết quả cho <strong>“{query}”</strong></>
               : "Không có thông báo nào trong mục này"}
           </p>
           {query && (

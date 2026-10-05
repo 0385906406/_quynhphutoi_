@@ -1,6 +1,7 @@
 "use client";
 
 // Quản lý quảng cáo (admin): danh sách + thống kê + form thêm/sửa.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useState } from "react";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { RowActions } from "@/components/admin/RowActions";
@@ -79,7 +80,7 @@ export function AdManager({ initial, adMaxImages = 6 }: { initial: AdRow[]; adMa
   }
 
   async function remove(r: AdRow) {
-    if (!confirm(`Xoá quảng cáo "${r.advertiser}"?`)) return;
+    if (!(await confirmDialog(`Xoá quảng cáo "${r.advertiser}"?`))) return;
     const res = await fetch(`/api/admin/ads/${r.id}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.id !== r.id));
   }

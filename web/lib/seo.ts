@@ -20,7 +20,7 @@ export const SITE = {
   description:
     "Kênh thông tin cộng đồng xã Quỳnh Phụ (Thái Bình) — tin tức, việc làm, mua bán, tìm đồ rơi, trường học, y tế, giao thông, di tích và kết nối cộng đồng.",
   locale: "vi_VN",
-  logo: "/img/patterns/logo.png",
+  logo: "/img/patterns/logo-512.png", // 512px nén (Google cần logo ≥112px)
   region: "Xã Quỳnh Phụ",
   province: "Thái Bình",
 } as const;
@@ -192,6 +192,27 @@ export function jsonLdJob(j: JobDoc, descText: string, locality?: string) {
   };
 }
 
+const PRICE_UNITS: Record<string, number> = {
+  "tỷ": 1e9, ty: 1e9, "triệu": 1e6, trieu: 1e6, tr: 1e6,
+  "nghìn": 1e3, nghin: 1e3, "ngàn": 1e3, ngan: 1e3, k: 1e3,
+};
+
+// Giá rao vặt dạng chữ tự do → số VND. "8.500.000đ" → 8500000, "1,5 triệu" → 1500000,
+// "500k" → 500000, "Thỏa thuận" → undefined. (Trước đây chỉ bỏ ký tự không phải số:
+// "2 triệu" → 2.)
+export function parseVndPrice(text?: string | null): number | undefined {
+  const s = (text || "").toLowerCase().normalize("NFC");
+  const m = s.match(/(\d+(?:[.,]\d+)*)\s*(tỷ|ty|triệu|trieu|tr|nghìn|nghin|ngàn|ngan|k)?/);
+  if (!m) return undefined;
+  const [, raw, unit] = m;
+  // Có đơn vị + 1–2 chữ số sau dấu → phần thập phân ("1,5 triệu"); còn lại là dấu phân cách nghìn.
+  const n = unit && /^\d+[.,]\d{1,2}$/.test(raw)
+    ? parseFloat(raw.replace(",", "."))
+    : Number(raw.replace(/[.,]/g, ""));
+  const value = Math.round(n * (unit ? PRICE_UNITS[unit] : 1));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
 export function jsonLdClassified(c: ClassifiedDoc, descText: string) {
   const avail = c.status === "sold" ? "https://schema.org/SoldOut"
     : c.status === "open" ? "https://schema.org/InStock"
@@ -199,6 +220,7 @@ export function jsonLdClassified(c: ClassifiedDoc, descText: string) {
   const itemCondition = c.condition === "moi"
     ? "https://schema.org/NewCondition"
     : c.condition === "da-dung" ? "https://schema.org/UsedCondition" : undefined;
+  const price = parseVndPrice(c.priceText);
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -206,15 +228,20 @@ export function jsonLdClassified(c: ClassifiedDoc, descText: string) {
     description: descText,
     category: c.categoryLabel,
     ...(c.images?.length ? { image: c.images.map((i) => abs(i)) } : {}),
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "VND",
-      price: (c.priceText || "").replace(/[^\d]/g, "") || undefined,
-      ...(itemCondition ? { itemCondition } : {}),
-      availability: avail,
-      seller: { "@type": "Person", name: c.postedByName },
-      url: abs(`/mua-ban/${c.slug}`),
-    },
+    // Offer bắt buộc có price — giá "Thỏa thuận"/không rõ thì bỏ hẳn offers thay vì khai sai.
+    ...(price
+      ? {
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "VND",
+            price,
+            ...(itemCondition ? { itemCondition } : {}),
+            availability: avail,
+            seller: { "@type": "Person", name: c.postedByName },
+            url: abs(`/mua-ban/${c.slug}`),
+          },
+        }
+      : {}),
   };
 }
 

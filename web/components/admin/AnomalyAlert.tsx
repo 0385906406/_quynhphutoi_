@@ -16,7 +16,7 @@ type AnomalyItem = {
 const SEV: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
   high:   { label: "Nguy hiểm", color: "#991b1b", bg: "rgba(239,68,68,0.08)",   border: "#fca5a5", dot: "#dc2626" },
   medium: { label: "Cảnh báo",  color: "#92400e", bg: "rgba(245,158,11,0.08)",  border: "#fcd34d", dot: "#d97706" },
-  low:    { label: "Lưu ý",     color: "#1e3a5f", bg: "rgba(59,130,246,0.08)",  border: "#93c5fd", dot: "#3b82f6" },
+  low:    { label: "Lưu ý",     color: "var(--color-navy-deep)", bg: "rgba(59,130,246,0.08)",  border: "#93c5fd", dot: "#3b82f6" },
 };
 
 const REFRESH_MS = 2 * 60 * 1000;

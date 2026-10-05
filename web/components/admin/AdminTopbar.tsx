@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { TickerItem } from "@/lib/staff-ticker";
 import { AdminNotifBell } from "@/components/admin/AdminNotifBell";
 import { AdminSearch } from "@/components/admin/AdminSearch";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 type Props = { name: string; email: string; avatar?: string | null };
 
@@ -76,7 +77,8 @@ export function AdminTopbar({ name, email, avatar }: Props) {
         </div>
       </div>
 
-      {/* Phải: search + bell + user dropdown */}
+      {/* Phải: sáng/tối + search + bell + user dropdown */}
+      <ThemeToggle className="qp-admin-iconbtn" />
       <AdminSearch />
       <AdminNotifBell />
       <div className="qp-admin-user" ref={menuRef}>

@@ -83,7 +83,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   const autoSum = payload.reduce((s, p) => s + (Number(p.value) || 0), 0);
   return (
     <div style={{
-      background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12,
+      background: "var(--surface)", border: "1px solid #e5e7eb", borderRadius: 12,
       padding: "10px 14px", boxShadow: "0 8px 24px rgba(0,0,0,0.11)",
       minWidth: 170, pointerEvents: "none",
     }}>
@@ -93,7 +93,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
           <span style={{ width: 9, height: 9, borderRadius: 3, background: p.color, flexShrink: 0 }} />
-          <span style={{ flex: 1, fontSize: 12, color: "#374151" }}>{p.name}</span>
+          <span style={{ flex: 1, fontSize: 12, color: "var(--color-gray-text)" }}>{p.name}</span>
           <b style={{ fontSize: 13, fontVariantNumeric: "tabular-nums", color: p.color }}>{fmtNum(Number(p.value) || 0)}</b>
         </div>
       ))}
@@ -191,7 +191,7 @@ function CalCell({
       {/* Day number */}
       <div style={{
         fontSize: 11, fontWeight: isToday ? 800 : 600, lineHeight: 1,
-        color: isToday ? "#00A98F" : isFuture ? "#9ca3af" : "#374151",
+        color: isToday ? "#00A98F" : isFuture ? "#9ca3af" : "var(--color-gray-text)",
         display: "flex", alignItems: "center", gap: 3,
       }}>
         {day}

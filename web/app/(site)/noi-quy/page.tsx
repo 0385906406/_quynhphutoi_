@@ -7,7 +7,7 @@ import {
 export async function generateMetadata() {
   return pageMetadata({
     key: "/noi-quy", path: "/noi-quy",
-    title: "Nội quy & Quy định đăng bài — Quỳnh Phụ Tôi",
+    title: "Nội quy & Quy định đăng bài",
     description:
       "Quy định đăng bài và nội quy cộng đồng trên Trang cộng đồng Quỳnh Phụ: những nội dung không được phê duyệt nhằm bảo đảm an toàn, chất lượng và quyền riêng tư của thành viên.",
   });

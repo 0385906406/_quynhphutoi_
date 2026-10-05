@@ -22,7 +22,7 @@ const DEFAULT_SLIDE: HeroSlide = {
   eyebrow: "Chào mừng · Quỳnh Phụ",
   headline: "Trang cộng đồng Quỳnh Phụ",
   lead: "Một điểm đến số duy nhất cho người dân Quỳnh Phụ — tra cứu thông báo, việc làm, tin tức và kết nối cộng đồng nhanh chóng, thuận tiện.",
-  image: "/img/patterns/slider-default.png",
+  image: "/img/patterns/slider-default.webp",
   imageAlt: "Trang cộng đồng Quỳnh Phụ",
   cta: { label: "Khám phá trang cộng đồng", href: "/tong-quan" },
   byline: { avatar: "QP", role: "Trang cộng đồng", name: "Phục vụ người dân", time: "Trực tuyến 24/7" },
@@ -47,8 +47,12 @@ export function HeroSlider({ articleSlides = [] }: { articleSlides?: HeroSlide[]
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progressKey, setProgressKey] = useState(0);
-  const touchStartX = useRef(0);
+  const touchStart = useRef({ x: 0, y: 0 });
   const reduceMotion = useRef(false);
+  // Thời gian còn lại của slide hiện tại — giữ khi tạm dừng để timer khớp với thanh tiến trình
+  // (CSS animation chỉ "paused" chứ không chạy lại từ đầu).
+  const remaining = useRef(INTERVAL);
+  const startedAt = useRef(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -64,32 +68,39 @@ export function HeroSlider({ articleSlides = [] }: { articleSlides?: HeroSlide[]
     [total],
   );
 
-  // Tự chạy
+  // Sang slide mới → đủ thời gian lại từ đầu (phải khai báo TRƯỚC effect tự chạy).
+  useEffect(() => {
+    remaining.current = INTERVAL;
+  }, [active]);
+
+  // Tự chạy — tạm dừng thì trừ phần đã chạy, tiếp tục thì chỉ chờ phần còn lại.
   useEffect(() => {
     if (reduceMotion.current || paused || total <= 1) return;
+    startedAt.current = Date.now();
     const t = window.setTimeout(() => {
       setActive((a) => (a + 1) % total);
       setProgressKey((k) => k + 1);
-    }, INTERVAL);
-    return () => window.clearTimeout(t);
+    }, remaining.current);
+    return () => {
+      window.clearTimeout(t);
+      remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt.current));
+    };
   }, [active, paused, total]);
 
-  // Phím mũi tên
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") goTo(active - 1);
-      if (e.key === "ArrowRight") goTo(active + 1);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [active, goTo]);
+  // Phím mũi tên — chỉ khi focus nằm trong carousel (không cướp phím của ô nhập liệu khác).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") goTo(active - 1);
+    if (e.key === "ArrowRight") goTo(active + 1);
+  };
 
   const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    const delta = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(delta) > 50) goTo(active + (delta < 0 ? 1 : -1));
+    const dx = e.changedTouches[0].clientX - touchStart.current.x;
+    const dy = e.changedTouches[0].clientY - touchStart.current.y;
+    // Bỏ qua cử chỉ cuộn dọc.
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) goTo(active + (dx < 0 ? 1 : -1));
   };
 
   return (
@@ -101,6 +112,7 @@ export function HeroSlider({ articleSlides = [] }: { articleSlides?: HeroSlide[]
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
+      onKeyDown={onKeyDown}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -151,6 +163,8 @@ export function HeroSlider({ articleSlides = [] }: { articleSlides?: HeroSlide[]
             aria-roledescription="slide"
             aria-label={`${i + 1} / ${total}`}
             aria-hidden={i !== active}
+            // Slide đang ẩn: không Tab vào được link bên trong.
+            inert={i !== active}
             style={{ flex: `0 0 ${100 / total}%` }}
           >
             <Image
@@ -169,7 +183,10 @@ export function HeroSlider({ articleSlides = [] }: { articleSlides?: HeroSlide[]
                   <span className="qp-hero__eyebrow-dot" aria-hidden />
                   {slide.eyebrow}
                 </span>
-                <h1 className="type-display-l qp-hero__headline">{slide.headline}</h1>
+                {/* Trang chủ chỉ 1 <h1> (slide đầu) — các slide sau dùng <h2> cùng kiểu chữ. */}
+                {i === 0
+                  ? <h1 className="type-display-l qp-hero__headline">{slide.headline}</h1>
+                  : <h2 className="type-display-l qp-hero__headline">{slide.headline}</h2>}
                 <p className="qp-hero__lead">{slide.lead}</p>
                 {slide.byline && (
                   <div className="qp-hero__byline">

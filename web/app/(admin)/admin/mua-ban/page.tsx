@@ -26,7 +26,9 @@ export default async function AdminClassifiedsPage() {
   const perm = await getModulePerm("mua-ban");
   if (!perm || perm === "none") redirect("/admin/403");
 
-  const [docs, units, pageSeo, condMap] = await Promise.all([listClassifieds({ approvedOnly: false, limit: 500 }), getAdminUnitsMap(), getPageSeoConfig(), categoryLabelMap("tinh-trang")]);
+  // Tải TẤT CẢ (trước đây cắt cứng 500 → mục thứ 501 trở đi âm thầm biến mất khỏi trang quản lý).
+  // Danh sách phân trang/lọc ở client; nếu dữ liệu lên hàng chục nghìn mục → chuyển phân trang phía server.
+  const [docs, units, pageSeo, condMap] = await Promise.all([listClassifieds({ approvedOnly: false }), getAdminUnitsMap(), getPageSeoConfig(), categoryLabelMap("tinh-trang")]);
   const rows: ModRow[] = docs.map((d) => {
     const ward = units.get(d.location.wardSlug)?.name ?? d.location.wardSlug;
     const place = [d.location.address, ward].filter(Boolean).join(", ");

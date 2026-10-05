@@ -4,7 +4,7 @@ import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
 import { listArticles, listMyArticles, toNewsCardArticle } from "@/lib/articles";
-import { getNewsPageConfig, resolveNewsBlocks } from "@/lib/news-page";
+import { getNewsPageConfig, resolveNewsBlocks, autoNewsBlocks } from "@/lib/news-page";
 import { getSession } from "@/lib/auth";
 import type { Article } from "@/lib/news";
 
@@ -12,7 +12,7 @@ export async function generateMetadata() {
   return pageMetadata({
     key: "/tin-tuc", path: "/tin-tuc",
     title: "Tin tức & thông báo",
-    description: "Tin tức, thông báo và hoạt động tại xã Quỳnh Phụ, Thái Bình.",
+    description: "Tin tức, thông báo chính quyền, sự kiện và hoạt động cộng đồng mới nhất tại xã Quỳnh Phụ — cập nhật hằng ngày từ Ban biên tập và người dân địa phương.",
   });
 }
 
@@ -32,10 +32,18 @@ export default async function TinTucPage() {
         .filter((d) => d.approved === false && d.active !== false)
         .map(toNewsCardArticle)
     : [];
-  // Vùng nổi bật & khối "Đọc nhiều" theo cấu hình admin (mặc định nếu chưa cấu hình).
-  const blocks = newsConfig
-    ? resolveNewsBlocks(newsConfig, items)
-    : { featured: items.slice(0, 4), popular: [...items].sort((a, b) => b.views - a.views).slice(0, 7) };
+  // Vùng nổi bật & khối "Đọc nhiều" — tính RIÊNG cho từng tab (Trong xã / Ngoài xã) để
+  // không lẫn bài giữa hai phạm vi. Theo cấu hình admin (mặc định nếu chưa cấu hình).
+  const localItems = items.filter((a) => a.scope !== "ngoai-xa");
+  const outsideItems = items.filter((a) => a.scope === "ngoai-xa");
+  const local = newsConfig ? resolveNewsBlocks(newsConfig, localItems) : autoNewsBlocks(localItems);
+  // Admin chọn thủ công thường là bài trong xã → tab Ngoài xã rỗng thì tự lấy mới nhất / đọc nhiều.
+  const outsideCfg = newsConfig ? resolveNewsBlocks(newsConfig, outsideItems) : autoNewsBlocks(outsideItems);
+  const outsideAuto = autoNewsBlocks(outsideItems);
+  const outside = {
+    featured: outsideCfg.featured.length || newsConfig?.featured.enabled === false ? outsideCfg.featured : outsideAuto.featured,
+    popular: outsideCfg.popular.length || newsConfig?.popular.enabled === false ? outsideCfg.popular : outsideAuto.popular,
+  };
   return (
     <>
       {/* Page hero sáng (gradient + đốm sáng + cây lúa halftone) */}
@@ -62,7 +70,7 @@ export default async function TinTucPage() {
 
       <section className="qp-newsmain">
         <div className="container-wide">
-          <NewsBrowser items={items} featured={blocks.featured} popular={blocks.popular} isLoggedIn={!!session} pendingItems={pendingItems} />
+          <NewsBrowser items={items} blocks={{ "trong-xa": local, "ngoai-xa": outside }} isLoggedIn={!!session} pendingItems={pendingItems} />
         </div>
       </section>
     </>

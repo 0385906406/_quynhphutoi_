@@ -354,7 +354,7 @@ export default async function AdminHomePage() {
       {/* ── KPI Stats ─────────────────────────────────────────── */}
       {isAdminUser && adminData ? (
         /* Admin: 6 cards (3+3) */
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 14, marginBottom: "var(--space-6)" }}>
+        <div className="qp-dash-stats">
           <StatCard icon={<IconUsers />}    value={adminData.users.total} label="Người dùng"          color={C.violet}
             sub={`${adminData.users.admins} quản trị · ${adminData.users.verified} đã xác minh · ${Math.max(0, adminData.users.total - adminData.users.admins)} thành viên`} />
           <StatCard icon={<IconFile />}     value={artPublished}          label="Bài đã xuất bản"      color={C.indigo}
@@ -373,7 +373,7 @@ export default async function AdminHomePage() {
         </div>
       ) : (
         /* Editor: 5 cards (3+2) */
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 14, marginBottom: "var(--space-6)" }}>
+        <div className="qp-dash-stats">
           <StatCard icon={<IconFile />}     value={artPublished} label="Bài đã xuất bản" color={C.indigo}
             sub={`${nArticles} tổng bài viết`} />
           <StatCard icon={<IconFileDraft />} value={artDraft}    label="Bài nháp"         color={C.slate} />
@@ -398,7 +398,7 @@ export default async function AdminHomePage() {
       </div>
 
       {/* ── Charts grid ───────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: "var(--space-5)", marginBottom: "var(--space-6)" }}>
+      <div className="qp-dash-charts">
         <div style={{ gridColumn: "span 2" }}>
           <ChartSwitcher title="Phân bố số lượng" options={barOptions} />
         </div>

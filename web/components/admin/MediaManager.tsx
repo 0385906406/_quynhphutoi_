@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/common/Toast";
@@ -247,10 +248,8 @@ export function MediaManager({ configured, perm = "full" }: { configured: boolea
               type="button"
               className="qp-btn-primary"
               style={{ background: "var(--color-warning, #f59e0b)", borderColor: "var(--color-warning, #f59e0b)" }}
-              onClick={() => {
-                if (window.confirm("Chắc chắn chạy migration thật? Thao tác này sẽ đổi tên ảnh trên Cloudinary và cập nhật toàn bộ cơ sở dữ liệu.")) {
-                  runMigrate(false);
-                }
+              onClick={async () => {
+                if (await confirmDialog("Chắc chắn chạy migration thật? Thao tác này sẽ đổi tên ảnh trên Cloudinary và cập nhật toàn bộ cơ sở dữ liệu.")) runMigrate(false);
               }}
             >
               Chạy migration ({migrate.previewCount} ảnh)

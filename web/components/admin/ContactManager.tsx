@@ -1,6 +1,7 @@
 "use client";
 
 // Quản trị Liên hệ / phản ánh: xem chi tiết, đánh dấu đã xử lý, xoá.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import { formatDateTime } from "@/lib/datetime";
@@ -40,7 +41,7 @@ export function ContactManager({ initial }: { initial: ContactRow[] }) {
     else toast.success(handled ? "Đã đánh dấu xử lý." : "Đã chuyển về chờ xử lý.");
   }
   async function remove(r: ContactRow) {
-    if (!confirm(`Xoá liên hệ từ "${r.name}"?`)) return;
+    if (!(await confirmDialog(`Xoá liên hệ từ "${r.name}"?`))) return;
     const res = await fetch(`/api/admin/contact/${r.id}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.id !== r.id));
   }

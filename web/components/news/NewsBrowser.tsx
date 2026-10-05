@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FilterBar } from "@/components/common/FilterBar";
@@ -13,6 +13,9 @@ import { NewsCard } from "./NewsCard";
 import { ArticleSubmitModal } from "./ArticleSubmitModal";
 
 const PAGE_SIZE = 8;
+// Điện thoại: "Đọc nhiều" chen sau N tin mới, tối đa M bài.
+const POPULAR_MOBILE_AFTER = 6;
+const POPULAR_MOBILE_MAX = 5;
 const SORTS = [
   { value: "newest", label: "Mới nhất" },
   { value: "popular", label: "Đọc nhiều" },
@@ -70,15 +73,18 @@ function PopularItem({ a, rank }: { a: Article; rank: number }) {
   );
 }
 
-export function NewsBrowser({ items = [], featured: featuredItems, popular: popularItems,
+type Scope = "trong-xa" | "ngoai-xa";
+type ScopeBlocks = { featured: Article[]; popular: Article[] };
+
+export function NewsBrowser({ items = [], blocks,
   isLoggedIn = false, pendingItems = [] }:
-  { items?: Article[]; featured?: Article[]; popular?: Article[];
+  { items?: Article[]; blocks?: Partial<Record<Scope, ScopeBlocks>>;
     isLoggedIn?: boolean; pendingItems?: Article[] }) {
   const [category, setCategory] = useState("Tất cả");
   const [sort, setSort] = useState<SortValue>("newest");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<"all" | "cho-duyet">("all");
-  const [scopeTab, setScopeTab] = useState<"trong-xa" | "ngoai-xa">("trong-xa");
+  const [scopeTab, setScopeTab] = useState<Scope>("trong-xa");
   const [postOpen, setPostOpen] = useState(false);
   const router = useRouter();
   const isPending = view === "cho-duyet";
@@ -104,20 +110,40 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
     });
   }, [items, category, scopeTab, sort, query]);
 
-  // Vùng nổi bật & "Đọc nhiều" do admin cấu hình (truyền từ server). Nếu thiếu thì suy diễn tại client.
-  const featuredList = featuredItems ?? sorted.slice(0, 4);
+  // Vùng nổi bật & "Đọc nhiều" RIÊNG cho tab đang xem (server tính sẵn theo cấu hình admin).
+  // Lọc lại theo phạm vi là lớp bảo vệ — không bao giờ lẫn bài giữa Trong xã / Ngoài xã.
+  // Thiếu dữ liệu từ server → suy diễn tại client (4 mới nhất + 7 đọc nhiều).
+  const inScope = useMemo(
+    () => (a: Article) => (scopeTab === "ngoai-xa" ? a.scope === "ngoai-xa" : a.scope !== "ngoai-xa"),
+    [scopeTab],
+  );
+  const scopeItems = useMemo(() => items.filter(inScope), [items, inScope]);
+  const scopeBlocks = blocks?.[scopeTab];
+  const featuredList = useMemo(
+    () => (scopeBlocks?.featured ?? scopeItems).filter(inScope).slice(0, 4),
+    [scopeBlocks, scopeItems, inScope],
+  );
   const popular = useMemo(
-    () => popularItems ?? [...items].sort((a, b) => b.views - a.views).slice(0, 7),
-    [popularItems, items],
+    () => (scopeBlocks?.popular ?? [...scopeItems].sort((a, b) => b.views - a.views).slice(0, 7)).filter(inScope),
+    [scopeBlocks, scopeItems, inScope],
   );
 
-  // "Tất cả tin tức" hiển thị ĐẦY ĐỦ mọi bài (không cắt bỏ các bài đã lên vùng nổi bật).
-  const pager = usePagedList(sorted, PAGE_SIZE);
+  // Vùng nổi bật được phép hiện: không lọc danh mục/từ khoá (ở cả hai tab).
+  const zoneEligible = category === "Tất cả" && !query.trim();
+  // Bài đã lên vùng nổi bật thì KHÔNG lặp lại ở lưới bên dưới. Loại ở mọi trang (không chỉ
+  // trang 1) để phân trang ổn định — các bài này luôn nằm ở vùng nổi bật đầu trang 1.
+  const gridItems = useMemo(() => {
+    if (!zoneEligible || featuredList.length === 0) return sorted;
+    const shown = new Set(featuredList.map((a) => a.id));
+    return sorted.filter((a) => !shown.has(a.id));
+  }, [sorted, zoneEligible, featuredList]);
+
+  const pager = usePagedList(gridItems, PAGE_SIZE);
   const pageItems = pager.items;
   const reset = pager.reset;
 
-  // Mặc định = tab Trong xã, không lọc danh mục/từ khoá, trang 1 → hiện vùng nổi bật + Đọc nhiều.
-  const defaultMode = scopeTab === "trong-xa" && category === "Tất cả" && !query.trim() && pager.page === 1;
+  // Mặc định = không lọc danh mục/từ khoá, trang 1 → hiện vùng nổi bật + Đọc nhiều của tab đang xem.
+  const defaultMode = zoneEligible && pager.page === 1;
   // Tiêu đề lưới: theo phạm vi đang xem / theo số kết quả khi có lọc.
   const headingTitle = category === "Tất cả" && !query.trim()
     ? `Tin ${SCOPE_LABEL[scopeTab].toLowerCase()}`
@@ -126,6 +152,23 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
   const levelTwo = defaultMode ? featuredList.slice(1, 4) : [];
   const showPopular = defaultMode && popular.length > 0;
   const showFeaturedZone = defaultMode && (!!featured || showPopular);
+
+  // ĐIỆN THOẠI: "Đọc nhiều" không đứng trước tin mới — chen vào SAU vài tin mới cập nhật,
+  // gọn 5 bài, bỏ bài đã có ở vùng nổi bật. (Bản desktop ở cột phải giữ nguyên; CSS ẩn/hiện.)
+  const popularMobile = useMemo(() => {
+    const shown = new Set(featuredList.map((a) => a.id));
+    return popular.filter((a) => !shown.has(a.id)).slice(0, POPULAR_MOBILE_MAX);
+  }, [popular, featuredList]);
+  const showPopularMobile = showPopular && popularMobile.length > 0;
+  const popularMobileAt = Math.min(POPULAR_MOBILE_AFTER, pageItems.length);
+  const popularMobileBlock = showPopularMobile ? (
+    <section className="qp-popular qp-popular--m" aria-label="Đọc nhiều">
+      <header className="qp-popular__head"><h2 className="type-h3">Đọc nhiều</h2></header>
+      <div className="qp-popular__list">
+        {popularMobile.map((a, i) => <PopularItem key={a.id} a={a} rank={i + 1} />)}
+      </div>
+    </section>
+  ) : null;
 
   return (
     <>
@@ -201,7 +244,7 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
             </div>
           )}
           {showPopular && (
-            <aside className="qp-popular" aria-label="Đọc nhiều">
+            <aside className="qp-popular qp-popular--d" aria-label="Đọc nhiều">
               <header className="qp-popular__head"><h2 className="type-h3">Đọc nhiều</h2></header>
               <div className="qp-popular__list">
                 {popular.map((a, i) => <PopularItem key={a.id} a={a} rank={i + 1} />)}
@@ -211,7 +254,12 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
         </div>
       )}
 
-      {/* Lưới tất cả tin tức */}
+      {/* Điện thoại: lưới trống (mọi bài đã ở vùng nổi bật) → "Đọc nhiều" ngay sau vùng nổi bật */}
+      {pageItems.length === 0 && popularMobileBlock}
+
+      {/* Lưới tất cả tin tức — ẩn hẳn khi mọi bài đã nằm ở vùng nổi bật (tránh báo "không tìm thấy"). */}
+      {!(showFeaturedZone && pageItems.length === 0) && (
+      <>
       <div className="qp-newsgrid-head qp-newsgrid-head--count">
         <span className="type-tag qp-sechead__eyebrow">{defaultMode ? "Mới cập nhật" : "Kết quả"}</span>
         <h2 className="type-h2">{headingTitle}</h2>
@@ -227,8 +275,17 @@ export function NewsBrowser({ items = [], featured: featuredItems, popular: popu
         </div>
       ) : (
         <div className="qp-grid-news">
-          {pageItems.map((a) => <NewsCard key={a.id} a={a} />)}
+          {pageItems.map((a, i) => (
+            <Fragment key={a.id}>
+              {i === popularMobileAt && popularMobileBlock}
+              <NewsCard a={a} />
+            </Fragment>
+          ))}
+          {/* Ít hơn POPULAR_MOBILE_AFTER bài → "Đọc nhiều" ở cuối lưới */}
+          {popularMobileAt === pageItems.length && popularMobileBlock}
         </div>
+      )}
+      </>
       )}
 
       <ListPager pager={pager} />

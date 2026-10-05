@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import type { UserRow } from "@/lib/users";
 import type { CustomRoleRow } from "@/lib/custom-roles";
@@ -72,7 +73,7 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
     return r.role === "custom" && r.customRoleId ? `custom:${r.customRoleId}` : r.role;
   }
 
-  function changeRole(r: UserRow, next: string) {
+  async function changeRole(r: UserRow, next: string) {
     if (r.id === me) { toast.error("Không thể tự đổi quyền của chính mình."); return; }
     if (next === roleSelectValue(r)) return;
 
@@ -80,10 +81,10 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
       const customRoleId = next.slice(7);
       const cr = customRoles.find((c) => c.id === customRoleId);
       if (!cr) return;
-      if (!confirm(`Gán vai trò "${cr.label}" cho ${r.email}?`)) return;
+      if (!(await confirmDialog(`Gán vai trò "${cr.label}" cho ${r.email}?`))) return;
       patch(r, { customRoleId }, { role: "custom", customRoleId });
     } else {
-      if (next === "admin" && !confirm(`Cấp quyền ADMIN (toàn quyền) cho ${r.email}?`)) return;
+      if (next === "admin" && !(await confirmDialog(`Cấp quyền ADMIN (toàn quyền) cho ${r.email}?`))) return;
       patch(r, { role: next }, { role: next as UserRow["role"], customRoleId: undefined });
     }
   }
@@ -92,10 +93,10 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
     patch(r, { verified: !r.verified }, { verified: !r.verified });
   }
 
-  function toggleBanned(r: UserRow) {
+  async function toggleBanned(r: UserRow) {
     if (r.id === me) { toast.error("Không thể tự khóa tài khoản của mình."); return; }
     const next = !r.banned;
-    if (next && !confirm(`Khóa tài khoản ${r.email}? Người dùng sẽ không đăng nhập được.`)) return;
+    if (next && !(await confirmDialog(`Khóa tài khoản ${r.email}? Người dùng sẽ không đăng nhập được.`))) return;
     patch(r, { banned: next }, { banned: next });
     toast.success(next ? `Đã khóa ${r.email}.` : `Đã mở khóa ${r.email}.`);
   }
@@ -119,7 +120,7 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
 
   async function remove(r: UserRow) {
     if (r.id === me) { toast.error("Không thể tự xoá tài khoản của mình."); return; }
-    if (!confirm(`Xoá tài khoản ${r.email}? Hành động không thể hoàn tác.`)) return;
+    if (!(await confirmDialog(`Xoá tài khoản ${r.email}? Hành động không thể hoàn tác.`))) return;
     const res = await fetch(`/api/admin/users/${r.id}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.id !== r.id));
     else { const d = await res.json().catch(() => ({})); toast.error(d.error || "Không xoá được."); }

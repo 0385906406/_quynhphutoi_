@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
 import { listArticles } from "@/lib/articles";
 import { listJobs } from "@/lib/jobs";
 import { listClassifieds } from "@/lib/classifieds";
@@ -46,10 +47,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...["/tin-tuc", "/viec-lam", "/mua-ban", "/tim-do-roi", "/truong-hoc", "/y-te", "/giao-thong", "/di-tich", "/cho"].map(
       (p) => ({ url: url(p), lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }),
     ),
-    ...["/tong-quan", "/sap-nhap", "/lien-he"].map(
+    ...["/tong-quan", "/sap-nhap", "/lien-he", "/noi-quy"].map(
       (p) => ({ url: url(p), lastModified: now, changeFrequency: "monthly" as const, priority: 0.5 }),
     ),
   ];
+  // /thoi-tiet trả 404 khi admin tắt module thời tiết → chỉ liệt kê khi đang bật.
+  const weatherOn = await getSettings().then((s) => s.weatherEnabled).catch(() => false);
+  if (weatherOn) staticRoutes.push({ url: url("/thoi-tiet"), lastModified: now, changeFrequency: "hourly", priority: 0.5 });
 
   const dynamicGroups = await Promise.all([
     entries("/tin-tuc", () => listArticles({ status: "published" }) as Promise<Row[]>, 0.8),

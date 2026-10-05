@@ -9,6 +9,7 @@ import { countPendingClassifieds } from "@/lib/classifieds";
 import { getSettings } from "@/lib/settings";
 import { AdminSidebar, type AdminCounts } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
+import { AdminTableLabels } from "@/components/admin/AdminTableLabels";
 import "@/styles/admin.css";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminTopbar name={user!.name} email={user!.email} avatar={user!.avatar} />
         <div className="qp-admin-content">{children}</div>
       </div>
+      {/* Bảng rộng → thẻ trên điện thoại: gắn nhãn cột cho từng ô (xem admin.css) */}
+      <AdminTableLabels />
     </div>
   );
 }

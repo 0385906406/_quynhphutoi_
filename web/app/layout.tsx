@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { SITE } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
-import { Be_Vietnam_Pro, Space_Grotesk, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { Be_Vietnam_Pro, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 import "@/styles/components.css";
@@ -29,12 +30,15 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   display: "swap",
 });
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-source-serif",
-  display: "swap",
-});
+// (Đã bỏ Source Serif 4: --font-serif khai báo nhưng không component nào dùng → tải font thừa.)
+
+// Màu thanh trình duyệt trên điện thoại theo giao diện sáng / tối của hệ điều hành.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1220" },
+  ],
+};
 
 // Từ khoá gốc mặc định (dùng khi admin chưa nhập "Từ khoá gốc" ở tab SEO).
 const DEFAULT_KEYWORDS = [
@@ -56,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ? (s.seoDefaultOgImage.startsWith("http") ? s.seoDefaultOgImage : `${SITE.url}${s.seoDefaultOgImage}`)
     : `${SITE.url}/opengraph-image`;
   // Icon tab trình duyệt: ưu tiên logo nhỏ, rồi logo chính, cuối cùng là logo mặc định.
-  const iconUrl = s.siteFavicon || s.siteLogo || "/img/patterns/logo.png";
+  const iconUrl = s.siteFavicon || s.siteLogo || "/img/patterns/logo-512.png";
   const verification =
     s.seoVerificationGoogle || s.seoVerificationBing
       ? {
@@ -72,7 +76,9 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: name,
     authors: [{ name }],
     keywords,
-    alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
+    // KHÔNG đặt canonical ở gốc: trang con không tự khai báo (404, đăng nhập…) sẽ kế thừa
+    // canonical "/" sai. Mỗi trang tự đặt canonical qua buildMetadata/pageMetadata.
+    alternates: { types: { "application/rss+xml": "/feed.xml" } },
     manifest: "/manifest.webmanifest",
     icons: { icon: iconUrl, apple: iconUrl, shortcut: iconUrl },
     ...(verification ? { verification } : {}),
@@ -99,13 +105,22 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const fontVars = `${beVietnam.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif.variable}`;
+  const fontVars = `${beVietnam.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`;
   const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
   const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   return (
-    <html lang="vi" className={fontVars} suppressHydrationWarning>
-      <body suppressHydrationWarning><ToastProvider>{children}</ToastProvider><Analytics /></body>
+    // data-scroll-behavior="smooth": Next 16 tạm tắt smooth-scroll khi chuyển trang (nhảy tức thì
+    // lên đầu, giữ vị trí khi Back/Forward) — CSS smooth chỉ áp cho cuộn trong trang (#anchor).
+    // suppressHydrationWarning: script đầu trang đặt data-theme trước khi React hydrate.
+    <html lang="vi" className={fontVars} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Đặt giao diện sáng/tối TRƯỚC khi vẽ trang (tránh nháy trắng). Script thuần, chặn render rất ngắn. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body suppressHydrationWarning>
+      <ToastProvider>{children}</ToastProvider>
+      <Analytics />
       {/* Google Analytics 4 — chỉ tải khi đã cấu hình Measurement ID (G-XXXXXXXXXX). */}
       {gaId && (
         <>
@@ -141,6 +156,7 @@ export default function RootLayout({
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
         />
       )}
+      </body>
     </html>
   );
 }

@@ -4,7 +4,7 @@ import { getSettings } from "@/lib/settings";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const s = await getSettings();
-  const icon = s.siteLogo || s.siteFavicon || "/img/patterns/logo.png";
+  const icon = s.siteLogo || s.siteFavicon || "/img/patterns/logo-512.png";
   return {
     name: s.seoSiteName || SITE.name,
     short_name: SITE.shortName,

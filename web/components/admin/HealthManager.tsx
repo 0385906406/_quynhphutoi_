@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,7 +39,7 @@ export function HealthManager({ initial, typeOptions, ownershipOptions, perm = "
   const pg = usePagination(filtered, 20);
 
   async function remove(r: HealthRow) {
-    if (!confirm(`Xoá "${r.name}"?`)) return;
+    if (!(await confirmDialog(`Xoá "${r.name}"?`))) return;
     const res = await fetch(`/api/admin/y-te/${r.slug}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.slug !== r.slug));
   }

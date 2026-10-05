@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
   await requireAdminPage();
-  const [me, docs, customRoles] = await Promise.all([getCurrentUser(), listUsers({ limit: 500 }), listCustomRoles()]);
+  // Tải TẤT CẢ (trước đây cắt cứng 500 → mục thứ 501 trở đi âm thầm biến mất khỏi trang quản lý).
+  // Danh sách phân trang/lọc ở client; nếu dữ liệu lên hàng chục nghìn mục → chuyển phân trang phía server.
+  const [me, docs, customRoles] = await Promise.all([getCurrentUser(), listUsers({}), listCustomRoles()]);
   const rows = docs.map(toUserRow);
   return (
     <>

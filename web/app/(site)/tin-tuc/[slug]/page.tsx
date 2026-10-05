@@ -3,8 +3,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fmtViews, type Article } from "@/lib/news";
-import { getArticleBySlug, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, type ArticleBlock } from "@/lib/articles";
+import { getArticleBySlug, listArticles, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, type ArticleBlock } from "@/lib/articles";
 import { getSession } from "@/lib/auth";
+import { isCurrentUserStaff } from "@/lib/admin";
 import { newsLikeInfo, listNewsComments } from "@/lib/news-social";
 import { PostInteractions } from "@/components/lostfound/PostInteractions";
 import { CommentsSection, type CommentItem } from "@/components/lostfound/CommentsSection";
@@ -12,6 +13,8 @@ import { NewsCard } from "@/components/news/NewsCard";
 import { AffiliateCTA } from "@/components/common/AffiliateCTA";
 import { cldUrl, cldHtml } from "@/lib/cloudinary-url";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
+import { JsonLd } from "@/components/common/JsonLd";
+import { ReadingTools } from "@/components/news/ReadingTools";
 
 export const dynamic = "force-dynamic";
 
@@ -50,8 +53,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const session = await getSession();
   const pub = isPublic(db);
   const isOwner = !!session && db.postedBy?.toString() === session.id;
-  // Bài chưa duyệt: chỉ chủ bài xem trước được; người ngoài → 404.
-  if (!pub && !isOwner) notFound();
+  // Bài chưa công khai (nháp / chờ duyệt): chủ bài hoặc BAN QUẢN TRỊ xem trước được (nút
+  // "Xem trước" trong trình soạn); người ngoài → 404. Trang chưa công khai luôn noindex.
+  const staffPreview = !pub && !isOwner && (await isCurrentUserStaff());
+  if (!pub && !isOwner && !staffPreview) notFound();
   const previewPending = !pub;
 
   if (pub) await incrementViews(slug).catch(() => {});
@@ -64,6 +69,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   };
   const body: ArticleBlock[] = db.body ?? [];
   const related: Article[] = (await relatedDbArticles(slug, 4)).map(toNewsCardArticle);
+  // "Đọc nhiều" cuối bài (chỉ hiện trên điện thoại): cùng phạm vi trong/ngoài xã, bỏ bài đang đọc
+  // và bài đã có ở "Bài liên quan".
+  const skip = new Set([slug, ...related.map((r) => r.slug)]);
+  const popular: Article[] = (await listArticles({ sort: "popular", limit: 12, scope: db.scope === "ngoai-xa" ? "ngoai-xa" : "trong-xa" }).catch(() => []))
+    .filter((d) => !skip.has(d.slug))
+    .slice(0, 5)
+    .map(toNewsCardArticle);
 
   const headings = body
     .map((b, i) => (b.type === "h2" ? { id: `sec-${i}`, text: b.text } : null))
@@ -87,11 +99,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <article>
       {/* Dữ liệu có cấu trúc (SEO) — chỉ chèn khi bài đã công khai */}
-      {pub && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildArticleJsonLd(db)) }} />}
+      {pub && <JsonLd data={buildArticleJsonLd(db)} />}
       {previewPending && (
         <div className="container-wide" style={{ marginTop: "var(--space-4)" }}>
           <div className="qp-alert is-warning" role="status">
-            <div className="qp-alert__body"><strong>Bài đang chờ duyệt.</strong> Chỉ bạn xem được bản xem trước này; bài sẽ hiển thị công khai sau khi ban quản trị duyệt.</div>
+            <div className="qp-alert__body">
+              {staffPreview || db.status !== "published"
+                ? <><strong>Bản xem trước ({db.status === "published" ? "chờ duyệt / đang ẩn" : "bản nháp"}).</strong> Chỉ ban quản trị và tác giả xem được trang này; người đọc chưa thấy cho tới khi bài được xuất bản.</>
+                : <><strong>Bài đang chờ duyệt.</strong> Chỉ bạn xem được bản xem trước này; bài sẽ hiển thị công khai sau khi ban quản trị duyệt.</>}
+            </div>
           </div>
         </div>
       )}
@@ -116,9 +132,32 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       </section>
 
       <div className="container-wide qp-lf-body">
-        <div className="qp-article-layout is-lf">
+        {/* is-reading: trên điện thoại ảnh bìa lên TRƯỚC thân bài, thẻ thông tin/mục lục ở cột phụ ẩn đi
+            (đã có bản gọn ngay đầu bài) — xem components.css "TRANG ĐỌC BÀI". */}
+        <div className="qp-article-layout is-lf is-reading">
           <div className="qp-lf-main">
-            <div className="qp-article-body">
+            {/* Dòng thông tin gọn — chỉ hiện trên điện thoại (desktop có thẻ ở cột phụ). */}
+            <div className="qp-article-mmeta">
+              <span className="qp-avatar-initials" aria-hidden>{initials}</span>
+              <div className="qp-article-mmeta__text">
+                <b>{a.author}</b>
+                <span>{a.date}<span className="qp-dot-sep" aria-hidden />{a.readTime}<span className="qp-dot-sep" aria-hidden />{a.viewsText}</span>
+              </div>
+            </div>
+
+            <ReadingTools targetId="article-body" />
+
+            {headings.length > 0 && (
+              <details className="qp-toc-m">
+                <summary>Mục lục <span>({headings.length})</span></summary>
+                <nav aria-label="Mục lục bài viết">
+                  {headings.map((h) => <a href={`#${h.id}`} key={h.id}>{h.text}</a>)}
+                </nav>
+              </details>
+            )}
+
+            <div className="qp-article-body" id="article-body">
+              {db.excerpt && <p className="qp-article-lead">{db.excerpt}</p>}
               <div className="rich-text-editor__content qp-rte-view">
               {body.map((b, i) => {
                 switch (b.type) {
@@ -165,7 +204,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               <Image src={a.image} alt={a.title} fill sizes="(max-width:900px) 100vw, 340px" priority />
             </figure>
 
-            <div className="qp-lf-infocard">
+            <div className="qp-lf-infocard qp-lf-infocard--meta">
               <div className="qp-author">
                 <span className="qp-avatar-initials" aria-hidden>{initials}</span>
                 <div>
@@ -182,7 +221,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             </div>
 
             {headings.length > 0 && (
-              <div className="qp-lf-infocard">
+              <div className="qp-lf-infocard qp-lf-infocard--toc">
                 <div className="qp-lf-infocard__title">Mục lục</div>
                 <nav className="qp-toc qp-toc--static">
                   {headings.map((h) => <a href={`#${h.id}`} key={h.id}>{h.text}</a>)}
@@ -192,7 +231,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
             <div className="qp-lf-infocard qp-lf-infocard--cta">
               <div className="qp-lf-infocard__title">Theo dõi tin huyện nhà</div>
-              <p className="type-body-small" style={{ color: "var(--on-dark-body, rgba(255,255,255,.85))", margin: "0 0 14px" }}>
+              <p className="type-body-small" style={{ color: "var(--color-gray-text)", margin: "0 0 14px" }}>
                 Tin tức, thông báo và việc làm mới — cập nhật liên tục từ Trang cộng đồng Quỳnh Phụ.
               </p>
               <Link href="/tin-tuc" className="qp-btn-primary qp-btn-block">Xem tất cả tin →</Link>
@@ -213,6 +252,24 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             {related.map((r) => <NewsCard key={r.id} a={r} />)}
           </div>
         </div>
+
+        {/* Đọc nhiều — chỉ điện thoại (desktop đã có cột phụ & "Đọc nhiều" ở trang Tin tức) */}
+        {popular.length > 0 && (
+          <section className="qp-popular qp-popular--m qp-popular--article" aria-label="Đọc nhiều">
+            <header className="qp-popular__head"><h2 className="type-h3">Đọc nhiều</h2></header>
+            <div className="qp-popular__list">
+              {popular.map((p, i) => (
+                <Link key={p.id} href={`/tin-tuc/${p.slug}`} className="qp-popular__item">
+                  <span className="qp-popular__rank">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="qp-popular__body">
+                    <span className="qp-popular__title">{p.title}</span>
+                    <span className="qp-popular__meta"><span>{p.date}</span><span className="qp-dot-sep" aria-hidden /><span>{fmtViews(p.views)}</span></span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Newsletter */}
         <div className="qp-newsletter" style={{ marginTop: "var(--space-10)" }}>

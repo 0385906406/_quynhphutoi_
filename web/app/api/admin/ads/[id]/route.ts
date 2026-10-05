@@ -1,7 +1,7 @@
 ﻿// Admin: cập nhật (PATCH) & xoá (DELETE) một quảng cáo.
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdmin } from "@/lib/users";
+import { requireAdmin } from "@/lib/admin-guard";
 import { updateAd, deleteAd, isPlacement, type CreateAdInput } from "@/lib/ads";
 import { isGoogleMapsUrl, resolveMapUrl } from "@/lib/map-embed";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -10,16 +10,15 @@ import { getSettings } from "@/lib/settings";
 import { sanitizeSeoFields } from "@/lib/seo-fields";
 import { logActivity } from "@/lib/activity-log";
 
-async function guard() {
-  const user = await getCurrentUser();
-  if (!user) return { error: "Vui lòng đăng nhập.", status: 401 as const };
-  if (!isAdmin(user)) return { error: "Chỉ admin.", status: 403 as const };
-  return null;
+// Chỉ admin — dùng guard chung (401 chưa đăng nhập / 403 không phải admin).
+async function guard(): Promise<NextResponse | null> {
+  const g = await requireAdmin();
+  return g instanceof NextResponse ? g : null;
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const g = await guard();
-  if (g) return NextResponse.json({ error: g.error }, { status: g.status });
+  if (g) return g;
   const { id } = await params;
   const b = await req.json().catch(() => ({}));
 
@@ -66,7 +65,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const g = await guard();
-  if (g) return NextResponse.json({ error: g.error }, { status: g.status });
+  if (g) return g;
   const { id } = await params;
   const n = await deleteAd(id);
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });

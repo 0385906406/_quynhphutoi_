@@ -412,3 +412,43 @@
 @media (max-width: 400px) {
   .wm-login .card--register .form-panel { padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ============================================================
+   GIAO DIỆN TỐI — trang đăng nhập / đăng ký / quên & đặt lại mật khẩu
+   (theo <html data-theme="dark">; chỉ đổi màu, giữ nguyên bố cục & hình lá)
+   ============================================================ */
+[data-theme="dark"] .wm-login {
+  --wm-white: #10201A;
+  background: radial-gradient(ellipse at 30% 50%, #12301F 0%, #0A1711 60%);
+}
+[data-theme="dark"] .wm-login .card { box-shadow: 0 40px 100px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.4); }
+[data-theme="dark"] .wm-login .brand-corner-name,
+[data-theme="dark"] .wm-login .form-title { color: #CDEFD9; }
+[data-theme="dark"] .wm-login .field-label { color: #7FD39C; }
+[data-theme="dark"] .wm-login .form-sub,
+[data-theme="dark"] .wm-login .signup-row,
+[data-theme="dark"] .wm-login .divider span { color: #8DB39A; }
+[data-theme="dark"] .wm-login .remember { color: #9CC4A9; }
+[data-theme="dark"] .wm-login .forgot,
+[data-theme="dark"] .wm-login .signup-row a { color: #6FD293; }
+[data-theme="dark"] .wm-login input[type="text"],
+[data-theme="dark"] .wm-login input[type="email"],
+[data-theme="dark"] .wm-login input[type="password"] {
+  border-color: #24402F; color: #E3F4EA; background: rgba(255,255,255,0.04);
+}
+[data-theme="dark"] .wm-login input::placeholder { color: #6F8F7B; }
+[data-theme="dark"] .wm-login input:focus { background: #142A1F; }
+[data-theme="dark"] .wm-login .input-wrap .ico,
+[data-theme="dark"] .wm-login .ico-eye { color: #5F8A6E; }
+[data-theme="dark"] .wm-login .divider hr { border-top-color: #22382B; }
+[data-theme="dark"] .wm-login .btn-social { background: #142A1F; border-color: #24402F; color: #E3F4EA; }
+[data-theme="dark"] .wm-login .btn-social:hover { background: #18331F; }
+[data-theme="dark"] .wm-login .auth-error { color: #FF8A80; }
+[data-theme="dark"] .wm-login .auth-success { color: #9BE3B4; background: rgba(63,168,94,.16); }
+[data-theme="dark"] .wm-login .strength-bar span { background: #22382B; }
+@media (max-width: 768px) {
+  [data-theme="dark"] .wm-login .card { background: radial-gradient(ellipse at 30% 40%, #1C4A31 0%, #0E2318 100%); }
+  [data-theme="dark"] .wm-login .form-panel { background: #10201A; box-shadow: 0 -6px 24px rgba(0,0,0,.45); }
+  [data-theme="dark"] .wm-login .form-title { color: #CDEFD9; }
+  [data-theme="dark"] .wm-login .form-sub { color: #8DB39A; }
+}

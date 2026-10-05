@@ -7,7 +7,7 @@ import { fmtViews, type Article } from "@/lib/news";
 export function NewsCard({ a }: { a: Article }) {
   const href = `/tin-tuc/${a.slug}`;
   return (
-    <article className="qp-newscard">
+    <article className="qp-newscard qp-newscard--news">
       <Link href={href} className="qp-newscard__media" aria-label={a.title}>
         <Image src={a.image} alt="" fill sizes="(max-width:767px) 100vw, (max-width:1023px) 50vw, 25vw" style={{ objectFit: "cover" }} />
         <span className="qp-newscard__badge">{a.category}</span>

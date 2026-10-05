@@ -5,9 +5,19 @@ import { useMemo, useState } from "react";
 import { WeatherIcon } from "./WeatherIcon";
 import type { WeatherData, WeatherIconKey } from "@/lib/weather";
 
-const WEEKDAY_FMT = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", weekday: "short" });
-const DAY_FMT = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", day: "2-digit", month: "2-digit" });
-const FULL_DATE_FMT = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", weekday: "long", day: "2-digit", month: "2-digit" });
+// Tên thứ CỐ ĐỊNH thay vì Intl "vi-VN": dữ liệu ICU của Node (server) và từng trình duyệt
+// viết khác nhau ("Th 3" / "Thứ 3") → lệch hydration. Định dạng giữ y như bản Intl của server.
+const WEEKDAY_SHORT = ["CN", "Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7"];
+const WEEKDAY_LONG = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+// d.date dạng "YYYY-MM-DD" (ngày theo giờ VN) → tách trực tiếp, không phụ thuộc múi giờ máy.
+function dateParts(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const dd = String(d).padStart(2, "0");
+  const mm = String(m).padStart(2, "0");
+  return { short: WEEKDAY_SHORT[wd], long: WEEKDAY_LONG[wd], dash: `${dd}-${mm}`, slash: `${dd}/${mm}` };
+}
 
 type View = {
   key: string;
@@ -38,11 +48,11 @@ export function WeatherPanel({ data }: { data: WeatherData }) {
       },
     ];
     daily.forEach((d, i) => {
-      const date = new Date(`${d.date}T00:00:00+07:00`);
+      const p = dateParts(d.date);
       out.push({
         key: d.date,
-        tabLabel: i === 0 ? "Hôm nay" : `${WEEKDAY_FMT.format(date)} ${DAY_FMT.format(date)}`,
-        dateLabel: i === 0 ? `Hôm nay, ${DAY_FMT.format(date)}` : FULL_DATE_FMT.format(date),
+        tabLabel: i === 0 ? "Hôm nay" : `${p.short} ${p.dash}`,
+        dateLabel: i === 0 ? `Hôm nay, ${p.dash}` : `${p.long}, ${p.slash}`,
         icon: d.icon,
         label: d.label,
         bigTemp: `${d.tempMax}° / ${d.tempMin}°`,

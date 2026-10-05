@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/common/Toast";
@@ -347,7 +348,7 @@ function SendTab() {
       const target = row.audience === "emails"
         ? `${row.emails.length} email: ${row.emails.slice(0, 2).join(", ")}${row.emails.length > 2 ? "…" : ""}`
         : (row.audience ? AUDIENCE_LABELS[row.audience] : "...");
-      if (!confirm(`Kích hoạt và gửi thông báo tới ${target}?\n"${row.title}"\n\nHành động này sẽ gửi ngay đến người nhận.`)) return;
+      if (!(await confirmDialog(`Kích hoạt và gửi thông báo tới ${target}?\n"${row.title}"\n\nHành động này sẽ gửi ngay đến người nhận.`))) return;
     }
     setToggling(row._id);
     try {
@@ -365,7 +366,7 @@ function SendTab() {
   }
 
   async function deleteRow(row: BroadcastRow) {
-    if (!confirm(`Xoá thông báo "${row.title}"?`)) return;
+    if (!(await confirmDialog(`Xoá thông báo "${row.title}"?`))) return;
     setDeleting(row._id);
     try {
       const res = await fetch(`/api/admin/notifications/${row._id}`, { method: "DELETE" });

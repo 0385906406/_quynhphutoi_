@@ -147,7 +147,7 @@ export default async function HomePage() {
   const heroSlides: HeroSlide[] = home.sliderDocs.map(toHeroSlide);
   return (
     <>
-      <JsonLd data={[jsonLdWebSite(), jsonLdOrganization()]} />
+      <JsonLd data={[jsonLdWebSite(), jsonLdOrganization(settings)]} />
       <HeroSlider articleSlides={heroSlides} />
 
       {/* KPI STRIP */}

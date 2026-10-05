@@ -140,7 +140,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   superadmin: { bg: "rgba(124,58,237,0.12)", color: "#6d28d9" },
   admin:      { bg: "rgba(239,68,68,0.12)",  color: "#b91c1c" },
   editor:     { bg: "rgba(59,130,246,0.12)", color: "#1d4ed8" },
-  user:       { bg: "rgba(156,163,175,0.2)", color: "#4b5563" },
+  user:       { bg: "rgba(156,163,175,0.2)", color: "var(--color-gray-text)" },
 };
 
 export function ActivityLogViewer() {

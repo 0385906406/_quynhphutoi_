@@ -231,3 +231,29 @@
   .wm-404 .nf-num { font-size: 5rem; }
   .wm-404 .nf-title { font-size: 1.35rem; }
 }
+
+/* Sửa (điện thoại): logo bị đè lên số "404" — absolute bám theo .nf-content (đang căn giữa
+   màn hình) thay vì mép trên màn hình → dùng fixed để bám đúng góc trên-trái. */
+@media (max-width: 768px) {
+  .wm-404 .nf-brand { position: fixed; }
+}
+
+/* ============================================================
+   GIAO DIỆN TỐI — trang 404 (chỉ đổi màu, giữ bố cục & hình lá)
+   ============================================================ */
+[data-theme="dark"] .wm-404 {
+  --nf-g1: #CDEFD9; --nf-g2: #7FD39C; --nf-g3: #4FC478;
+  background: radial-gradient(ellipse at 60% 40%, #12301F 0%, #0A1711 60%);
+}
+[data-theme="dark"] .wm-404 .nf-card,
+[data-theme="dark"] .wm-404 .nf-content { background: #10201A; }
+[data-theme="dark"] .wm-404 .nf-card { box-shadow: 0 40px 100px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.4); }
+[data-theme="dark"] .wm-404 .nf-sub,
+[data-theme="dark"] .wm-404 .nf-links { color: #9CC4A9; }
+/* Nút chính: nền xanh đậm cố định để chữ trắng đủ tương phản (g1 đã sáng lên ở giao diện tối) */
+[data-theme="dark"] .wm-404 .nf-btn { background: linear-gradient(135deg, #1e5c35 0%, #3fa85e 100%); }
+@media (max-width: 768px) {
+  [data-theme="dark"] .wm-404 .nf-card { background: radial-gradient(ellipse at 40% 35%, #1C4A31 0%, #0E2318 70%); }
+  [data-theme="dark"] .wm-404 .nf-content { background: transparent; }
+  [data-theme="dark"] .wm-404 .nf-sub { color: #A9CDB5; }
+}

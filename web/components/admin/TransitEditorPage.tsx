@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useUnsavedGuard } from "@/lib/use-unsaved-guard";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/common/Toast";
 import { FilterSelect, type FilterOption } from "@/components/admin/FilterSelect";
+import { slugify } from "@/lib/slug";
 import { SeoFieldsEditor } from "@/components/admin/SeoFieldsEditor";
 import type { SeoFields } from "@/lib/seo-fields";
 
@@ -41,8 +43,13 @@ export function TransitEditorPage({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [form, setForm] = useState<TransitForm>(initialForm);
+  // Ghép form mặc định: trang "thêm" (server) spread TRANSIT_FORM_EMPTY nhưng import từ file "use client"
+  // chỉ là client reference → mọi trường undefined (từng làm trang thêm mới lỗi). Ghép ở đây cho chắc.
+  const [form, setForm] = useState<TransitForm>(() => ({ ...TRANSIT_FORM_EMPTY, ...initialForm }));
   const [busy, setBusy] = useState(false);
+  // Cảnh báo rời trang (đóng tab / bấm link) khi còn thay đổi chưa lưu.
+  const [savedSnapshot] = useState(() => JSON.stringify(form));
+  useUnsavedGuard(JSON.stringify(form) !== savedSnapshot && !busy);
   const [tab, setTab] = useState<Tab>("route");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiProvider, setAiProvider] = useState<AiProvider>("gemini");
@@ -141,7 +148,7 @@ export function TransitEditorPage({
             <a href={`/giao-thong/${editingSlug}`} target="_blank" rel="noopener noreferrer" className="qp-btn-outline">Xem trang{SVG_EXT}</a>
           )}
           <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value as AiProvider)} disabled={aiLoading || busy}
-            style={{ height: 32, padding: "0 8px", fontSize: 13, border: "1px solid var(--color-gray-border)", borderRadius: "var(--radius-sm)", background: "#fff", color: "var(--color-navy)", cursor: "pointer" }}>
+            style={{ height: 32, padding: "0 8px", fontSize: 13, border: "1px solid var(--color-gray-border)", borderRadius: "var(--radius-sm)", background: "var(--surface)", color: "var(--color-navy)", cursor: "pointer" }}>
             <option value="gemini">Gemini</option>
             <option value="openai">OpenAI</option>
             <option value="custom">Tùy chỉnh</option>
@@ -261,7 +268,8 @@ export function TransitEditorPage({
 
         {tab === "seo" && (
           <div className="qp-ae__tab-panel">
-            <SeoFieldsEditor value={form.seo} onChange={(seo) => set("seo", seo)} />
+            <SeoFieldsEditor value={form.seo} onChange={(seo) => set("seo", seo)}
+              preview={{ title: form.name, description: "", path: `/giao-thong/${editingSlug || slugify(form.name)}` }} />
           </div>
         )}
       </div>

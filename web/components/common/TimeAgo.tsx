@@ -10,6 +10,7 @@ import { formatDate, relativeTime } from "@/lib/datetime";
 
 export function TimeAgo({ iso, className }: { iso: string; className?: string }) {
   const [now, setNow] = useState<number | null>(null);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- chủ đích: đổi sang giờ client sau hydration
   useEffect(() => { setNow(Date.now()); }, []);
   return (
     <time dateTime={iso} title={formatDate(iso)} className={className}>

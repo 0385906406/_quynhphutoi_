@@ -11,15 +11,23 @@ export function BackToTop() {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const y = window.scrollY;
       setVisible(y > SHOW_AFTER);
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      setPct(max > 0 ? Math.min(100, (y / max) * 100) : 0);
+      // Làm tròn 0.5% → bỏ qua các lần render không đổi hình.
+      setPct(max > 0 ? Math.round(Math.min(100, (y / max) * 100) * 2) / 2 : 0);
     };
-    onScroll();
+    // Gom các sự kiện scroll trong 1 frame → tối đa 1 lần đo/render mỗi frame.
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   const toTop = () => {

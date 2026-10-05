@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,7 +53,7 @@ export function SchoolsManager({
   const pg = usePagination(filtered, 20);
 
   async function remove(r: SchoolRow) {
-    if (!confirm(`Xoá "${r.name}"?`)) return;
+    if (!(await confirmDialog(`Xoá "${r.name}"?`))) return;
     const res = await fetch(`/api/admin/truong-hoc/${r.slug}`, { method: "DELETE" });
     if (res.ok) {
       setRows((cur) => cur.filter((x) => x.slug !== r.slug));

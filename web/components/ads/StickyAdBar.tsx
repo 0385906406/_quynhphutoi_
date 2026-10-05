@@ -6,7 +6,13 @@
 // Nếu để yên (không reload), sau REAPPEAR_MS (mặc định 5 phút) thanh sẽ TỰ BUNG lại.
 // Vòng xoay TÔN TRỌNG TRỌNG SỐ ƯU TIÊN (weight): ad trọng số cao hiện trước + nhiều hơn.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { cldUrl } from "@/lib/cloudinary-url";
+
+// Trang chi tiết (đọc bài/tin) — chỉ hiện thanh sau khi người đọc cuộn qua ~nửa trang,
+// để quảng cáo không che chữ ngay khi vừa mở bài.
+const READING_PAGE = /^\/(tin-tuc|viec-lam|mua-ban|tim-do-roi|truong-hoc|y-te|giao-thong|di-tich|cho)\/[^/]+/;
+const REVEAL_AT = 0.5;
 
 type Ad = { id: string; advertiser: string; title: string; imageDesktop: string; imageMobile: string | null; weight?: number };
 
@@ -33,6 +39,27 @@ export function StickyAdBar() {
   const [idx, setIdx] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
   const seen = useRef<Set<string>>(new Set());
+  const pathname = usePathname();
+  const isReading = READING_PAGE.test(pathname);
+  // Lưu theo pathname → sang trang khác tự "chưa mở khoá" mà không cần effect reset.
+  const [revealedPath, setRevealedPath] = useState<string | null>(null);
+  const revealed = !isReading || revealedPath === pathname;
+
+  useEffect(() => {
+    if (!isReading || revealedPath === pathname) return;
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (max <= 0 || window.scrollY / max >= REVEAL_AT) setRevealedPath(pathname);
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [isReading, revealedPath, pathname]);
 
   // Vòng xoay theo trọng số ưu tiên (ổn định cho tới khi danh sách ads đổi).
   const order = useMemo(() => weightedOrder(ads), [ads]);
@@ -62,19 +89,19 @@ export function StickyAdBar() {
     return () => clearInterval(iv);
   }, [collapsed, order.length]);
 
-  // Đếm lượt hiển thị (mỗi quảng cáo 1 lần, khi đang mở).
+  // Đếm lượt hiển thị (mỗi quảng cáo 1 lần, khi đang mở VÀ thực sự hiện trên màn hình).
   useEffect(() => {
-    if (collapsed) return;
+    if (collapsed || !revealed) return;
     const ad = order[idx];
     if (!ad || seen.current.has(ad.id)) return;
     seen.current.add(ad.id);
     fetch(`/api/ads/${ad.id}/impression`, { method: "POST", keepalive: true }).catch(() => {});
-  }, [collapsed, idx, order]);
+  }, [collapsed, revealed, idx, order]);
 
   function collapse() { setCollapsed(true); }
   function expand() { setCollapsed(false); }
 
-  if (ads.length === 0) return null;
+  if (ads.length === 0 || !revealed) return null;
 
   // Đã thu nhỏ → nút nhỏ ở góc.
   if (collapsed) {

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/admin";
-import { isAdmin, isStaff } from "@/lib/users";
+import { requireStaff } from "@/lib/admin-guard";
+import { isAdmin } from "@/lib/users";
 import {
   dailyNewCountsRange, monthlyNewCounts,
   dailyUserRegistrationsRange, monthlyUserRegistrations,
@@ -11,10 +11,10 @@ export const dynamic = "force-dynamic";
 type Period = "day" | "month" | "quarter" | "year";
 
 export async function GET(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user || !isStaff(user)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Nhân sự quản trị (admin / editor / vai trò tuỳ chỉnh) — guard chung.
+  const g = await requireStaff();
+  if (g instanceof NextResponse) return g;
+  const user = g.user;
 
   const period = (req.nextUrl.searchParams.get("period") ?? "month") as Period;
   const now    = new Date();

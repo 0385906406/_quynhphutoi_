@@ -61,7 +61,7 @@ export const NAV_TREE: NavNode[] = [
 
 export const BRAND = {
   mark: "QP",
-  logo: "/img/patterns/logo.png",
+  logo: "/img/patterns/logo-192.webp", // bản nén 12KB (gốc logo.png 1,5MB)
   name: "Quỳnh Phụ Tôi",
   sub: "Thông tin · Việc làm · Cộng đồng",
 };

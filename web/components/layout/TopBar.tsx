@@ -8,6 +8,8 @@ import { NAV_TREE, BRAND, type NavItem } from "@/lib/nav";
 import { cldUrl } from "@/lib/cloudinary-url";
 import { NotificationBell } from "./NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
+import { MENU_TOGGLE_EVENT, MENU_STATE_EVENT } from "./BottomNav";
+import { ThemeToggle } from "./ThemeToggle";
 
 type SessionUser = { id: string; email: string; name: string; avatar?: string };
 
@@ -63,6 +65,8 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
   const [openId, setOpenId] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
+  // Điện thoại: cuộn xuống → ẩn thanh trên (nhường chỗ đọc), cuộn lên → hiện lại. CSS chỉ áp ≤767px.
+  const [hidden, setHidden] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   // Nav ở chế độ drawer điện thoại (≤1180px) — khớp breakpoint trong components.css.
   // Khi true: bỏ hover, dropdown mở/đóng bằng cách bấm (điện thoại không có hover).
@@ -83,6 +87,7 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
     setMobileOpen(false);
     setOpenId(null);
     setAccountOpen(false);
+    setHidden(false);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [pathname]);
 
@@ -99,17 +104,62 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Click ra ngoài đóng dropdown
+  // Click ra ngoài đóng dropdown / menu điện thoại (trừ chính nút ☰ — nó tự bật/tắt).
   useEffect(() => {
     function onClick(e: MouseEvent) {
       const t = e.target as Node;
-      if (navRef.current && !navRef.current.contains(t)) setOpenId(null);
+      if (navRef.current && !navRef.current.contains(t)) {
+        setOpenId(null);
+        // Nút ☰ và nút "Menu" ở thanh dưới tự bật/tắt menu → bỏ qua để không đóng-rồi-mở-lại.
+        if (!(t instanceof Element && t.closest("[data-menu-toggle]"))) setMobileOpen(false);
+      }
       if (accountRef.current && !accountRef.current.contains(t)) setAccountOpen(false);
     }
     // pointerdown thay mousedown: iOS Safari không phát mousedown khi chạm vùng trống → menu không đóng.
     document.addEventListener("pointerdown", onClick);
     return () => document.removeEventListener("pointerdown", onClick);
   }, []);
+
+  // Nút "Menu" ở thanh điều hướng dưới (BottomNav) bật/tắt menu này; báo lại trạng thái cho nó.
+  useEffect(() => {
+    const onToggle = () => setMobileOpen((v) => !v);
+    window.addEventListener(MENU_TOGGLE_EVENT, onToggle);
+    return () => window.removeEventListener(MENU_TOGGLE_EVENT, onToggle);
+  }, []);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(MENU_STATE_EVENT, { detail: mobileOpen }));
+  }, [mobileOpen]);
+
+  // Menu điện thoại mở → khoá cuộn nền (tránh trang phía sau trôi theo ngón tay).
+  useEffect(() => {
+    if (!mobileOpen || !isMobileNav) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen, isMobileNav]);
+
+  // Ẩn/hiện thanh trên theo hướng cuộn (gom theo frame, chỉ setState khi đổi trạng thái).
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (Math.abs(dy) < 8) return; // bỏ qua rung nhẹ
+      setHidden(dy > 0 && y > 160);
+      lastY = y;
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // Đang mở menu / dropdown thì không ẩn thanh trên.
+  const barHidden = hidden && !mobileOpen && !accountOpen && openId === null;
 
   const groupActive = (children: NavItem[]) => children.some((c) => isActive(c.href, pathname));
 
@@ -128,7 +178,11 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
   }
 
   return (
-    <header className="qp-topbar">
+    <>
+    {/* Lớp nền tối sau menu điện thoại — đặt NGOÀI header vì header có backdrop-filter
+        (sẽ biến position:fixed của con thành tương đối theo header). */}
+    {mobileOpen && <div className="qp-nav-backdrop" aria-hidden onClick={() => setMobileOpen(false)} />}
+    <header className={`qp-topbar${barHidden ? " is-hidden" : ""}`}>
       <div className="container-wide qp-topbar__inner">
         <Link className="qp-brand" href="/" aria-label={`${BRAND.name} — Trang chủ`}>
           <span className="qp-brand__mark">
@@ -208,6 +262,9 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
             );
           })}
 
+          {/* Sáng/tối trong menu — chỉ hiện trên điện thoại (≤767px), nơi nút trên thanh bị ẩn để đỡ chật. */}
+          <ThemeToggle className="qp-nav__theme" withLabel />
+
           {/* Đăng nhập trong drawer — chỉ hiện trên điện thoại (≤767px) khi chưa đăng nhập,
               vì nút Đăng nhập ở thanh trên bị ẩn ở breakpoint đó. */}
           {!user && (
@@ -219,6 +276,9 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
         </nav>
 
         <div className="qp-topbar__actions">
+          {/* Giao diện sáng / tối */}
+          <ThemeToggle />
+
           {/* Tìm kiếm toàn cục */}
           <GlobalSearch />
 
@@ -287,19 +347,21 @@ export function TopBar({ user, isAdmin = false, logo }: { user: SessionUser | nu
           )}
 
           <button
+            data-menu-toggle
             className="qp-hamburger"
             type="button"
             aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((v) => !v)}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="22" height="22">
-              <path d="M3 6h18M3 12h18M3 18h18" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="22" height="22" aria-hidden>
+              {mobileOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M3 6h18M3 12h18M3 18h18" />}
             </svg>
           </button>
         </div>
       </div>
 
     </header>
+    </>
   );
 }

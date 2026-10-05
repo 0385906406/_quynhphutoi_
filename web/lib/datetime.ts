@@ -4,12 +4,18 @@
 
 const VN_TZ = "Asia/Ho_Chi_Minh";
 
-const DATE_FMT = new Intl.DateTimeFormat("vi-VN", {
-  timeZone: VN_TZ, day: "2-digit", month: "2-digit", year: "numeric",
+// Chỉ lấy CÁC SỐ từ Intl (formatToParts) rồi tự ghép chuỗi: thứ tự & dấu phân cách của
+// "vi-VN" khác nhau giữa bản ICU của Node và từng trình duyệt → tự ghép mới chắc khớp.
+const PARTS_FMT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: VN_TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
 });
-const DATETIME_FMT = new Intl.DateTimeFormat("vi-VN", {
-  timeZone: VN_TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-});
+function vnParts(d: Date) {
+  const p: Record<string, string> = {};
+  for (const x of PARTS_FMT.formatToParts(d)) p[x.type] = x.value;
+  return p;
+}
+const DATE_FMT = { format: (d: Date) => { const p = vnParts(d); return `${p.day}/${p.month}/${p.year}`; } };
+const DATETIME_FMT = { format: (d: Date) => { const p = vnParts(d); return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`; } };
 
 function toDate(value: string | number | Date | null | undefined): Date | null {
   if (value === null || value === undefined || value === "") return null;

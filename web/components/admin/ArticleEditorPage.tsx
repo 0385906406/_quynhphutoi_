@@ -1,14 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useUnsavedGuard, confirmLeave } from "@/lib/use-unsaved-guard";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { RichTextEditor } from "@/components/lostfound/RichTextEditor";
 import { useToast } from "@/components/common/Toast";
 import { SeoScoreBadge } from "@/components/common/SeoScoreBadge";
-import { scoreTitle, scoreExcerpt, scoreTags, scoreCoverAlt, scoreSeoMetaTitle, scoreSeoMetaDesc, scoreSeoKeywords, scoreSeoOgImage, scoreBody, countBodyWords, calcTotalSeoScore } from "@/lib/seo-score";
+import { scoreTitle, scoreExcerpt, scoreTags, scoreCoverAlt, scoreSeoMetaTitle, scoreSeoMetaDesc, scoreSeoKeywords, scoreSeoOgImage, scoreBody, countBodyWords } from "@/lib/seo-score";
+import { analyzeSeo, scoreColor } from "@/lib/seo-analysis";
+import { SeoAnalysisPanel, SerpPreview, LengthMeter } from "@/components/admin/SeoAnalysisPanel";
+import { SITE } from "@/lib/seo";
+import { slugify } from "@/lib/slug";
 import type { ArticleScope } from "@/lib/news";
+
+// Từ khoá chính = phần tử ĐẦU của danh sách keywords đã lưu (không thêm field mới vào DB).
+const splitKw = (s: string | undefined) => (s ?? "").split(",").map((t) => t.trim()).filter(Boolean);
 
 export type ArticleForm = {
   title: string; excerpt: string; category: string; scope: ArticleScope; tags: string;
@@ -34,7 +42,12 @@ function Counter({ val, max, warn = max - 20 }: { val: number; max: number; warn
 export function ArticleEditorPage({ editingSlug, initialForm, categories }: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const [form, setForm] = useState<ArticleForm>(initialForm);
+  // Ghép form mặc định: trang "viết bài mới" (server) spread ARTICLE_FORM_EMPTY nhưng import từ
+  // file "use client" chỉ là client reference → mọi trường undefined. Ghép ở đây cho chắc.
+  const init = { ...ARTICLE_FORM_EMPTY, ...initialForm };
+  // Tách keywords đã lưu: [0] = từ khoá chính (ô riêng), còn lại = từ khoá phụ (ô Keywords).
+  const [focusKw, setFocusKw] = useState(() => splitKw(init.seoKeywords)[0] ?? "");
+  const [form, setForm] = useState<ArticleForm>(() => ({ ...init, seoKeywords: splitKw(init.seoKeywords).slice(1).join(", ") }));
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<Tab>("content");
 
@@ -98,8 +111,12 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
       authorTitle:        f.authorTitle              || "Quỳnh Phụ Tôi",
       seoMetaTitle:       rwResult.seoMetaTitle       || f.seoMetaTitle,
       seoMetaDescription: rwResult.seoMetaDescription || f.seoMetaDescription,
-      seoKeywords:        rwResult.seoKeywords        || f.seoKeywords,
+      // AI trả 1 chuỗi keywords: phần tử đầu làm từ khoá chính nếu chưa đặt, còn lại là từ khoá phụ.
+      seoKeywords: rwResult.seoKeywords
+        ? splitKw(rwResult.seoKeywords).slice(focusKw.trim() ? 0 : 1).join(", ")
+        : f.seoKeywords,
     }));
+    if (!focusKw.trim() && rwResult.seoKeywords) setFocusKw(splitKw(rwResult.seoKeywords)[0] ?? "");
     closeRewrite();
     toast.success("Đã điền toàn bộ nội dung vào form.");
   }
@@ -147,9 +164,17 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
     const seoOgImage  = scoreSeoOgImage(form.seoOgImage);
     const body       = scoreBody(form.bodyHtml);
     const bodyWords  = countBodyWords(form.bodyHtml);
-    const total      = calcTotalSeoScore({ title, excerpt, body, tags, coverAlt, metaTitle, metaDesc, seoKeywords, seoOgImage });
-    return { title, excerpt, tags, coverAlt, metaTitle, metaDesc, seoKeywords, seoOgImage, body, bodyWords, total };
+    return { title, excerpt, tags, coverAlt, metaTitle, metaDesc, seoKeywords, seoOgImage, body, bodyWords };
   }, [form.title, form.excerpt, form.tags, form.coverAlt, form.seoMetaTitle, form.seoMetaDescription, form.seoKeywords, form.seoOgImage, form.bodyHtml]);
+
+  // Chấm điểm SEO đầy đủ (từ khoá, cấu trúc, liên kết, ảnh, độ dễ đọc) — cập nhật khi gõ.
+  const slug = editingSlug || slugify(form.title);
+  const analysis = useMemo(() => analyzeSeo({
+    title: form.title, slug, excerpt: form.excerpt, bodyHtml: form.bodyHtml, focusKeyword: focusKw,
+    metaTitle: form.seoMetaTitle, metaDescription: form.seoMetaDescription,
+    tags: splitKw(form.tags), coverImage: form.coverImage, coverAlt: form.coverAlt,
+    noindex: form.seoNoindex, siteHost: SITE.url,
+  }), [form.title, slug, form.excerpt, form.bodyHtml, focusKw, form.seoMetaTitle, form.seoMetaDescription, form.tags, form.coverImage, form.coverAlt, form.seoNoindex]);
 
   function buildPayload(f: ArticleForm) {
     return {
@@ -159,15 +184,49 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
       authorName: f.authorName, authorTitle: f.authorTitle,
       bodyHtml: f.bodyHtml, status: f.status,
       seoMetaTitle: f.seoMetaTitle, seoMetaDescription: f.seoMetaDescription,
-      seoKeywords: f.seoKeywords.split(",").map((t) => t.trim()).filter(Boolean),
+      // Từ khoá chính luôn đứng đầu danh sách (bỏ trùng không phân biệt hoa thường).
+      seoKeywords: [focusKw.trim(), ...splitKw(f.seoKeywords)].filter(Boolean)
+        .filter((k, i, arr) => arr.findIndex((x) => x.toLowerCase() === k.toLowerCase()) === i),
       seoOgImage: f.seoOgImage, seoNoindex: f.seoNoindex,
     };
   }
 
-  async function save(forcedStatus?: "draft" | "published") {
+  // ── Chưa lưu: so với bản đã lưu gần nhất (baseline) → cảnh báo rời trang + tự lưu bản tạm ──
+  const snapshot = JSON.stringify({ form, focusKw });
+  const [baseline, setBaseline] = useState(snapshot);
+  const dirty = snapshot !== baseline;
+  useUnsavedGuard(dirty && !busy);
+
+  // Bản tạm trong trình duyệt (localStorage) — mất điện / lỡ đóng tab vẫn khôi phục được.
+  const draftKey = `qp-draft:article:${editingSlug || "new"}`;
+  const [restore, setRestore] = useState<{ at: number; data: { form: ArticleForm; focusKw: string } } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { at: number; data: { form: ArticleForm; focusKw: string } };
+      if (saved?.data && JSON.stringify(saved.data) !== snapshot) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- đọc bản tạm 1 lần sau khi mở trình soạn
+        setRestore(saved);
+      }
+    } catch {}
+    // chỉ chạy khi mở trình soạn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!dirty || restore) return; // chưa đổi gì / đang chờ người dùng quyết định khôi phục
+    const t = setTimeout(() => {
+      try { localStorage.setItem(draftKey, JSON.stringify({ at: Date.now(), data: { form, focusKw } })); } catch {}
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [dirty, restore, draftKey, form, focusKw]);
+  const clearLocalDraft = () => { try { localStorage.removeItem(draftKey); } catch {} };
+
+  /** Lưu bài. stay=true → ở lại trình soạn (dùng cho "Lưu & xem trước"); trả slug hoặc null. */
+  async function save(forcedStatus?: "draft" | "published", opts: { stay?: boolean } = {}): Promise<string | null> {
     const f = forcedStatus ? { ...form, status: forcedStatus } : form;
-    if (!f.title.trim()) { toast.error("Nhập tiêu đề bài viết."); return; }
-    if (!f.coverImage) { toast.error("Cần chọn ảnh bìa (tab Chi tiết)."); return; }
+    if (!f.title.trim()) { toast.error("Nhập tiêu đề bài viết."); return null; }
+    if (!f.coverImage) { toast.error("Cần chọn ảnh bìa (tab Chi tiết)."); return null; }
     setBusy(true);
     try {
       const res = await fetch(
@@ -175,14 +234,34 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
         { method: editingSlug ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildPayload(f)) },
       );
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra."); return; }
+      if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra."); return null; }
+      const slug: string = editingSlug || data.item?.slug || "";
+      clearLocalDraft();
+      setBaseline(JSON.stringify({ form: f, focusKw }));
+      if (forcedStatus) setForm(f);
+      if (opts.stay) {
+        // Bài mới vừa tạo → chuyển sang chế độ SỬA (lần lưu sau là cập nhật, không tạo trùng bài).
+        if (!editingSlug && slug) router.replace(`/admin/tin-tuc/bai-viet/${slug}/sua`);
+        return slug;
+      }
       toast.success(editingSlug ? "Đã cập nhật bài viết." : "Đã tạo bài viết.");
       router.push("/admin/tin-tuc");
       router.refresh();
+      return slug;
     } finally { setBusy(false); }
   }
 
-  const seoColor = seo.total >= 80 ? "green" : seo.total >= 60 ? "yellow" : "red";
+  // Xem trước trang bài thật (bản nháp chỉ ban quản trị xem được). Có thay đổi → lưu trước.
+  // Mở tab NGAY trong cú bấm (tránh bị chặn popup), lưu xong mới trỏ tab tới bài.
+  async function preview() {
+    if (editingSlug && !dirty) { window.open(`/tin-tuc/${editingSlug}`, "_blank", "noopener"); return; }
+    const w = window.open("about:blank", "_blank");
+    const slug = await save(undefined, { stay: true });
+    if (slug && w) { w.location.href = `/tin-tuc/${slug}`; toast.success("Đã lưu — đang mở bản xem trước."); }
+    else w?.close();
+  }
+
+  const seoColor = scoreColor(analysis.total);
 
   return (
     <>
@@ -192,6 +271,19 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
       {form.title && <span className="qp-admin-head__name">{form.title}</span>}
     </div>
     <div className="qp-ae">
+
+      {/* Bản tạm chưa lưu từ lần trước (tự lưu trong trình duyệt) */}
+      {restore && (
+        <div className="qp-alert is-warning qp-ae__restore" role="status">
+          <div className="qp-alert__body">
+            <strong>Có bản chỉnh sửa chưa lưu</strong> lúc {new Date(restore.at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} {new Date(restore.at).toLocaleDateString("vi-VN")}. Khôi phục để làm tiếp?
+          </div>
+          <div className="qp-ae__restore-actions">
+            <button type="button" className="qp-btn-primary" onClick={() => { setForm({ ...ARTICLE_FORM_EMPTY, ...restore.data.form }); setFocusKw(restore.data.focusKw ?? ""); setRestore(null); }}>Khôi phục</button>
+            <button type="button" className="qp-btn-outline" onClick={() => { clearLocalDraft(); setRestore(null); }}>Bỏ bản tạm</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Topbar + Tabs ── */}
       <div className="qp-ae__topbar">
@@ -207,16 +299,20 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
           <button type="button" className={`qp-ae__tab-btn${tab === "seo" ? " is-active" : ""}`} onClick={() => setTab("seo")}>
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
             SEO
-            {seo.total < 60 && <span className="qp-ae__tab-warn">!</span>}
+            {analysis.total < 55 && <span className="qp-ae__tab-warn">!</span>}
           </button>
         </div>
         <div className="qp-ae__headeractions">
-          <span className={`qp-ae__seo-pill qp-ae__seo-pill--${seoColor}`}>SEO {seo.total}/100</span>
+          <span className={`qp-ae__seo-pill qp-ae__seo-pill--${seoColor}`}>SEO {analysis.total}/100</span>
           <button type="button" className="qp-ae__import-btn" onClick={openRewrite} disabled={busy} title="Dán nội dung gốc, AI viết lại và điền vào form">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
             Viết lại bằng AI
           </button>
-          <button type="button" className="qp-btn-outline" onClick={() => router.push("/admin/tin-tuc")} disabled={busy}>Huỷ</button>
+          <button type="button" className="qp-btn-outline" onClick={() => { if (confirmLeave(dirty)) { clearLocalDraft(); setBaseline(snapshot); router.push("/admin/tin-tuc"); } }} disabled={busy}>Huỷ</button>
+          <button type="button" className="qp-btn-outline" onClick={preview} disabled={busy}
+            title={dirty || !editingSlug ? "Lưu thay đổi rồi mở trang bài ở tab mới" : "Mở trang bài ở tab mới"}>
+            {dirty || !editingSlug ? "Lưu & xem trước" : "Xem trước"}
+          </button>
           <button type="button" className="qp-btn-outline" onClick={() => save("draft")} disabled={busy}>
             {busy ? "Đang lưu…" : "Lưu nháp"}
           </button>
@@ -380,20 +476,20 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
         {tab === "seo" && (
           <div className="qp-ae__tab-panel">
 
-            {/* Score overview */}
-            <div className="qp-ae__main-card" style={{ padding: "18px 24px" }}>
-              <div className="qp-ae__seo-total" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: "none" }}>
-                <span className="qp-ae__seo-total-lbl">Điểm SEO</span>
-                <div className="qp-ae__seo-bar">
-                  <div className="qp-ae__seo-bar-fill"
-                    style={{ width: `${seo.total}%`, background: seo.total >= 80 ? "var(--color-teal)" : seo.total >= 60 ? "var(--color-warning)" : "var(--color-error)" }}
-                  />
-                </div>
-                <span className="qp-ae__seo-total-num">{seo.total}/100</span>
-                <span className={`qp-seo-badge qp-seo-badge--${seoColor}`}>
-                  {seo.total >= 80 ? "Tốt" : seo.total >= 60 ? "Khá" : "Cần cải thiện"}
-                </span>
+            {/* Từ khoá chính + xem trước Google + phân tích chi tiết */}
+            <div className="qp-ae__main-card qp-seo-workspace">
+              <div className="qp-ae__field">
+                <label className="qp-ae__flabel" htmlFor="ae-focus-kw">Từ khoá chính <span className="text-muted" style={{ fontWeight: 400 }}>(cụm từ người dân hay gõ tìm trên Google)</span></label>
+                <input id="ae-focus-kw" className="qp-input" value={focusKw} maxLength={80}
+                  onChange={(e) => setFocusKw(e.target.value.replace(/,/g, " "))}
+                  placeholder="VD: lịch cắt điện Quỳnh Phụ" />
               </div>
+              <SerpPreview
+                title={analysis.stats.metaTitle}
+                description={analysis.stats.metaDescription}
+                path={`/tin-tuc/${analysis.stats.slug}`}
+              />
+              <SeoAnalysisPanel analysis={analysis} />
             </div>
 
             {/* SEO fields */}
@@ -406,15 +502,17 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
               </div>
               <div className="qp-ae__scard-body">
                 <div className="qp-ae__field">
-                  <label className="qp-ae__flabel">Meta title<SeoScoreBadge result={seo.metaTitle} /></label>
+                  <label className="qp-ae__flabel">Meta title<SeoScoreBadge result={seo.metaTitle} />
+                    <LengthMeter value={analysis.stats.metaTitle.length} min={40} max={60} hardMax={70} /></label>
                   <input className="qp-input" value={form.seoMetaTitle} onChange={(e) => set("seoMetaTitle", e.target.value)} placeholder="Để trống → dùng tiêu đề bài viết" />
                 </div>
                 <div className="qp-ae__field">
-                  <label className="qp-ae__flabel">Meta description<SeoScoreBadge result={seo.metaDesc} /></label>
+                  <label className="qp-ae__flabel">Meta description<SeoScoreBadge result={seo.metaDesc} />
+                    <LengthMeter value={analysis.stats.metaDescription.length} min={120} max={160} hardMax={200} /></label>
                   <textarea className="qp-textarea" rows={2} value={form.seoMetaDescription} onChange={(e) => set("seoMetaDescription", e.target.value)} placeholder="Để trống → dùng tóm tắt (sapo)" />
                 </div>
                 <div className="qp-ae__field">
-                  <label className="qp-ae__flabel">Keywords (dấu phẩy)<SeoScoreBadge result={seo.seoKeywords} /></label>
+                  <label className="qp-ae__flabel">Từ khoá phụ (dấu phẩy)<SeoScoreBadge result={seo.seoKeywords} /></label>
                   <input className="qp-input" value={form.seoKeywords} onChange={(e) => set("seoKeywords", e.target.value)} />
                 </div>
                 <div className="qp-ae__field">
@@ -603,7 +701,7 @@ export function ArticleEditorPage({ editingSlug, initialForm, categories }: Prop
                   </div>
                   {form.bodyHtml && (
                     <p style={{ fontSize: 12, color: "var(--color-warning)", fontWeight: 600, margin: 0 }}>
-                      ⚠ Nội dung hiện tại sẽ bị thay thế khi bấm "Chèn vào bài".
+                      ⚠ Nội dung hiện tại sẽ bị thay thế khi bấm “Chèn vào bài”.
                     </p>
                   )}
                   {aiError && <p style={{ fontSize: 13, color: "var(--color-error)", margin: 0 }}>{aiError}</p>}

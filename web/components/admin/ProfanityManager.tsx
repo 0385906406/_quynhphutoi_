@@ -3,6 +3,7 @@
 // Quản trị danh sách từ cấm (lọc từ ngữ thô tục): tìm kiếm, thêm (một hoặc nhiều
 // từ ngăn bởi dấu phẩy), sửa trực tiếp trên bảng, bật/tắt, xoá, copy toàn bộ,
 // khôi phục mặc định. Giao diện gọn.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/common/Toast";
 import { Pagination } from "@/components/common/Pagination";
@@ -53,7 +54,7 @@ export function ProfanityManager({ initial, perm = "full" }: { initial: Profanit
   }
 
   async function remove(r: ProfanityRow) {
-    if (!confirm(`Xoá từ cấm "${r.text}"?`)) return;
+    if (!(await confirmDialog(`Xoá từ cấm "${r.text}"?`))) return;
     const res = await fetch(`/api/admin/profanity/${r.id}`, { method: "DELETE" });
     if (res.ok) { setRows((cur) => cur.filter((x) => x.id !== r.id)); toast.success("Đã xoá."); }
     else toast.error("Xoá thất bại.");
@@ -101,7 +102,7 @@ export function ProfanityManager({ initial, perm = "full" }: { initial: Profanit
 
   async function importLib() {
     if (busy) return;
-    if (!confirm("Nạp từ điển tục tiếng Anh từ thư viện (leo-profanity + bad-words)? Chỉ thêm từ chưa có.")) return;
+    if (!(await confirmDialog("Nạp từ điển tục tiếng Anh từ thư viện (leo-profanity + bad-words)? Chỉ thêm từ chưa có."))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/profanity/import", { method: "POST" });
@@ -117,7 +118,7 @@ export function ProfanityManager({ initial, perm = "full" }: { initial: Profanit
 
   async function restoreDefaults() {
     if (busy) return;
-    if (!confirm("Nạp lại các từ cấm mặc định còn thiếu? (Không ghi đè từ đã chỉnh sửa)")) return;
+    if (!(await confirmDialog("Nạp lại các từ cấm mặc định còn thiếu? (Không ghi đè từ đã chỉnh sửa)"))) return;
     setBusy(true);
     try {
       const res = await fetch("/api/admin/profanity/seed", { method: "POST" });

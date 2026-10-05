@@ -27,7 +27,9 @@ export default async function AdminLostFoundPage() {
   const perm = await getModulePerm("tim-do-roi");
   if (!perm || perm === "none") redirect("/admin/403");
 
-  const [docs, units, pageSeo] = await Promise.all([listPosts({ approvedOnly: false, limit: 500 }), getAdminUnitsMap(), getPageSeoConfig()]);
+  // Tải TẤT CẢ (trước đây cắt cứng 500 → mục thứ 501 trở đi âm thầm biến mất khỏi trang quản lý).
+  // Danh sách phân trang/lọc ở client; nếu dữ liệu lên hàng chục nghìn mục → chuyển phân trang phía server.
+  const [docs, units, pageSeo] = await Promise.all([listPosts({ approvedOnly: false }), getAdminUnitsMap(), getPageSeoConfig()]);
   const rows: ModRow[] = docs.map((d) => {
     const ward = units.get(d.location.wardSlug)?.name ?? d.location.wardSlug;
     const place = [d.location.address, ward].filter(Boolean).join(", ");

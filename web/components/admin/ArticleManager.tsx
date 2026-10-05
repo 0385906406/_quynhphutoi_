@@ -1,6 +1,7 @@
 "use client";
 
 // Quản trị Tin tức: bảng danh sách + duyệt bài. Tạo/sửa bài → trang riêng /admin/tin-tuc/bai-viet/*
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ArticleRow } from "@/lib/articles";
@@ -19,7 +20,11 @@ const STATUS_TABS = [
   { value: "draft",     label: "Nháp"          },
 ] as const;
 
-export function ArticleManager({ initial, externalEnabled, perm = "full" }: { initial: ArticleRow[]; externalEnabled?: boolean; categories?: string[]; perm?: PermLevel }) {
+export function ArticleManager({ initial, externalEnabled, importCategories = [], aiWriting = false, perm = "full" }: {
+  initial: ArticleRow[]; externalEnabled?: boolean; categories?: string[]; perm?: PermLevel;
+  importCategories?: { slug: string; name: string }[];  // chuyên mục cho bài nhập từ nguồn ngoài
+  aiWriting?: boolean;                                  // admin + đã cấu hình AI → "Viết bài ngay" dùng AI
+}) {
   const canEdit = hasPerm(perm, "edit");
   const canFull = hasPerm(perm, "full");
   const router = useRouter();
@@ -81,7 +86,7 @@ export function ArticleManager({ initial, externalEnabled, perm = "full" }: { in
   const pg = usePagination(filtered, 20);
 
   async function remove(r: ArticleRow) {
-    if (!confirm(`Xoá bài "${r.title}"?`)) return;
+    if (!(await confirmDialog(`Xoá bài "${r.title}"?`))) return;
     const res = await fetch(`/api/admin/articles/${r.slug}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.slug !== r.slug));
   }
@@ -98,7 +103,7 @@ export function ArticleManager({ initial, externalEnabled, perm = "full" }: { in
         />
         <span className="qp-admin-toolbar__spacer" />
         {externalEnabled && canEdit && (
-          <ExternalNewsImport onImported={(items) => setRows((cur) => [...items, ...cur])} />
+          <ExternalNewsImport categories={importCategories} aiWriting={aiWriting} onImported={(items) => setRows((cur) => [...items, ...cur])} />
         )}
         {canEdit && (
           <button type="button" className="qp-btn-primary" onClick={() => router.push("/admin/tin-tuc/bai-viet/moi")}>
@@ -193,7 +198,7 @@ export function ArticleManager({ initial, externalEnabled, perm = "full" }: { in
             </thead>
             <tbody>
               {pg.paged.map((r) => (
-                <tr key={r.slug} style={r.featured ? { outline: "1px solid var(--color-yellow)", outlineOffset: -1, background: "#FFFBEB" } : undefined}>
+                <tr key={r.slug} style={r.featured ? { outline: "1px solid var(--color-yellow)", outlineOffset: -1, background: "var(--color-yellow-light)" } : undefined}>
                   <td style={{ maxWidth: 400 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
                       {r.featured && <span style={{ flexShrink: 0, color: "var(--color-warning)", fontSize: 14 }} aria-label="Nổi bật">★</span>}

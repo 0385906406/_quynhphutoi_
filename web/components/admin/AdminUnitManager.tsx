@@ -1,6 +1,7 @@
 "use client";
 
 // Quản trị Đơn vị hành chính (xã/thị trấn cũ → xã mới sau sáp nhập 2025).
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import type { AdminUnitRow } from "@/lib/admin-units";
@@ -63,7 +64,7 @@ export function AdminUnitManager({ initial }: { initial: AdminUnitRow[] }) {
   }
 
   async function remove(r: AdminUnitRow) {
-    if (!confirm(`Xoá "${r.name}"? Lưu ý các bản ghi đang tham chiếu xã này sẽ mất liên kết.`)) return;
+    if (!(await confirmDialog(`Xoá "${r.name}"? Lưu ý các bản ghi đang tham chiếu xã này sẽ mất liên kết.`))) return;
     const res = await fetch(`/api/admin/admin-units/${r.slug}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.slug !== r.slug));
   }

@@ -1,6 +1,7 @@
 "use client";
 
 // Quản trị danh sách email đăng ký nhận tin: tìm, xoá, xuất CSV.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useToast } from "@/components/common/Toast";
 import { Pagination } from "@/components/common/Pagination";
@@ -21,7 +22,7 @@ export function NewsletterManager({ initial }: { initial: SubscriberRow[] }) {
   const pg = usePagination(filtered, 50);
 
   async function remove(r: SubscriberRow) {
-    if (!confirm(`Xoá email "${r.email}"?`)) return;
+    if (!(await confirmDialog(`Xoá email "${r.email}"?`))) return;
     const res = await fetch(`/api/admin/newsletter?id=${r.id}`, { method: "DELETE" });
     if (res.ok) { setRows((cur) => cur.filter((x) => x.id !== r.id)); toast.success("Đã xoá."); }
     else toast.error("Xoá thất bại.");

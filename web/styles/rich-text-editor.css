@@ -2,7 +2,7 @@
    Rich Text Editor (Tiptap) — port từ dự án innovation.
    Ánh xạ biến màu của innovation sang palette dự án này.
    ================================================================ */
-:root {
+:root, [data-theme="light"] {
   --gray-50: #f8f9fb;
   --gray-100: #f1f3f6;
   --gray-200: #e5e8ed;
@@ -17,12 +17,27 @@
   --color-primary-hover: #0a7a6b;
   --color-accent-cyan: #00a98f;
 }
+/* Giao diện tối — thang xám đảo chiều (xem tokens.css) */
+:root[data-theme="dark"] {
+  --gray-50: #151F33;
+  --gray-100: #1A2540;
+  --gray-200: #26324A;
+  --gray-300: #33415E;
+  --gray-400: #7C89A0;
+  --gray-500: #96A2B6;
+  --gray-600: #AEB9CB;
+  --gray-700: #C5CFDD;
+  --gray-800: #DCE3EE;
+  --gray-900: #F1F5FA;
+  --color-primary: #3CD2B8;
+  --color-primary-hover: #5FE0C9;
+}
 
 /* ── Container ──────────────────────────────────────────────────── */
 .rich-text-editor {
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  background: white;
+  background: var(--surface);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -49,7 +64,7 @@
   cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
   gap: 3px; white-space: nowrap; position: relative;
 }
-.rich-text-editor__btn:hover { background: white; border-color: var(--gray-200); color: var(--color-primary); }
+.rich-text-editor__btn:hover { background: var(--surface); border-color: var(--gray-200); color: var(--color-primary); }
 .rich-text-editor__btn.is-active { background: rgba(0, 210, 255, 0.12); color: var(--color-primary); border-color: rgba(0, 210, 255, 0.3); }
 .rich-text-editor__btn svg { flex-shrink: 0; }
 .rich-text-editor__btn .rte-color-dot { width: 10px; height: 4px; border-radius: 2px; border: 1px solid rgba(0, 0, 0, 0.15); flex-shrink: 0; }
@@ -57,7 +72,7 @@
 /* ── Heading dropdown ───────────────────────────────────────────── */
 .rte-heading-wrap { position: relative; }
 .rte-heading-dropdown {
-  position: absolute; top: calc(100% + 4px); left: 0; z-index: 300; background: white;
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 300; background: var(--surface);
   border: 1px solid var(--gray-200); border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   min-width: 140px; overflow: hidden;
 }
@@ -115,7 +130,7 @@
 
 /* ── Modal overlay ──────────────────────────────────────────────── */
 .rte-modal-overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 9995; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.rte-modal { background: white; border-radius: 14px; padding: 24px; width: 440px; max-width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; gap: 16px; }
+.rte-modal { background: var(--surface); border-radius: 14px; padding: 24px; width: 440px; max-width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; gap: 16px; }
 .rte-modal__title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin: 0; }
 .rte-modal__field { display: flex; flex-direction: column; gap: 6px; }
 .rte-modal__label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -125,7 +140,7 @@
 .rte-modal__error { font-size: 12px; color: #dc2626; }
 .rte-modal__checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); cursor: pointer; user-select: none; }
 .rte-modal__actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
-.rte-modal__btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--gray-200); background: white; color: var(--gray-700); transition: background 0.12s; }
+.rte-modal__btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--gray-200); background: var(--surface); color: var(--gray-700); transition: background 0.12s; }
 .rte-modal__btn:hover { background: var(--gray-50); }
 .rte-modal__btn--primary { background: var(--color-primary); color: white; border-color: var(--color-primary); }
 .rte-modal__btn--primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
@@ -137,7 +152,7 @@
 
 /* ── Color picker popover ───────────────────────────────────────── */
 .rte-color-picker-wrap { position: relative; }
-.rte-color-picker { position: absolute; top: calc(100% + 4px); left: 0; z-index: 300; background: white; border: 1px solid var(--gray-200); border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14); padding: 10px; width: 248px; }
+.rte-color-picker { position: absolute; top: calc(100% + 4px); left: 0; z-index: 300; background: var(--surface); border: 1px solid var(--gray-200); border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14); padding: 10px; width: 248px; }
 .rte-color-picker__palette { display: flex; flex-direction: column; gap: 2px; }
 .rte-color-picker__palette-row { display: flex; gap: 2px; }
 .rte-color-picker__swatch { width: 20px; height: 20px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.08); cursor: pointer; flex-shrink: 0; transition: transform 0.1s, box-shadow 0.1s; outline: none; padding: 0; }
@@ -234,7 +249,7 @@
 .rte-gallery__add-confirm:disabled { opacity: .45; cursor: not-allowed; }
 .rte-gallery__add-cancel {
   padding: 6px 10px; border-radius: 6px; border: 1px solid var(--gray-200);
-  background: #fff; color: var(--gray-600); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  background: var(--surface); color: var(--gray-600); font-size: 12.5px; font-weight: 600; cursor: pointer;
 }
 .rte-gallery__count { font-size: 11.5px; color: var(--gray-400); margin-left: auto; }
 

@@ -1,8 +1,11 @@
 "use client";
 
-// Nút + modal "Tạo tin từ nguồn ngoài": gọi API ngoài (NewsAPI) lấy tin Quỳnh Phụ,
-// admin tick chọn nhiều tin rồi tạo HÀNG LOẠT bản nháp để chỉnh sửa lại trước khi xuất bản.
+// Nút + modal "Tạo tin từ nguồn ngoài": gọi API ngoài (NewsAPI/RSS) lấy tin Quỳnh Phụ.
+//  • "✨ Viết bài ngay" (từng tin): tải bài gốc + AI viết lại đầy đủ → MỞ THẲNG trình soạn
+//    (thay cho chuỗi: tạo nháp → tìm → Sửa → copy bài gốc → dán vào "Viết lại bằng AI").
+//  • Tick nhiều tin → tạo HÀNG LOẠT bản nháp (tuỳ chọn lấy toàn văn, tối đa 5 tin/lần).
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import { useToast } from "@/components/common/Toast";
 import { formatDate } from "@/lib/datetime";
@@ -11,8 +14,15 @@ import type { ArticleRow } from "@/lib/articles";
 type ExternalItem = {
   id: string; title: string; description: string; url: string; image: string; source: string; publishedAt: string;
 };
+type ImportResponse = { items?: ArticleRow[]; warnings?: string[]; aiCount?: number; aiAllowed?: boolean; error?: string };
 
-export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleRow[]) => void }) {
+const FULL_MAX = 5; // khớp giới hạn ở API /api/admin/articles/external
+
+export function ExternalNewsImport({ onImported, categories = [], aiWriting = false }: {
+  onImported: (rows: ArticleRow[]) => void;
+  categories?: { slug: string; name: string }[];  // chuyên mục gán cho bài nhập
+  aiWriting?: boolean;                             // true = admin + đã cấu hình AI → AI viết lại
+}) {
   const [show, setShow] = useState(false);
   useModalDismiss(show, () => setShow(false));
   const [q, setQ] = useState("");
@@ -22,9 +32,44 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
   const [creating, setCreating] = useState(false);
   const [err, setErr] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [full, setFull] = useState(true);
+  // Chuyên mục gán cho bài nhập (trước đây gán cứng "Tin tức").
+  const [category, setCategory] = useState(() => categories.find((c) => c.slug === "tin-tuc")?.slug ?? ""); // "" = Tin tức (chung)              // tạo hàng loạt: lấy toàn văn?
+  const [writingId, setWritingId] = useState<string | null>(null); // tin đang "Viết bài ngay"
   const { toast } = useToast();
+  const router = useRouter();
 
   const selected = items.filter((i) => sel[i.id]);
+  const fullAllowed = selected.length <= FULL_MAX;
+  const busy = creating || writingId !== null;
+
+  async function postImport(list: ExternalItem[], wantFull: boolean): Promise<ImportResponse | null> {
+    const res = await fetch("/api/admin/articles/external", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: list, full: wantFull, category: category || undefined }),
+    });
+    const data: ImportResponse = await res.json().catch(() => ({}));
+    if (!res.ok) { toast.error(data.error || "Tạo bài thất bại."); return null; }
+    (data.warnings ?? []).forEach((w) => toast.error(w));
+    return data;
+  }
+
+  // 1 chạm: tạo bài đầy đủ rồi mở thẳng trình soạn để xem lại & xuất bản.
+  async function writeNow(it: ExternalItem) {
+    setWritingId(it.id);
+    try {
+      const data = await postImport([it], true);
+      const row = data?.items?.[0];
+      if (!row) return;
+      onImported([row]);
+      toast.success(data?.aiCount ? "AI đã viết xong bài — xem lại rồi bấm Xuất bản." : "Đã lấy nội dung bài gốc (không dùng AI) — biên tập lại rồi xuất bản.");
+      setShow(false);
+      router.push(`/admin/tin-tuc/bai-viet/${row.slug}/sua`);
+    } finally {
+      setWritingId(null);
+    }
+  }
 
   async function search() {
     setLoading(true);
@@ -65,19 +110,18 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
     }
     setCreating(true);
     try {
-      const res = await fetch("/api/admin/articles/external", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: selected }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(data.error || "Tạo bản nháp thất bại.");
+      const data = await postImport(selected, full && fullAllowed);
+      const rows = data?.items ?? [];
+      if (!rows.length) return;
+      onImported(rows);
+      // Chỉ 1 bài → mở thẳng trình soạn, khỏi phải tìm trong danh sách.
+      if (rows.length === 1) {
+        toast.success("Đã tạo bản nháp — xem lại rồi bấm Xuất bản.");
+        setShow(false);
+        router.push(`/admin/tin-tuc/bai-viet/${rows[0].slug}/sua`);
         return;
       }
-      const rows = (data.items as ArticleRow[]) || [];
-      onImported(rows);
-      toast.success(`Đã tạo ${rows.length} bản nháp. Vào “Sửa” để hoàn thiện rồi xuất bản.`);
+      toast.success(`Đã tạo ${rows.length} bản nháp${data?.aiCount ? ` (AI viết ${data.aiCount} bài)` : ""}. Vào “Sửa” để xem lại rồi xuất bản.`);
       setShow(false);
       setSel({});
     } finally {
@@ -109,6 +153,12 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                 />
+                {categories.length > 0 && (
+                  <select className="qp-select qp-extnews__cat" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Chuyên mục cho bài nhập" title="Chuyên mục gán cho bài nhập">
+                    {!categories.some((c) => c.slug === "tin-tuc") && <option value="">Tin tức (chung)</option>}
+                    {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                  </select>
+                )}
                 <button type="submit" className="qp-btn-primary" disabled={loading}>
                   {loading ? "Đang tìm…" : "Tìm"}
                 </button>
@@ -162,13 +212,27 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
                         loading="lazy"
                       />
                     ) : null}
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontWeight: 600 }}>{it.title}</div>
                       {it.description && (
                         <div className="type-body-small text-muted" style={{ marginTop: 2 }}>{it.description}</div>
                       )}
-                      <div className="type-body-small text-muted" style={{ marginTop: 4 }}>
-                        {[it.source, formatDate(it.publishedAt, "")].filter(Boolean).join(" • ")}
+                      <div className="qp-extnews__foot">
+                        <span className="type-body-small text-muted">
+                          {[it.source, formatDate(it.publishedAt, "")].filter(Boolean).join(" • ")}
+                        </span>
+                        <button
+                          type="button"
+                          className="qp-extnews__write"
+                          disabled={busy || !it.url}
+                          // nằm trong <label> → chặn để không tick/bỏ tick ô chọn
+                          onClick={(e) => { e.preventDefault(); void writeNow(it); }}
+                          title={aiWriting ? "Tải bài gốc, AI viết lại đầy đủ rồi mở trình soạn" : "Tải nội dung bài gốc (chưa cấu hình AI / không phải admin) rồi mở trình soạn để biên tập"}
+                        >
+                          {writingId === it.id
+                            ? (aiWriting ? "AI đang viết… (≈ 10–30 giây)" : "Đang lấy nội dung…")
+                            : (aiWriting ? "✨ Viết bài bằng AI" : "↧ Lấy nội dung bài gốc")}
+                        </button>
                       </div>
                     </div>
                   </label>
@@ -176,13 +240,15 @@ export function ExternalNewsImport({ onImported }: { onImported: (rows: ArticleR
               </div>
             </div>
 
-            <div className="qp-modal__foot">
-              <span className="type-body-small text-muted" style={{ marginRight: "auto" }}>
-                Tin tạo ra ở trạng thái <b>Bản nháp</b> để bạn chỉnh sửa rồi mới xuất bản.
-              </span>
+            <div className="qp-modal__foot qp-extnews__modalfoot">
+              <label className="qp-check" style={{ marginRight: "auto" }} title={fullAllowed ? "" : `Lấy toàn văn tối đa ${FULL_MAX} tin mỗi lần`}>
+                <input type="checkbox" checked={full && fullAllowed} disabled={!fullAllowed || busy} onChange={(e) => setFull(e.target.checked)} />{" "}
+                {aiWriting ? "Lấy toàn văn & AI viết lại" : "Lấy toàn văn bài gốc"}
+                <span className="type-body-small text-muted">{fullAllowed ? ` · tối đa ${FULL_MAX} tin` : ` · chỉ khi chọn ≤ ${FULL_MAX} tin`}</span>
+              </label>
               <button type="button" className="qp-btn-outline" onClick={() => setShow(false)}>Huỷ</button>
-              <button type="button" className="qp-btn-primary" disabled={creating || !selected.length} onClick={createDrafts}>
-                {creating ? "Đang tạo…" : `Tạo ${selected.length || ""} bản nháp`.trim()}
+              <button type="button" className="qp-btn-primary" disabled={busy || !selected.length} onClick={createDrafts}>
+                {creating ? (full && fullAllowed ? "Đang lấy toàn văn…" : "Đang tạo…") : `Tạo ${selected.length || ""} bản nháp`.trim()}
               </button>
             </div>
           </div>

@@ -9,7 +9,10 @@
       KHÔNG hard-code màu / spacing / radius ở nơi khác.
    ============================================================ */
 
-:root {
+/* [data-theme="light"]: khai báo lại bảng màu sáng cho 1 nhánh DOM (vd khu admin luôn sáng
+   kể cả khi người dùng chọn giao diện tối) — xem khối DARK ở cuối file. */
+:root, [data-theme="light"] {
+  color-scheme: light;
   /* ============ COLORS · 6 SOLIDS (cold base) ============ */
   --color-navy:        #0F4C81;  /* Brand primary · heading */
   --color-navy-deep:   #062340;  /* Text on light · BG dark */
@@ -110,8 +113,56 @@
   --shadow-lift: 0 14px 32px -12px rgba(6, 35, 64, 0.22);
   --shadow-cta:  0 14px 32px -10px rgba(99, 102, 241, 0.5);
 
+  /* ============ SURFACES (đổi theo giao diện sáng/tối) ============ */
+  --surface:        #FFFFFF;                  /* Nền thẻ / khối nổi */
+  --surface-glass:  rgba(255, 255, 255, 0.92); /* Thanh trên mờ kính */
+  /* Màu thương hiệu CỐ ĐỊNH — dùng làm NỀN (nút, dải marquee…), KHÔNG đổi ở giao diện tối.
+     (--color-navy / --color-navy-deep là màu CHỮ nên đổi sáng lên ở giao diện tối.) */
+  --brand-navy:      #0F4C81;
+  --brand-navy-deep: #062340;
+
   /* ============ LAYOUT ============ */
   --container-max:      1200px;
   --container-wide-max: 1440px;
   --topbar-height:      72px;
+}
+
+/* ============================================================
+   GIAO DIỆN TỐI — bật bằng <html data-theme="dark"> (script đầu trang
+   + nút chuyển ở TopBar). Chỉ ĐỔI GIÁ TRỊ token: mọi component dùng
+   var(--color-*) / var(--surface) tự theo. Token chữ sáng lên, token nền
+   tối đi; màu thương hiệu dùng làm nền (--brand-*) và gradient giữ nguyên.
+   ============================================================ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Chữ */
+  --color-navy-deep:   #EEF3FA;  /* tiêu đề */
+  --color-navy:        #8EBBF2;  /* chữ thương hiệu / link */
+  --color-text:        #E4EAF3;
+  --color-gray-text:   #B4C0D2;  /* thân chữ — ~9:1 trên --surface */
+  --color-teal-dark:   #3CD2B8;
+  --color-indigo-dark: #A5B4FC;
+  --color-yellow-dark: #FBBF24;
+
+  /* Nền & viền */
+  --color-gray-light:  #0B1220;  /* nền trang */
+  --surface:           #131C2E;  /* nền thẻ */
+  --surface-glass:     rgba(13, 20, 34, 0.9);
+  --color-navy-pale:   #1A2540;  /* nền phụ / hover / section-alt */
+  --color-navy-pale-2: #2B3A58;
+  --color-gray-border: #26324A;
+  --color-teal-pale:   #11302F;
+  --color-indigo-pale: #1D2250;
+  --color-sky:         #0F1D33;
+  --color-mint:        #0F2626;
+  --color-yellow-light:#3A2E10;
+
+  --gradient-g1: linear-gradient(135deg, #0E1A2E 0%, #101B2F 50%, #0D2427 100%);
+
+  --on-dark-caption: rgba(255, 255, 255, 0.72);
+
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 16px -6px rgba(0, 0, 0, 0.55);
+  --shadow-lift: 0 14px 32px -12px rgba(0, 0, 0, 0.7);
 }

@@ -2,6 +2,7 @@
 
 // Quản lý toàn bộ tin do người dùng đăng (việc làm / tìm đồ rơi / mua bán):
 // thống kê, lọc trạng thái duyệt, xem chi tiết đầy đủ, duyệt/bỏ duyệt, sửa, xoá. Dùng chung 3 phân hệ.
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import { useModalDismiss } from "@/lib/use-modal-dismiss";
 import { TimeAgo } from "@/components/common/TimeAgo";
@@ -75,7 +76,7 @@ export function PostModerationManager({ initial, config, perm = "full" }: { init
   }
 
   async function remove(r: ModRow) {
-    if (!confirm(`Xoá tin "${r.title}"? Người đăng sẽ nhận thông báo từ chối.`)) return;
+    if (!(await confirmDialog(`Xoá tin "${r.title}"? Người đăng sẽ nhận thông báo từ chối.`))) return;
     const res = await fetch(`${config.apiBase}/${r.slug}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.slug !== r.slug));
   }

@@ -9,6 +9,10 @@ import { ModuleTabs } from "@/components/admin/ModuleTabs";
 import { ArticleManager } from "@/components/admin/ArticleManager";
 import { NewsPageManager } from "@/components/admin/NewsPageManager";
 import { getModulePerm } from "@/lib/admin-guard";
+import { getCurrentUser } from "@/lib/admin";
+import { isAdmin } from "@/lib/users";
+import { getSettingsRaw } from "@/lib/settings";
+import { configuredProviders } from "@/lib/ai-call";
 
 export const metadata: Metadata = { title: "Tin tức — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -22,6 +26,9 @@ export default async function AdminArticlesPage() {
   ]);
   // Danh mục tin tức từ DB (admin quản lý ở /admin/danh-mục). DB rỗng → fallback list cố định trong ArticleManager.
   const categoryNames = catOpts.map((c) => c.name);
+  // "Viết bài ngay" chỉ thật sự dùng AI khi người xem là admin VÀ đã cấu hình khoá AI → đặt tên nút đúng.
+  const [me, rawSettings] = await Promise.all([getCurrentUser(), getSettingsRaw()]);
+  const aiWriting = isAdmin(me) && configuredProviders(rawSettings).length > 0;
   // Tiêu đề cho các bài đã chọn thủ công (để picker hiển thị chip ngay, không cần search).
   const selectedSlugs = [
     newsConfig.featured.heroSlug,
@@ -47,7 +54,7 @@ export default async function AdminArticlesPage() {
         seoInitial={pageSeo["/tin-tuc"] ?? {}}
         manage={<NewsPageManager initialConfig={newsConfig} initialTitles={newsTitles} />}
       >
-        <ArticleManager initial={rows} externalEnabled={externalEnabled} categories={categoryNames} perm={perm} />
+        <ArticleManager initial={rows} externalEnabled={externalEnabled} categories={categoryNames} importCategories={catOpts} aiWriting={aiWriting} perm={perm} />
       </ModuleTabs>
     </>
   );

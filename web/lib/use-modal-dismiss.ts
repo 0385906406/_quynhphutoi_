@@ -7,7 +7,8 @@ import { useEffect, useRef } from "react";
 // dù caller truyền arrow inline).
 export function useModalDismiss(open: boolean, onClose: () => void) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  // Cập nhật ref sau commit (không ghi ref trong lúc render).
+  useEffect(() => { onCloseRef.current = onClose; });
 
   useEffect(() => {
     if (!open) return;

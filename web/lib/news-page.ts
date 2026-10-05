@@ -123,6 +123,14 @@ export function resolveNewsBlocks(cfg: NewsPageConfig, items: Article[]): Resolv
   return { featured, popular };
 }
 
+// Khối mặc định khi không có cấu hình: 4 bài mới nhất + 7 bài đọc nhiều.
+export function autoNewsBlocks(items: Article[]): ResolvedNewsBlocks {
+  return {
+    featured: items.slice(0, 4),
+    popular: [...items].sort((a, b) => b.views - a.views).slice(0, DEFAULT_LIMIT.popular),
+  };
+}
+
 // ───────────────────────── Ứng viên cho picker thủ công (admin) ─────────────────────────
 export type NewsCandidate = { slug: string; title: string };
 

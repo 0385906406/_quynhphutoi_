@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/common/ConfirmDialog";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,7 +38,7 @@ export function RelicsManager({ initial, typeOptions, rankingOptions, perm = "fu
   const pg = usePagination(filtered, 20);
 
   async function remove(r: RelicRow) {
-    if (!confirm(`Xoá "${r.name}"?`)) return;
+    if (!(await confirmDialog(`Xoá "${r.name}"?`))) return;
     const res = await fetch(`/api/admin/di-tich/${r.slug}`, { method: "DELETE" });
     if (res.ok) setRows((cur) => cur.filter((x) => x.slug !== r.slug));
   }
