@@ -26,6 +26,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
   if (typeof b.bodyHtml === "string") patch.bodyHtml = sanitizeHtml(b.bodyHtml);
   if (typeof b.featured === "boolean") patch.featured = b.featured;
   if (b.status !== undefined && STATUSES.includes(b.status)) patch.status = b.status;
+  if (b.scheduledAt === null) patch.scheduledAt = null; // huỷ hẹn giờ đăng
   if (b.seoMetaTitle !== undefined || b.seoMetaDescription !== undefined || b.seoOgImage !== undefined || b.seoNoindex !== undefined || b.seoKeywords !== undefined) {
     patch.seo = {
       metaTitle: b.seoMetaTitle || undefined, metaDescription: b.seoMetaDescription || undefined,
@@ -38,6 +39,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ slug: 
   if (!n) return NextResponse.json({ error: "Không tìm thấy." }, { status: 404 });
   const details: string[] = [];
   if (patch.status) details.push(`Trạng thái: ${patch.status}`);
+  if (patch.scheduledAt === null) details.push("Huỷ hẹn giờ đăng");
   if (patch.featured !== undefined) details.push(patch.featured ? "Đánh dấu nổi bật" : "Bỏ nổi bật");
   void logActivity({ userId: g.user._id!.toString(), userName: g.user.name, userEmail: g.user.email, userRole: g.user.role ?? "admin", category: "admin", action: "article.update", target: { type: "bài viết", id: slug, label: patch.title ?? slug }, success: true, detail: details.join(" · ") || undefined });
   return NextResponse.json({ ok: true });

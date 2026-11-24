@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/admin";
 import { getSettings } from "@/lib/settings";
 import { SettingsManager } from "@/components/admin/SettingsManager";
+import { listActiveCategoryOptions } from "@/lib/categories";
+import { getNewsAutoLastRun } from "@/lib/news-auto";
 
 export const metadata: Metadata = { title: "Cài đặt — Quản trị", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   await requireAdminPage();
-  const settings = await getSettings();
+  const [settings, newsCategories, newsAutoLastRun] = await Promise.all([
+    getSettings(),
+    listActiveCategoryOptions("tin-tuc").catch(() => []),
+    getNewsAutoLastRun(),
+  ]);
   return (
     <>
       <div className="qp-admin-head">
@@ -16,7 +22,7 @@ export default async function AdminSettingsPage() {
         <h1 className="type-h1">Cài đặt</h1>
         <p className="qp-admin-head__desc">Cấu hình chung của cổng — chỉnh tại đây và áp dụng ngay, không cần khởi động lại.</p>
       </div>
-      <SettingsManager initial={settings} />
+      <SettingsManager initial={settings} newsCategories={newsCategories} newsAutoLastRun={newsAutoLastRun} />
     </>
   );
 }

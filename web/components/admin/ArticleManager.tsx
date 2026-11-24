@@ -12,6 +12,7 @@ import { ExternalNewsImport } from "@/components/admin/ExternalNewsImport";
 import { FilterSelect } from "@/components/admin/FilterSelect";
 import { useToast } from "@/components/common/Toast";
 import { hasPerm, type PermLevel } from "@/lib/perm";
+import { formatDateTime } from "@/lib/datetime";
 
 const STATUS_TABS = [
   { value: "",          label: "Tất cả"       },
@@ -81,6 +82,17 @@ export function ArticleManager({ initial, externalEnabled, importCategories = []
       setRows((cur) => cur.map((x) => (x.slug === r.slug ? { ...x, approved: true, pending: false, status: "published" } : x)));
       toast.success("Đã duyệt bài viết.");
     } else { toast.error("Duyệt thất bại."); }
+  }
+
+  // Bài hẹn giờ (tự động lấy tin) → về nháp thường, không tự đăng nữa.
+  async function unschedule(r: ArticleRow) {
+    const res = await fetch(`/api/admin/articles/${r.slug}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scheduledAt: null }),
+    });
+    if (res.ok) {
+      setRows((cur) => cur.map((x) => (x.slug === r.slug ? { ...x, scheduledAt: null } : x)));
+      toast.success("Đã huỷ hẹn giờ — bài chuyển về nháp.");
+    } else { toast.error("Huỷ hẹn giờ thất bại."); }
   }
 
   const pg = usePagination(filtered, 20);
@@ -218,8 +230,11 @@ export function ArticleManager({ initial, externalEnabled, importCategories = []
                     {r.pending
                       ? <span className="qp-acc-badge is-pending">Chờ duyệt</span>
                       : <span className={`qp-acc-badge is-${r.status === "published" ? "active" : "pending"}`}>
-                          {r.status === "published" ? "Đã xuất bản" : "Nháp"}
+                          {r.status === "published" ? "Đã xuất bản" : r.scheduledAt ? "Hẹn giờ" : "Nháp"}
                         </span>}
+                    {!r.pending && r.status === "draft" && r.scheduledAt && (
+                      <span className="type-body-small text-muted" style={{ display: "block", marginTop: 2 }}>🕒 {formatDateTime(r.scheduledAt)}</span>
+                    )}
                     {!r.pending && r.approvedByName && (
                       <span className="type-body-small text-muted" style={{ display: "block", marginTop: 2 }}>{r.approvedByName}</span>
                     )}
@@ -230,6 +245,7 @@ export function ArticleManager({ initial, externalEnabled, importCategories = []
                       { value: "approve", label: "Duyệt", hidden: !r.pending || !canFull, run: () => approve(r) },
                       { value: "view", label: "Xem", hidden: r.status !== "published" || r.pending, run: () => window.open(`/tin-tuc/${r.slug}`, "_blank") },
                       { value: "edit", label: "Sửa", hidden: !canEdit, run: () => router.push(`/admin/tin-tuc/bai-viet/${r.slug}/sua`) },
+                      { value: "unschedule", label: "Huỷ hẹn giờ", hidden: !canEdit || r.status !== "draft" || !r.scheduledAt, run: () => unschedule(r) },
                       { value: "delete", label: r.pending ? "Từ chối" : "Xoá", hidden: !canEdit, run: () => remove(r) },
                     ]} />
                   </td>

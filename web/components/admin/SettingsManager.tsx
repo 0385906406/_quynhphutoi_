@@ -3,6 +3,8 @@
 // Cấu hình hệ thống — full trang, tab dọc + công tắc gạt. Lưu DB, áp dụng ngay.
 import { useState } from "react";
 import type { AppSettings } from "@/lib/settings";
+import type { NewsAutoRun } from "@/lib/news-auto";
+import { formatDateTime } from "@/lib/datetime";
 import { useToast } from "@/components/common/Toast";
 import { ImageUploader } from "@/components/common/ImageUploader";
 
@@ -20,7 +22,11 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "data", label: "Dữ liệu mẫu", icon: "🌱" },
 ];
 
-export function SettingsManager({ initial }: { initial: AppSettings }) {
+export function SettingsManager({ initial, newsCategories = [], newsAutoLastRun = null }: {
+  initial: AppSettings;
+  newsCategories?: { slug: string; name: string }[];   // chuyên mục Tin tức cho bài tự động
+  newsAutoLastRun?: NewsAutoRun | null;                 // lượt tự động lấy tin gần nhất
+}) {
   const [form, setForm] = useState<AppSettings>(initial);
   const [tab, setTab] = useState<Tab>("post");
   const [busy, setBusy] = useState(false);
@@ -210,6 +216,7 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         )}
 
         {tab === "news" && (
+          <>
           <Card title="Tạo tin từ nguồn ngoài" desc={'Bật để hiện nút "Tạo tin từ nguồn ngoài" ở trang quản trị Tin tức. Tin kéo về luôn ở trạng thái Bản nháp để bạn chỉnh sửa rồi mới xuất bản.'}>
             <Toggle k="newsImportEnabled" label="Bật tạo tin từ nguồn ngoài" desc={'Phải BẬT công tắc này VÀ cấu hình nguồn bên dưới thì nút "Tạo tin từ nguồn ngoài" mới hiện ở trang Tin tức.'} />
 
@@ -283,6 +290,39 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
               </div>
             )}
           </Card>
+
+          <Card title="Tự động lấy tin hằng ngày" desc="Mỗi ngày khoảng 6 giờ sáng, hệ thống tự lấy tin MỚI từ nguồn ở trên (bỏ qua tin đã nhập), dùng AI viết lại toàn văn rồi tạo bài ở mục Ngoài xã. Cần bật nguồn tin ngoài ở trên và cấu hình AI (tab AI & nội dung).">
+            <Toggle k="newsAutoEnabled" label="Bật tự động lấy tin" desc="Tắt: cron vẫn chạy nhưng không lấy tin mới (bài đã hẹn giờ vẫn được đăng đúng giờ)." />
+            <div className="qp-acc-grid2" style={{ marginTop: 16 }}>
+              <Field label="Cách xử lý bài lấy về" hint="Hẹn giờ đăng: chỉ bài AI viết lại thành công mới được hẹn giờ; bài lỗi AI giữ ở dạng nháp.">
+                <select className="qp-input" value={form.newsAutoMode} onChange={(e) => set("newsAutoMode", e.target.value as never)}>
+                  <option value="draft">Tạo bản nháp — admin duyệt rồi đăng</option>
+                  <option value="schedule">Tự hẹn giờ đăng rải trong ngày</option>
+                </select>
+              </Field>
+              <Field label="Số tin mỗi ngày" hint="1–5 tin (mỗi tin mất ~10–30 giây AI).">
+                <input type="number" min={1} max={5} className="qp-input" value={form.newsAutoCount} onChange={num("newsAutoCount")} />
+              </Field>
+              <Field label="Chuyên mục" hint="Chuyên mục gắn cho bài tự động.">
+                <select className="qp-input" value={form.newsAutoCategory} onChange={(e) => set("newsAutoCategory", e.target.value as never)}>
+                  <option value="">Tin tức (mặc định)</option>
+                  {newsCategories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                </select>
+              </Field>
+              {form.newsAutoMode === "schedule" && (
+                <>
+                  <Field label="Giờ đăng bài đầu tiên" hint="Giờ Việt Nam. Bài sau nối tiếp theo khoảng cách bên dưới.">
+                    <input type="number" min={0} max={23} className="qp-input" value={form.newsAutoStartHour} onChange={num("newsAutoStartHour")} />
+                  </Field>
+                  <Field label="Khoảng cách giữa 2 bài (giờ)" hint="VD: 3 tin, bắt đầu 7h, cách 2 giờ → đăng lúc 7h, 9h, 11h.">
+                    <input type="number" min={1} max={12} className="qp-input" value={form.newsAutoIntervalHours} onChange={num("newsAutoIntervalHours")} />
+                  </Field>
+                </>
+              )}
+            </div>
+            <NewsAutoStatus initial={newsAutoLastRun} />
+          </Card>
+          </>
         )}
 
         {tab === "weather" && (
@@ -373,6 +413,61 @@ export function SettingsManager({ initial }: { initial: AppSettings }) {
         )}
       </div>
     </form>
+  );
+}
+
+// Kết quả lượt tự động gần nhất + nút "Chạy ngay" (không cần đợi cron). Chạy với cấu hình
+// ĐÃ LƯU — đổi cài đặt thì bấm "Lưu cấu hình" trước.
+function NewsAutoStatus({ initial }: { initial: NewsAutoRun | null }) {
+  const [run, setRun] = useState(initial);
+  const [running, setRunning] = useState(false);
+  const { toast } = useToast();
+
+  async function runNow() {
+    if (running) return;
+    setRunning(true);
+    try {
+      const res = await fetch("/api/admin/news-auto", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (data.run) setRun(data.run);
+      if (!res.ok) { toast.error(data.run?.error || data.error || "Chạy thất bại."); return; }
+      toast.success(`Đã tạo ${data.run.created.length} bài.`);
+    } catch {
+      toast.error("Lỗi kết nối.");
+    } finally { setRunning(false); }
+  }
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <button type="button" className="qp-btn-outline" disabled={running} onClick={runNow}>
+          {running ? "Đang chạy… (có thể mất 1–2 phút)" : "Chạy ngay 1 lượt"}
+        </button>
+        <span className="type-body-small text-muted">Dùng cấu hình đã lưu — đổi cài đặt thì bấm “Lưu cấu hình” trước.</span>
+      </div>
+      {run && (
+        <div className="qp-form-tip" style={{ marginTop: 12 }}>
+          <b>Lượt gần nhất:</b> {formatDateTime(run.at)} · {run.trigger === "cron" ? "tự động" : "chạy tay"} ·{" "}
+          {run.error ? <span style={{ color: "var(--color-danger, #c0392b)" }}>{run.error}</span>
+            : <>tạo {run.created.length} bài · bỏ qua {run.skipped} tin đã có{run.published ? ` · đăng ${run.published} bài hẹn giờ` : ""}</>}
+          {run.created.length > 0 && (
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {run.created.map((c) => (
+                <li key={c.slug}>
+                  <a href={`/admin/tin-tuc/bai-viet/${c.slug}/sua`} style={{ color: "var(--color-navy)", textDecoration: "underline" }}>{c.title}</a>
+                  {" — "}{c.scheduledAt ? `hẹn đăng ${formatDateTime(c.scheduledAt)}` : "bản nháp"}
+                </li>
+              ))}
+            </ul>
+          )}
+          {run.warnings.length > 0 && (
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+              {run.warnings.map((w, i) => <li key={i}>⚠️ {w}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

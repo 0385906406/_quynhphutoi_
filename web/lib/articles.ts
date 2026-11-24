@@ -7,7 +7,7 @@
 
 import { getDb, ensureIndexes } from "@/lib/db";
 import { SITE } from "@/lib/seo";
-import { ObjectId, type Filter } from "mongodb";
+import { ObjectId, type Collection, type Filter } from "mongodb";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { formatDate } from "@/lib/datetime";
 import type { ArticleScope } from "@/lib/news";
@@ -68,6 +68,8 @@ export type ArticleDoc = {
   approvedBy?: string; approvedByName?: string; approvedAt?: Date;
   active?: boolean;          // false = đã ẩn/gỡ; thiếu/true = đang hiển thị
   flags?: string[];          // cờ kiểm duyệt tự động (từ cấm + vi phạm chính sách) — báo admin xem
+  sourceUrl?: string;        // link bài gốc (tin nhập từ nguồn ngoài) — chống nhập trùng
+  scheduledAt?: Date | null; // hẹn giờ đăng: bài NHÁP có mốc này sẽ tự xuất bản khi tới giờ
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -88,10 +90,42 @@ export async function articles() {
     // Bài người dùng: theo chủ bài & hàng chờ duyệt.
     col.createIndex({ postedBy: 1, createdAt: -1 }),
     col.createIndex({ approved: 1, active: 1, createdAt: 1 }),
+    // Hẹn giờ đăng & chống nhập trùng tin nguồn ngoài.
+    col.createIndex({ status: 1, scheduledAt: 1 }),
+    col.createIndex({ sourceUrl: 1 }, { sparse: true }),
     // Tìm kiếm tiếng Việt cơ bản trên tiêu đề / tóm tắt / thẻ.
     col.createIndex({ title: "text", excerpt: "text", tags: "text" }, { default_language: "none" }),
   ]));
+  await publishDueThrottled(col);
   return col;
+}
+
+// ---- Hẹn giờ đăng ----
+// Bài nháp có scheduledAt <= now → chuyển "published", publishedAt = đúng giờ đã hẹn.
+// Gọi lười mỗi lần mở collection (tối đa 1 lần / phút / tiến trình) nên bài lên đúng giờ
+// mà không cần cron chạy dày (Vercel Hobby chỉ cho cron 1 lần/ngày).
+const PUBLISH_DUE_EVERY_MS = 60_000;
+let lastPublishDue = 0;
+
+async function publishDueThrottled(col: Collection<ArticleDoc>) {
+  const now = Date.now();
+  if (now - lastPublishDue < PUBLISH_DUE_EVERY_MS) return;
+  lastPublishDue = now;
+  await publishDue(col).catch(() => { lastPublishDue = 0; });
+}
+
+async function publishDue(col: Collection<ArticleDoc>) {
+  const now = new Date();
+  const res = await col.updateMany(
+    { status: "draft", scheduledAt: { $lte: now } },
+    [{ $set: { status: "published", publishedAt: "$scheduledAt", updatedAt: now } }, { $unset: "scheduledAt" }],
+  );
+  return res.modifiedCount;
+}
+
+// Bản gọi trực tiếp (cron) — bỏ qua throttle.
+export async function publishDueArticles() {
+  return publishDue(await articles());
 }
 
 // ---- Truy vấn ----
@@ -277,6 +311,8 @@ export type ArticleInput = {
   approved?: boolean;        // mặc định true (admin); route đăng tin truyền false để chờ duyệt
   active?: boolean;          // mặc định true
   flags?: string[];          // cờ kiểm duyệt tự động (báo admin)
+  sourceUrl?: string;        // link bài gốc (tin nguồn ngoài)
+  scheduledAt?: Date | null; // hẹn giờ đăng (chỉ tác dụng khi status = "draft"); null = huỷ hẹn
 };
 
 export async function createArticle(input: ArticleInput) {
@@ -297,6 +333,8 @@ export async function createArticle(input: ArticleInput) {
     approved: input.approved ?? true,
     active: input.active ?? true,
     flags: input.flags?.length ? input.flags : undefined,
+    sourceUrl: input.sourceUrl || undefined,
+    scheduledAt: status === "draft" && input.scheduledAt ? input.scheduledAt : undefined,
     publishedAt: status === "published" ? now : null, createdAt: now, updatedAt: now,
   };
   const { insertedId } = await col.insertOne(doc);
@@ -320,10 +358,13 @@ export async function updateArticle(slug: string, patch: Partial<ArticleInput>) 
     const body: ArticleBlock[] = [{ type: "html", html: patch.bodyHtml }];
     set.body = body; set.readingMinutes = estimateReadingMinutes(body);
   }
+  if (patch.scheduledAt !== undefined) set.scheduledAt = patch.scheduledAt;
   if (patch.status !== undefined) {
     set.status = patch.status;
     const cur = await col.findOne({ slug });
     if (patch.status === "published" && cur && !cur.publishedAt) set.publishedAt = new Date();
+    // Đăng tay ngay → bỏ lịch hẹn cũ.
+    if (patch.status === "published") set.scheduledAt = null;
   }
   const res = await col.updateOne({ slug }, { $set: set });
   return res.matchedCount;
@@ -388,6 +429,8 @@ export type ArticleRow = {
   approved: boolean; pending: boolean; postedByName: string;   // bài người dùng gửi
   approvedByName?: string; approvedAt?: string | null;          // ai duyệt, khi nào
   flags: string[];   // cờ kiểm duyệt tự động (từ cấm + vi phạm chính sách)
+  scheduledAt: string | null;   // hẹn giờ đăng (bài nháp)
+  sourceUrl: string;            // link bài gốc (tin nguồn ngoài)
 };
 // Map sang shape Article tĩnh (lib/news.ts) để tái dùng NewsCard / NewsBrowser ở trang public.
 export function toNewsCardArticle(d: ArticleDoc): import("@/lib/news").Article {
@@ -414,6 +457,8 @@ export function toArticleRow(d: ArticleDoc): ArticleRow {
     approved: d.approved !== false, pending: d.approved === false, postedByName: d.postedByName ?? "",
     approvedByName: d.approvedByName ?? undefined, approvedAt: d.approvedAt ? (d.approvedAt as Date).toISOString() : null,
     flags: d.flags ?? [],
+    scheduledAt: d.scheduledAt ? d.scheduledAt.toISOString() : null,
+    sourceUrl: d.sourceUrl ?? "",
   };
 }
 

@@ -57,6 +57,14 @@ export type AppSettings = {
   newsApiKeySet?: boolean;        // SUY DIỄN (không lưu DB): đã có khoá NewsAPI chưa — để UI báo "đã lưu"
   newsGnewsKeySet?: boolean;      // SUY DIỄN (không lưu DB): đã có khoá GNews chưa
 
+  // --- Tự động lấy tin hằng ngày (cron) — dùng nguồn & từ khoá ở trên, AI viết lại toàn văn ---
+  newsAutoEnabled: boolean;               // bật chạy tự động
+  newsAutoMode: "draft" | "schedule";     // draft: tạo nháp chờ duyệt · schedule: tự hẹn giờ đăng rải trong ngày
+  newsAutoCount: number;                  // số tin mỗi lượt (1–5; mỗi tin ~10–30 giây AI)
+  newsAutoCategory: string;               // slug chuyên mục Tin tức cho bài tự động (trống = "Tin tức")
+  newsAutoStartHour: number;              // giờ (VN) bắt đầu đăng bài đầu tiên trong ngày
+  newsAutoIntervalHours: number;          // khoảng cách giữa 2 bài hẹn giờ (giờ)
+
   // --- AI tạo nội dung ---
   geminiApiKey: string;           // khoá API Gemini. Để trống = lấy từ env GEMINI_API_KEY
   geminiApiKeySet?: boolean;      // SUY DIỄN (không lưu DB): đã có khoá Gemini chưa
@@ -126,6 +134,13 @@ const DEFAULTS: AppSettings = {
   newsApiUrl: process.env.NEWS_API_URL || "",
   newsApiQuery: process.env.NEWS_API_QUERY || "", // trống = tin mới nhất VN (GNews top-headlines)
   newsGnewsKey: "",
+
+  newsAutoEnabled: false,
+  newsAutoMode: "draft",
+  newsAutoCount: 3,
+  newsAutoCategory: "",
+  newsAutoStartHour: 7,
+  newsAutoIntervalHours: 2,
 
   geminiApiKey: "",
   openaiApiKey: "",
@@ -247,6 +262,12 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
     newsApiQuery: str(patch.newsApiQuery ?? c.newsApiQuery, 120, c.newsApiQuery),
     newsGnewsKey: typeof patch.newsGnewsKey === "string" && patch.newsGnewsKey.trim()
       ? patch.newsGnewsKey.trim().slice(0, 200) : c.newsGnewsKey,
+    newsAutoEnabled: bool(patch.newsAutoEnabled, c.newsAutoEnabled),
+    newsAutoMode: patch.newsAutoMode === "draft" || patch.newsAutoMode === "schedule" ? patch.newsAutoMode : c.newsAutoMode,
+    newsAutoCount: int(patch.newsAutoCount ?? c.newsAutoCount, 1, 5, c.newsAutoCount),
+    newsAutoCategory: str(patch.newsAutoCategory ?? c.newsAutoCategory, 120, c.newsAutoCategory),
+    newsAutoStartHour: int(patch.newsAutoStartHour ?? c.newsAutoStartHour, 0, 23, c.newsAutoStartHour),
+    newsAutoIntervalHours: int(patch.newsAutoIntervalHours ?? c.newsAutoIntervalHours, 1, 12, c.newsAutoIntervalHours),
     geminiApiKey: typeof patch.geminiApiKey === "string" && patch.geminiApiKey.trim()
       ? patch.geminiApiKey.trim().slice(0, 200) : c.geminiApiKey,
     openaiApiKey: typeof patch.openaiApiKey === "string" && patch.openaiApiKey.trim()
