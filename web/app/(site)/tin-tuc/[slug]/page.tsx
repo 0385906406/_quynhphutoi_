@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fmtViews, type Article } from "@/lib/news";
-import { getArticleBySlug, listArticles, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, type ArticleBlock } from "@/lib/articles";
+import { getArticleBySlug, listArticles, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, buildArticleBreadcrumb, type ArticleBlock } from "@/lib/articles";
 import { getSession } from "@/lib/auth";
 import { isCurrentUserStaff } from "@/lib/admin";
 import { newsLikeInfo, listNewsComments } from "@/lib/news-social";
@@ -15,6 +15,7 @@ import { cldUrl, cldHtml } from "@/lib/cloudinary-url";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { JsonLd } from "@/components/common/JsonLd";
 import { ReadingTools } from "@/components/news/ReadingTools";
+import { ShareButtons } from "@/components/social/ShareButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <article>
       {/* Dữ liệu có cấu trúc (SEO) — chỉ chèn khi bài đã công khai */}
-      {pub && <JsonLd data={buildArticleJsonLd(db)} />}
+      {pub && (
+        <>
+          <JsonLd data={buildArticleJsonLd(db)} />
+          <JsonLd data={buildArticleBreadcrumb(db)} />
+        </>
+      )}
       {previewPending && (
         <div className="container-wide" style={{ marginTop: "var(--space-4)" }}>
           <div className="qp-alert is-warning" role="status">
@@ -185,6 +191,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
               <div className="qp-tag-row mt-8">
                 {a.tags.map((t) => <span className="qp-tag" key={t}>#{t}</span>)}
+              </div>
+
+              <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid var(--color-border)" }}>
+                <div style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.75rem", color: "var(--color-text-secondary)" }}>
+                  Chia sẻ bài viết
+                </div>
+                <ShareButtons
+                  url={`${process.env.NEXT_PUBLIC_SITE_URL || "https://www.quynhphutoi.io.vn"}/tin-tuc/${slug}`}
+                  title={a.title}
+                  slug={slug}
+                  variant="row"
+                />
               </div>
             </div>
 

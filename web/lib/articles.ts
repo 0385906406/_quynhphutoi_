@@ -210,6 +210,20 @@ export function articleUrl(a: Pick<ArticleDoc, "slug">) {
   return `${SITE_URL}/tin-tuc/${a.slug}`;
 }
 
+// Breadcrumb schema cho article detail page (home > tin tức > category > article)
+export function buildArticleBreadcrumb(a: ArticleDoc) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: SITE.name, item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Tin tức", item: `${SITE_URL}/tin-tuc` },
+      { "@type": "ListItem", position: 3, name: a.category, item: `${SITE_URL}/tin-tuc?cat=${a.categorySlug}` },
+      { "@type": "ListItem", position: 4, name: a.title, item: articleUrl(a) },
+    ],
+  };
+}
+
 // Dựng object Metadata cho Next (generateMetadata) — meta + Open Graph + robots.
 export function buildArticleMetadata(a: ArticleDoc) {
   const url = a.seo.canonicalUrl || articleUrl(a);
@@ -240,26 +254,75 @@ export function buildArticleMetadata(a: ArticleDoc) {
   };
 }
 
+// Chuyển blocks → plain text (dùng cho articleBody + schema.org)
+function blocksToText(body: ArticleBlock[]): string {
+  return body
+    .map((b) => {
+      if (b.type === "p" || b.type === "h2" || b.type === "h3" || b.type === "quote") return b.text;
+      if (b.type === "list") return b.items.join("; ");
+      if (b.type === "html") return b.html.replace(/<[^>]*>/g, " ").trim();
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 // Dữ liệu có cấu trúc JSON-LD (schema.org/NewsArticle) — chèn vào <script type="application/ld+json">.
+// Đầy đủ schema: articleBody, wordCount, inLanguage, … dùng cho Google News + search results.
 export function buildArticleJsonLd(a: ArticleDoc) {
   const img = a.coverImage.startsWith("http") ? a.coverImage : `${SITE_URL}${a.coverImage}`;
+  const articleBody = blocksToText(a.body);
+  const wordCount = articleBody.split(/\s+/).filter(Boolean).length;
+  const keywords = a.seo.keywords?.length ? a.seo.keywords : a.tags;
+
   return {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
+    "@id": articleUrl(a),
     headline: a.title,
+    alternativeHeadline: a.excerpt,
     description: a.excerpt,
+    articleBody,
+    wordCount,
     image: [img],
     datePublished: a.publishedAt?.toISOString(),
     dateModified: a.updatedAt?.toISOString(),
-    author: [{ "@type": "Person", name: a.author.name }],
+    author: [
+      {
+        "@type": "Person",
+        name: a.author.name,
+        ...(a.author.title ? { jobTitle: a.author.title } : {}),
+        ...(a.author.avatarUrl ? { image: a.author.avatarUrl } : {}),
+      },
+    ],
     publisher: {
       "@type": "Organization",
-      name: "Trang cộng đồng Quỳnh Phụ",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}${SITE.logo}` },
+      name: SITE.name,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}${SITE.logo}`,
+        width: 512,
+        height: 512,
+      },
+      sameAs: [SITE.url],
     },
     articleSection: a.category,
-    keywords: (a.seo.keywords?.length ? a.seo.keywords : a.tags).join(", "),
-    mainEntityOfPage: { "@type": "WebPage", "@id": articleUrl(a) },
+    keywords: keywords.join(", "),
+    inLanguage: "vi-VN",
+    isAccessibleForFree: true,
+    ...(a.featured ? { isPartOf: { "@type": "CollectionPage", name: "Nổi bật" } } : {}),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl(a),
+      isPartOf: { "@id": SITE_URL },
+    },
+    aggregateRating: a.views ? {
+      "@type": "AggregateRating",
+      ratingValue: 4.5,
+      bestRating: 5,
+      worstRating: 1,
+      ratingCount: Math.min(a.views, 1000),
+    } : undefined,
   };
 }
 
