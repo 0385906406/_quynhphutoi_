@@ -12,6 +12,7 @@ import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { getSettings } from "@/lib/settings";
 import { getWeather, type WeatherData } from "@/lib/weather";
 import { HomeWeatherWidget } from "@/components/weather/HomeWeatherWidget";
+import { HomeWidgetGrid } from "@/components/home/HomeWidgetGrid";
 
 // SEO trang chủ — admin chỉnh ở "SEO từng trang" (key "/"); ô trống = mặc định bên dưới.
 // Dùng title tuyệt đối để KHÔNG gắn hậu tố "· Tên site" cho trang gốc.
@@ -166,6 +167,9 @@ export default async function HomePage() {
       </section>
 
       <HomeWeatherWidget data={weather} forecastDays={settings.weatherForecastDays} />
+
+      {/* WIDGETS — Sổ số, Bóng đá, Phim, Giá vàng, Tỷ giá, Thời tiết, Chiêm tinh */}
+      <HomeWidgetGrid />
 
       {/* TRUY CẬP NHANH */}
       <section className="section">
