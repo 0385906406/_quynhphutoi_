@@ -1518,3 +1518,23 @@ details.qp-seochecks[open] > summary { margin-bottom: 8px; }
 .qp-ae__restore { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: var(--space-4); }
 .qp-ae__restore .qp-alert__body { flex: 1 1 260px; }
 .qp-ae__restore-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Affiliate: danh sách link theo từng trang (mỗi trang 1 mục mở/đóng) */
+.qp-aff-pages { display: flex; flex-direction: column; gap: 8px; }
+.qp-aff-page { border: 1px solid var(--color-gray-border); border-radius: var(--radius-md); background: var(--surface); }
+.qp-aff-page > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  min-height: 48px; padding: 10px 14px; cursor: pointer; list-style: none;
+}
+.qp-aff-page > summary::-webkit-details-marker { display: none; }
+.qp-aff-page > summary:hover { background: var(--color-navy-pale); }
+.qp-aff-page[open] > summary { border-bottom: 1px solid var(--color-gray-border); }
+.qp-aff-page__name { font: 600 14.5px/1.35 var(--font-primary); color: var(--color-navy-deep); }
+.qp-aff-page__name code { margin-left: 6px; font-size: 12px; color: var(--color-gray-text); }
+.qp-aff-page__count {
+  padding: 3px 10px; border-radius: var(--radius-pill); font: 600 12px/1.4 var(--font-primary);
+  background: var(--color-navy-pale); color: var(--color-gray-text);
+}
+.qp-aff-page__count.is-set { background: var(--color-teal-pale); color: var(--color-teal-dark); }
+.qp-aff-page__body { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.qp-aff-page__body .qp-form-group { margin: 0; }

@@ -130,7 +130,7 @@ export default async function ClassifiedDetailPage({ params }: { params: Promise
               </div>
             )}
             <ClassifiedActions slug={a.slug} title={a.title} isOwner={isOwner} status={a.status} />
-            <AffiliateCTA />
+            <AffiliateCTA page="/mua-ban" />
             <DetailSocial type="mua-ban" slug={slug} title={a.title} />
           </div>
 

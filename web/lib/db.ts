@@ -10,7 +10,8 @@ const g = globalThis as unknown as {
 };
 
 if (!g._mongoClientPromise) {
-  g._mongoClientPromise = new MongoClient(uri).connect();
+  g._mongoClientPromise = // Chọn máy chủ tối đa 8s (mặc định 30s) — DB sự cố thì báo lỗi nhanh thay vì để người dùng nhìn màn hình quay hàng chục giây.
+  new MongoClient(uri, { serverSelectionTimeoutMS: 8000, connectTimeoutMS: 8000 }).connect();
 }
 const clientPromise = g._mongoClientPromise;
 

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { requireAdminPage } from "@/lib/admin";
 import { getHomeSections, listHomeCandidates } from "@/lib/home-sections";
+import { getHomeBlocks } from "@/lib/home-blocks";
+import { LEAGUES } from "@/lib/daily/football";
+import { HomeBlocksManager } from "@/components/admin/HomeBlocksManager";
 import { getPageSeoConfig } from "@/lib/page-seo";
 import { HomeSectionsManager } from "@/components/admin/HomeSectionsManager";
 import { ModuleTabs } from "@/components/admin/ModuleTabs";
@@ -10,8 +13,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminHomeSectionsPage() {
   await requireAdminPage();
-  const [config, candidates, pageSeo] = await Promise.all([
-    getHomeSections(), listHomeCandidates(), getPageSeoConfig(),
+  const [config, candidates, pageSeo, blocks] = await Promise.all([
+    getHomeSections(), listHomeCandidates(), getPageSeoConfig(), getHomeBlocks(),
   ]);
   return (
     <>
@@ -24,7 +27,7 @@ export default async function AdminHomeSectionsPage() {
         pageKey="/"
         pageLabel="Trang chủ"
         seoInitial={pageSeo["/"] ?? {}}
-        manage={<HomeSectionsManager initialConfig={config} candidates={candidates} />}
+        manage={<><HomeSectionsManager initialConfig={config} candidates={candidates} /><HomeBlocksManager initial={blocks} leagues={LEAGUES.map((l) => ({ code: l.code, name: l.name }))} /></>}
       />
     </>
   );

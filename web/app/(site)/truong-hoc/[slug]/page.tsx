@@ -166,7 +166,7 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
               </div>
             )}
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/truong-hoc" />
             <DetailSocial type="truong-hoc" slug={slug} title={s.name} />
           </div>
 

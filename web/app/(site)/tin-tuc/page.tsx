@@ -3,7 +3,9 @@ import { JsonLd } from "@/components/common/JsonLd";
 import { jsonLdBreadcrumb } from "@/lib/seo";
 import Link from "next/link";
 import { NewsBrowser } from "@/components/news/NewsBrowser";
-import { listArticles, listMyArticles, toNewsCardArticle } from "@/lib/articles";
+import { ForYou } from "@/components/news/ForYou";
+import { TrendingNews } from "@/components/news/TrendingNews";
+import { listArticles, listMyArticles, toNewsCardArticle, queryNewsPage, newsFacets } from "@/lib/articles";
 import { getNewsPageConfig, resolveNewsBlocks, autoNewsBlocks } from "@/lib/news-page";
 import { getSession } from "@/lib/auth";
 import type { Article } from "@/lib/news";
@@ -18,18 +20,21 @@ export async function generateMetadata() {
 
 export const dynamic = "force-dynamic";
 
-// Số bài tối đa mỗi tab (Trong xã / Ngoài xã) — lọc & phân trang làm ở client.
+// Số bài tối đa mỗi tab dùng để chọn "nổi bật" / "đọc nhiều" (tính ở máy chủ, KHÔNG gửi xuống trình duyệt).
 const SCOPE_LIMIT = 300;
+// Số bài mỗi trang — phải khớp PAGE_SIZE trong NewsBrowser. Các trang sau lấy qua /api/news.
+const PAGE_SIZE = 8;
 
 export default async function TinTucPage() {
   // Chỉ hiển thị bài đã xuất bản + đã duyệt (DB) — bài người dùng chờ duyệt không lọt ra đây.
   // Lấy RIÊNG từng phạm vi: nếu gộp chung 1 limit, tin ngoài xã nhập hàng loạt (mới hơn)
   // sẽ chiếm hết suất và đẩy bài trong xã cũ ra khỏi danh sách.
-  const [localDocs, outsideDocs, newsConfig, session] = await Promise.all([
+  const [localDocs, outsideDocs, newsConfig, session, facets] = await Promise.all([
     listArticles({ status: "published", scope: "trong-xa", limit: SCOPE_LIMIT }).catch(() => []),
     listArticles({ status: "published", scope: "ngoai-xa", limit: SCOPE_LIMIT }).catch(() => []),
     getNewsPageConfig().catch(() => null),
     getSession().catch(() => null),
+    newsFacets().catch(() => ({ counts: { "trong-xa": 0, "ngoai-xa": 0 }, categories: [] as string[] })),
   ]);
   const items: Article[] = [...localDocs, ...outsideDocs].map(toNewsCardArticle);
   // Bài người dùng đang chờ duyệt (chỉ của chính họ) — hiển thị ở tab "Chờ duyệt".
@@ -50,6 +55,13 @@ export default async function TinTucPage() {
     featured: outsideCfg.featured.length || newsConfig?.featured.enabled === false ? outsideCfg.featured : outsideAuto.featured,
     popular: outsideCfg.popular.length || newsConfig?.popular.enabled === false ? outsideCfg.popular : outsideAuto.popular,
   };
+  // Trang đầu của mỗi tab (hiện ngay khi vào trang, không chờ API). Loại bài đã ở vùng nổi bật.
+  const firstPage = async (scope: "trong-xa" | "ngoai-xa", featured: Article[]) => {
+    const exclude = featured.slice(0, 4).map((a) => a.slug);
+    const r = await queryNewsPage({ scope, sort: "newest", exclude, page: 1, pageSize: PAGE_SIZE }).catch(() => null);
+    return r ? { items: r.docs.map(toNewsCardArticle), total: r.total, totalPages: r.totalPages, exclude } : undefined;
+  };
+  const [initialLocal, initialOutside] = await Promise.all([firstPage("trong-xa", local.featured), firstPage("ngoai-xa", outside.featured)]);
   return (
     <>
       {/* Page hero sáng (gradient + đốm sáng + cây lúa halftone) */}
@@ -76,7 +88,16 @@ export default async function TinTucPage() {
 
       <section className="qp-newsmain">
         <div className="container-wide">
-          <NewsBrowser items={items} blocks={{ "trong-xa": local, "ngoai-xa": outside }} isLoggedIn={!!session} pendingItems={pendingItems} />
+          <TrendingNews />
+          <ForYou limit={4} />
+          <NewsBrowser
+            blocks={{ "trong-xa": local, "ngoai-xa": outside }}
+            initial={{ "trong-xa": initialLocal, "ngoai-xa": initialOutside }}
+            counts={facets.counts}
+            categories={facets.categories}
+            isLoggedIn={!!session}
+            pendingItems={pendingItems}
+          />
         </div>
       </section>
     </>

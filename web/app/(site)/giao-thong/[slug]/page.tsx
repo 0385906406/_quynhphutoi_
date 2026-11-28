@@ -91,7 +91,7 @@ export default async function TransitDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/giao-thong" />
             <DetailSocial type="giao-thong" slug={slug} title={t.name} />
           </div>
 

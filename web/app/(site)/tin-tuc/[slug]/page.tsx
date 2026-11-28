@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { isBot, recordArticleView } from "@/lib/visits";
 import { fmtViews, type Article } from "@/lib/news";
 import { getArticleBySlug, listArticles, relatedArticles as relatedDbArticles, toNewsCardArticle, incrementViews, buildArticleMetadata, buildArticleJsonLd, buildArticleBreadcrumb, type ArticleBlock } from "@/lib/articles";
 import { getSession } from "@/lib/auth";
@@ -15,6 +17,10 @@ import { cldUrl, cldHtml } from "@/lib/cloudinary-url";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { JsonLd } from "@/components/common/JsonLd";
 import { ReadingTools } from "@/components/news/ReadingTools";
+import { ForYou } from "@/components/news/ForYou";
+import { BookmarkButton } from "@/components/news/BookmarkButton";
+import { slugify } from "@/lib/slug";
+import { ArticleInterest } from "@/components/news/ArticleInterest";
 import { ShareButtons } from "@/components/social/ShareButtons";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +66,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!pub && !isOwner && !staffPreview) notFound();
   const previewPending = !pub;
 
-  if (pub) await incrementViews(slug).catch(() => {});
+  // Chỉ đếm lượt đọc của người thật (bỏ bot/crawler); ghi cả bộ đếm theo ngày cho thống kê admin.
+  if (pub && !isBot((await headers()).get("user-agent"))) {
+    await Promise.all([incrementViews(slug), recordArticleView(slug)]).catch(() => {});
+  }
   const dd = db.publishedAt ?? db.createdAt;
   const view: ArticleView = {
     title: db.title, category: db.category, image: db.coverImage,
@@ -131,7 +140,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <span className="qp-breadcrumb__sep">›</span>
             <Link href="/tin-tuc">Tin tức</Link>
             <span className="qp-breadcrumb__sep">›</span>
-            <span className="qp-breadcrumb__current">{a.category}</span>
+            <Link href={`/tin-tuc/chuyen-muc/${db.categorySlug}`}>{a.category}</Link>
           </nav>
           <h1 id="art-title" className="type-h1" style={{ margin: "var(--space-3) 0 0" }}>{a.title}</h1>
         </div>
@@ -146,12 +155,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <div className="qp-article-mmeta">
               <span className="qp-avatar-initials" aria-hidden>{initials}</span>
               <div className="qp-article-mmeta__text">
-                <b>{a.author}</b>
+                <b><Link href={`/tac-gia/${slugify(a.author)}`}>{a.author}</Link></b>
                 <span>{a.date}<span className="qp-dot-sep" aria-hidden />{a.readTime}<span className="qp-dot-sep" aria-hidden />{a.viewsText}</span>
               </div>
             </div>
 
-            <ReadingTools targetId="article-body" />
+            <ReadingTools targetId="article-body" minutes={db.readingMinutes ?? 0} />
+            {pub && <BookmarkButton slug={slug} />}
 
             {headings.length > 0 && (
               <details className="qp-toc-m">
@@ -187,10 +197,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* "… Xem thêm" affiliate (random link Shopee) — cuối phần mô tả; ẩn nếu admin chưa bật */}
-              <AffiliateCTA />
+              <AffiliateCTA page="/tin-tuc" />
 
               <div className="qp-tag-row mt-8">
-                {a.tags.map((t) => <span className="qp-tag" key={t}>#{t}</span>)}
+                {a.tags.map((t) => <Link href={`/tin-tuc/tag/${slugify(t)}`} className="qp-tag" key={t}>#{t}</Link>)}
               </div>
 
               <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid var(--color-border)" }}>
@@ -226,12 +236,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               <div className="qp-author">
                 <span className="qp-avatar-initials" aria-hidden>{initials}</span>
                 <div>
-                  <div className="qp-author__name">{a.author}</div>
+                  <div className="qp-author__name"><Link href={`/tac-gia/${slugify(a.author)}`}>{a.author}</Link></div>
                   <div className="qp-author__meta">{a.authorTitle || "Quỳnh Phụ Tôi"}</div>
                 </div>
               </div>
               <div className="qp-lf-spec" style={{ marginTop: 14 }}>
-                <div className="qp-lf-spec__row"><span>Chuyên mục</span><b><span className={`qp-category-badge${badgeClass(a.category)}`}>{a.category}</span></b></div>
+                <div className="qp-lf-spec__row"><span>Chuyên mục</span><b><Link href={`/tin-tuc/chuyen-muc/${db.categorySlug}`} className={`qp-category-badge${badgeClass(a.category)}`}>{a.category}</Link></b></div>
                 <div className="qp-lf-spec__row"><span>Ngày đăng</span><b>{a.date}</b></div>
                 <div className="qp-lf-spec__row"><span>Thời gian đọc</span><b>{a.readTime}</b></div>
                 <div className="qp-lf-spec__row"><span>Lượt đọc</span><b>{a.viewsText}</b></div>
@@ -259,6 +269,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
         {/* Bình luận */}
         <CommentsSection slug={slug} initial={comments} isLoggedIn={!!session} currentUserName={session?.name} apiBase="/api/tin-tuc" />
+
+        {pub && <ArticleInterest slug={slug} category={db.category} tags={db.tags ?? []} title={db.title} />}
+        {pub && <ForYou title="Có thể bạn quan tâm" eyebrow="Gợi ý cho bạn" limit={4} exclude={[slug, ...related.map((r) => r.slug)]} className="qp-foryou--article" />}
 
         {/* Bài liên quan */}
         <div className="qp-lf-related">

@@ -6,6 +6,10 @@ import { Footer } from "@/components/layout/Footer";
 import { BackToTop } from "@/components/layout/BackToTop";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StickyAdBar } from "@/components/ads/StickyAdBar";
+import { ShopeeFloat } from "@/components/ads/ShopeeFloat";
+import { VisitTracker } from "@/components/common/VisitTracker";
+import { ServiceWorker } from "@/components/common/ServiceWorker";
+import { RouteProgress } from "@/components/common/RouteProgress";
 import { getSession } from "@/lib/auth";
 import { isCurrentUserStaff } from "@/lib/admin";
 import { getSettings } from "@/lib/settings";
@@ -36,6 +40,8 @@ export default async function SiteLayout({
 
   return (
     <>
+      <RouteProgress />
+      <ServiceWorker />
       <a className="skip-link" href="#main">
         Bỏ qua tới nội dung
       </a>
@@ -45,6 +51,8 @@ export default async function SiteLayout({
       <Footer />
       <BackToTop />
       <StickyAdBar />
+      <ShopeeFloat />
+      <VisitTracker />
       <BottomNav />
       {user ? <RulesGate needsAgreement={needsRules} /> : null}
       {user && activeWarnings.length > 0

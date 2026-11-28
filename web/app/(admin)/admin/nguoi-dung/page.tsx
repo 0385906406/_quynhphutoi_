@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentUser, requireAdminPage } from "@/lib/admin";
-import { listUsers, toUserRow } from "@/lib/users";
+import { listUsers, toUserRow, userDemographics } from "@/lib/users";
+import { UserDemographics } from "@/components/admin/UserDemographics";
 import { listCustomRoles } from "@/lib/custom-roles";
 import { UserManager } from "@/components/admin/UserManager";
 
@@ -13,7 +14,7 @@ export default async function AdminUsersPage() {
   await requireAdminPage();
   // Tải TẤT CẢ (trước đây cắt cứng 500 → mục thứ 501 trở đi âm thầm biến mất khỏi trang quản lý).
   // Danh sách phân trang/lọc ở client; nếu dữ liệu lên hàng chục nghìn mục → chuyển phân trang phía server.
-  const [me, docs, customRoles] = await Promise.all([getCurrentUser(), listUsers({}), listCustomRoles()]);
+  const [me, docs, customRoles, demo] = await Promise.all([getCurrentUser(), listUsers({}), listCustomRoles(), userDemographics()]);
   const rows = docs.map(toUserRow);
   return (
     <>
@@ -22,6 +23,7 @@ export default async function AdminUsersPage() {
         <h1 className="type-h1">Người dùng</h1>
         <p className="qp-admin-head__desc">Quản lý tài khoản &amp; vai trò: <b>Admin</b> toàn quyền · <b>Biên tập viên</b> chỉ làm nội dung và kiểm duyệt · <b>Người dùng</b> thường. Đổi quyền có hiệu lực ngay.</p>
       </div>
+      <UserDemographics d={demo} />
       <UserManager initial={rows} me={me!._id!.toString()} isSuperAdmin={me!.email === SUPERADMIN_EMAIL} customRoles={customRoles} />
     </>
   );

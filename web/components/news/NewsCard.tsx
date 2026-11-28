@@ -18,8 +18,6 @@ export function NewsCard({ a }: { a: Article }) {
         <div className="qp-newscard__meta">
           <span>{a.date}</span>
           <span className="qp-dot-sep" aria-hidden />
-          <span>{a.readTime}</span>
-          <span className="qp-dot-sep" aria-hidden />
           <span>{fmtViews(a.views)}</span>
         </div>
       </div>

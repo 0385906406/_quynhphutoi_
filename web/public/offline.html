@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mất kết nối — Quỳnh Phụ</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f4f8fb; --fg:#062340; --mut:#4b5d6e; --teal:#00a98f; --card:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1b2b; --fg:#eaf2f8; --mut:#9db0c2; --card:#102a40; } }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg); color:var(--fg); font:18px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:30rem; text-align:center; background:var(--card); padding:36px 28px; border-radius:20px; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  .ic { font-size:56px; line-height:1; }
+  h1 { font-size:1.5rem; margin:14px 0 8px; }
+  p { color:var(--mut); margin:0 0 22px; }
+  button { font:inherit; font-weight:700; min-height:52px; padding:0 28px; border:0; border-radius:12px; background:var(--teal); color:#fff; cursor:pointer; }
+  button:focus-visible { outline:3px solid var(--fg); outline-offset:3px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="ic" aria-hidden="true">📡</div>
+  <h1>Bạn đang mất kết nối mạng</h1>
+  <p>Không sao cả. Hãy kiểm tra Wi-Fi hoặc 4G rồi bấm nút bên dưới để thử lại. Trang sẽ tự mở khi có mạng.</p>
+  <button type="button" onclick="location.reload()">Thử lại</button>
+</main>
+<script>addEventListener("online", function () { location.reload(); });</script>
+</body>
+</html>

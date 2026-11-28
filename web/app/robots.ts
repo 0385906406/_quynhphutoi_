@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
           "/tai-khoan",
           "/thong-bao",
           "/tim-kiem",
+          "/da-luu",
           "/dang-nhap",
           "/dang-ky",
           "/quen-mat-khau",
@@ -23,7 +24,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${SITE.url}/sitemap.xml`,
+    sitemap: [`${SITE.url}/sitemap.xml`, `${SITE.url}/news-sitemap.xml`],
     host: SITE.url,
   };
 }

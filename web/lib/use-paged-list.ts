@@ -13,6 +13,8 @@ export type PagerControls = {
   mobile: boolean;
   sentinelRef: RefObject<HTMLDivElement | null>;
   hasMore: boolean;
+  settledPage?: number; // trang ĐANG hiển thị (khác `page` khi đang chờ API) — ListPager cuộn theo giá trị này
+  busy?: boolean;       // đang tải trang mới
 };
 
 export type PagedList<T> = PagerControls & {

@@ -86,7 +86,7 @@ export default async function HealthDetailPage({ params }: { params: Promise<{ s
               {!h.verified && <p className="type-body-small text-muted">* Thông tin tổng hợp theo quy ước, cần đối chiếu với cơ quan y tế.</p>}
             </div>
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/y-te" />
             <DetailSocial type="y-te" slug={slug} title={h.name} />
           </div>
 

@@ -62,10 +62,3 @@ export function trackShare(platform: SharePlatform, slug: string, title: string)
     });
   }
 }
-
-// Mock share count API (thực tế cần fetch từ endpoint hoặc cache DB)
-export async function getShareCount(platform: SharePlatform, url: string): Promise<number> {
-  // TODO: Implement real share counting via API hoặc DB cache
-  // Hiện tại trả random để demo
-  return Math.floor(Math.random() * 100);
-}

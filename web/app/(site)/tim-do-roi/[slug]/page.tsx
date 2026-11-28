@@ -160,7 +160,7 @@ export default async function LostFoundDetailPage({ params }: { params: Promise<
               </div>
             )}
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/tim-do-roi" />
 
             <PostInteractions slug={post.slug} title={post.title} initialLiked={liked}
               initialLikeCount={likeCount} commentCount={commentItems.length} isLoggedIn={!!user} />

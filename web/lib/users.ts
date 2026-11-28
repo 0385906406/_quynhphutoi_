@@ -1,5 +1,6 @@
 // Truy xuất người dùng trong MongoDB + token xác nhận / đặt lại mật khẩu.
 import { getDb, ensureIndexes } from "@/lib/db";
+import { ageGroup, type UserProfile } from "@/lib/profile-options";
 import { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -17,6 +18,7 @@ export type UserDoc = {
   banned?: boolean;            // true = tài khoản bị khóa, không thể đăng nhập.
   warnCount?: number;          // số lần bị cảnh báo vi phạm nội quy.
   avatar?: string | null;     // URL ảnh đại diện (Cloudinary). Trống = dùng chữ cái đầu.
+  profile?: UserProfile;      // hồ sơ cá nhân tuỳ chọn (giới tính, năm sinh, nơi ở, nghề, chủ đề quan tâm)
   role?: UserRole;            // thiếu = "user". "admin" toàn quyền; "editor" làm nội dung + kiểm duyệt; "custom" = vai trò tùy chỉnh.
   customRoleId?: string;      // ID của custom role khi role === "custom".
   verifyToken?: string | null;
@@ -121,8 +123,9 @@ export async function deleteUser(id: string | ObjectId) {
 }
 
 // Bản ghi phẳng cho client admin (KHÔNG kèm passwordHash / token).
-export type UserRow = { id: string; email: string; name: string; role: UserRole; customRoleId?: string; verified: boolean; banned: boolean; warnCount: number; createdAt: string };
+export type UserRow = { id: string; email: string; name: string; role: UserRole; customRoleId?: string; verified: boolean; banned: boolean; warnCount: number; createdAt: string; gender: string; birthYear: number | null; ageGroup: string; wardSlug: string; occupation: string; interests: string[] };
 export function toUserRow(u: UserDoc): UserRow {
+  const pr = u.profile?.personalize === false ? undefined : u.profile; // người dùng không đồng ý → admin không thấy thông tin cá nhân
   return {
     id: u._id!.toString(), email: u.email, name: u.name,
     role: u.role === "admin" ? "admin" : u.role === "editor" ? "editor" : u.role === "custom" ? "custom" : "user",
@@ -131,6 +134,27 @@ export function toUserRow(u: UserDoc): UserRow {
     banned: u.banned === true,
     warnCount: u.warnCount ?? 0,
     createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : "",
+    gender: pr?.gender || "", birthYear: pr?.birthYear ?? null, ageGroup: ageGroup(pr?.birthYear) ?? "",
+    wardSlug: pr?.wardSlug || "", occupation: pr?.occupation || "", interests: pr?.interests ?? [],
+  };
+}
+
+// Thống kê nhân khẩu học TỔNG HỢP (không lộ từng người) — để admin biết đang phục vụ ai & phân phối tin phù hợp.
+export async function userDemographics() {
+  const col = await users();
+  const all = await col.find({}, { projection: { profile: 1 } }).toArray();
+  const docs = all.map((d) => (d.profile?.personalize === false ? { ...d, profile: undefined } : d)); // tôn trọng người không đồng ý
+  const tally = (vals: string[]) => { const m = new Map<string, number>(); for (const v of vals) if (v) m.set(v, (m.get(v) ?? 0) + 1); return [...m.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
+  const withProfile = docs.filter((d) => d.profile && (d.profile.gender || d.profile.birthYear || d.profile.wardSlug || d.profile.occupation || d.profile.interests?.length));
+  return {
+    total: all.length,
+    optedOut: all.filter((d) => d.profile?.personalize === false).length,
+    filled: withProfile.length,
+    gender: tally(docs.map((d) => d.profile?.gender || "")),
+    age: tally(docs.map((d) => ageGroup(d.profile?.birthYear) ?? "")),
+    ward: tally(docs.map((d) => d.profile?.wardSlug || "")),
+    occupation: tally(docs.map((d) => d.profile?.occupation || "")),
+    interests: tally(docs.flatMap((d) => d.profile?.interests ?? [])),
   };
 }
 
@@ -246,13 +270,14 @@ export async function updateUserName(id: string | ObjectId, name: string) {
 // Cập nhật hồ sơ (tên hiển thị + ảnh đại diện). avatar="" → xoá ảnh (về chữ cái đầu).
 export async function updateUserProfile(
   id: string | ObjectId,
-  patch: { name?: string; avatar?: string | null },
+  patch: { name?: string; avatar?: string | null; profile?: UserProfile },
 ) {
   if (typeof id === "string" && !ObjectId.isValid(id)) return null;
   const _id = typeof id === "string" ? new ObjectId(id) : id;
   const set: Record<string, unknown> = {};
   if (typeof patch.name === "string") set.name = patch.name.trim();
   if (patch.avatar !== undefined) set.avatar = patch.avatar ? patch.avatar : null;
+  if (patch.profile) set.profile = { ...patch.profile, updatedAt: new Date().toISOString() };
   const col = await users();
   if (Object.keys(set).length) await col.updateOne({ _id }, { $set: set });
   return col.findOne({ _id });

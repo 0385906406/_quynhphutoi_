@@ -13,12 +13,6 @@ export default async function NotFound() {
 
   return (
     <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap"
-        rel="stylesheet"
-      />
       <main className="wm-404">
         <div className="nf-card">
 
@@ -46,7 +40,7 @@ export default async function NotFound() {
 
             <div className="nf-num">404</div>
             <div className="nf-bar" />
-            <div className="nf-title">Trang không tồn tại</div>
+            <h1 className="nf-title">Trang không tồn tại</h1>
             <p className="nf-sub">
               Trang bạn đang tìm kiếm có thể đã bị xoá, đổi địa chỉ,
               hoặc tạm thời không khả dụng.
@@ -64,7 +58,7 @@ export default async function NotFound() {
               Hoặc thử&nbsp;
               <Link href="/tin-tuc">xem tin tức</Link>
               &nbsp;·&nbsp;
-              <Link href="/search">tìm kiếm</Link>
+              <Link href="/tim-kiem">tìm kiếm</Link>
             </p>
           </div>
 

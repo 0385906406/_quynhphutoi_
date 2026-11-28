@@ -15,6 +15,9 @@ export const NAV: NavItem[] = [
   { id: "cho", label: "Chợ", href: "/cho" },
   { id: "giao-thong", label: "Giao thông", href: "/giao-thong" },
   { id: "thoi-tiet", label: "Thời tiết", href: "/thoi-tiet" },
+  { id: "gia-vang", label: "Giá vàng & tỷ giá", href: "/gia-vang" },
+  { id: "xo-so", label: "Xổ số miền Bắc", href: "/xo-so" },
+  { id: "bong-da", label: "Bóng đá", href: "/bong-da" },
   { id: "di-tich", label: "Di tích", href: "/di-tich" },
   { id: "sap-nhap", label: "Sáp nhập xã 2025", href: "/sap-nhap" },
   { id: "tin-tuc", label: "Tin tức", href: "/tin-tuc" },
@@ -42,6 +45,15 @@ export const NAV_TREE: NavNode[] = [
       { id: "viec-lam", label: "Việc làm", href: "/viec-lam", desc: "Tin tuyển dụng địa phương", icon: "job" },
       { id: "tim-do-roi", label: "Tìm đồ rơi", href: "/tim-do-roi", desc: "Đăng & tra tin nhặt được / bị mất", icon: "search" },
       { id: "mua-ban", label: "Mua bán", href: "/mua-ban", desc: "Rao vặt mua bán của người dân", icon: "tag" },
+    ],
+  },
+  {
+    id: "hom-nay",
+    label: "Hôm nay",
+    children: [
+      { id: "gia-vang", label: "Giá vàng & tỷ giá", href: "/gia-vang", desc: "Vàng SJC, nhẫn 999.9, ngoại tệ", icon: "coin" },
+      { id: "xo-so", label: "Xổ số miền Bắc", href: "/xo-so", desc: "Kết quả XSMB & bảng lô tô", icon: "ticket" },
+      { id: "bong-da", label: "Bóng đá", href: "/bong-da", desc: "Lịch thi đấu, tỷ số trực tiếp", icon: "ball" },
       { id: "thoi-tiet", label: "Thời tiết", href: "/thoi-tiet", desc: "Nhiệt độ hiện tại & dự báo nhiều ngày", icon: "cloud" },
     ],
   },
@@ -52,10 +64,10 @@ export const NAV_TREE: NavNode[] = [
       { id: "tong-quan", label: "Tổng quan", href: "/tong-quan", desc: "Địa lý, dân số, hành chính", icon: "info" },
       { id: "sap-nhap", label: "Sáp nhập xã 2025", href: "/sap-nhap", desc: "35 xã cũ → 9 xã mới (Hưng Yên)", icon: "map" },
       { id: "di-tich", label: "Di tích", href: "/di-tich", desc: "Đình, chùa, đền & di tích lịch sử", icon: "landmark" },
+      { id: "noi-quy", label: "Nội quy", href: "/noi-quy", desc: "Quy định đăng tin & bình luận", icon: "info" },
     ],
   },
   { id: "tin-tuc", label: "Tin tức", href: "/tin-tuc" },
-  { id: "noi-quy", label: "Nội quy", href: "/noi-quy" },
   { id: "lien-he", label: "Liên hệ", href: "/lien-he" },
 ];
 

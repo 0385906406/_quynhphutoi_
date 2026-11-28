@@ -21,7 +21,7 @@
 
   --color-teal:        #00A98F;  /* Accent · button outline */
   --color-teal-light:  #34D4B8;  /* Hover · gradient stop */
-  --color-teal-dark:   #007D69;  /* Active · text on teal-pale */
+  --color-teal-dark:   #006B5A;  /* Active · text on teal-pale */
   --color-teal-pale:   #DEF5EE;  /* Tag BG · category badge BG */
 
   --color-indigo:      #6366F1;  /* Decorative gradient · focus */
@@ -120,6 +120,7 @@
      (--color-navy / --color-navy-deep là màu CHỮ nên đổi sáng lên ở giao diện tối.) */
   --brand-navy:      #0F4C81;
   --brand-navy-deep: #062340;
+  --brand-teal-deep: #007D69;  /* nền nút có chữ trắng (tương phản ~5:1), không đổi ở giao diện tối */
 
   /* ============ LAYOUT ============ */
   --container-max:      1200px;

@@ -132,7 +132,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
               </div>
             )}
             <JobActions slug={job.slug} title={job.title} isOwner={isOwner} status={job.status} />
-            <AffiliateCTA />
+            <AffiliateCTA page="/viec-lam" />
             <DetailSocial type="viec-lam" slug={slug} title={job.title} />
           </div>
 

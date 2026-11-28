@@ -10,6 +10,7 @@ import { getSettings } from "@/lib/settings";
 import { AdminSidebar, type AdminCounts } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
 import { AdminTableLabels } from "@/components/admin/AdminTableLabels";
+import { RouteProgress } from "@/components/common/RouteProgress";
 import "@/styles/admin.css";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="qp-admin-shell">
+      <RouteProgress />
       <AdminSidebar counts={counts} logo={settings.siteLogo || undefined} role={user!.role ?? "user"} />
       <div className="qp-admin-main">
         <AdminTopbar name={user!.name} email={user!.email} avatar={user!.avatar} />

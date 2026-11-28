@@ -127,7 +127,7 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
           </div>
         )}
 
-        <AffiliateCTA />
+        <AffiliateCTA page="/quang-cao" />
 
         {/* Quảng cáo khác */}
         {others.length > 0 && (

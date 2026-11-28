@@ -25,8 +25,8 @@ export function MyPosts({ items }: { items: MyPost[] }) {
   const [page, setPage] = useState(1);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: items.length, "tin-tuc": 0, "tim-do-roi": 0, "viec-lam": 0, "mua-ban": 0 };
-    for (const p of items) c[p.section]++;
+    const c: Record<string, number> = { all: items.length, "tin-tuc": 0, "tim-do-roi": 0, "viec-lam": 0, "mua-ban": 0, pendingAll: 0 };
+    for (const p of items) { c[p.section]++; if (p.state === "pending") c.pendingAll++; }
     return c;
   }, [items]);
 
@@ -51,9 +51,12 @@ export function MyPosts({ items }: { items: MyPost[] }) {
             {t.label} <span className="qp-tab__count">{counts[t.key]}</span>
           </button>
         ))}
-        <label className="qp-acc-pending-toggle">
+      </div>
+
+      <div className="qp-acc-toolbar">
+        <label className={`qp-acc-pending-toggle${pendingOnly ? " is-on" : ""}`}>
           <input type="checkbox" checked={pendingOnly} onChange={(e) => togglePending(e.target.checked)} />
-          Chỉ hiện chờ duyệt
+          <span>Chỉ hiện bài chờ duyệt{counts.pendingAll > 0 ? ` (${counts.pendingAll})` : ""}</span>
         </label>
       </div>
 

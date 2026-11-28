@@ -28,6 +28,7 @@ export const PERM_MODULES = [
   { key: "affiliate",  label: "Affiliate Shopee",    group: "Hệ thống" },
   { key: "cai-dat",    label: "Cài đặt",             group: "Hệ thống" },
   { key: "hoat-dong",  label: "Nhật ký hoạt động",   group: "Hệ thống" },
+  { key: "thong-ke",   label: "Thống kê truy cập",   group: "Hệ thống" },
 ] as const;
 
 export type ModuleKey = typeof PERM_MODULES[number]["key"];
@@ -62,6 +63,7 @@ export const DEFAULT_EDITOR_PERMS: RolePerms = {
   "affiliate":  "none",
   "cai-dat":    "none",
   "hoat-dong":  "none",
+  "thong-ke":   "none",
 };
 
 export const DEFAULT_USER_PERMS: RolePerms = Object.fromEntries(

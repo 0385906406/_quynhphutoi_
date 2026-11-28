@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { searchAll, SEARCH_MODULES, MODULE_ICON } from "@/lib/search";
 import { pageMetadata } from "@/lib/page-seo";
+import { recordSearchTerm } from "@/lib/recommend";
+import { SearchInterest } from "@/components/news/SearchInterest";
+import { ForYou } from "@/components/news/ForYou";
 
 export async function generateMetadata() {
   return pageMetadata({
@@ -18,6 +21,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const query = q.trim();
   const moduleFilter = SEARCH_MODULES.some((m) => m.slug === type) ? type : "";
   const { total, groups } = query.length >= 2 ? await searchAll(query, 24, moduleFilter || undefined) : { total: 0, groups: [] };
+
+  if (query.length >= 2) await recordSearchTerm(query, total > 0).catch(() => {});
 
   return (
     <>
@@ -54,6 +59,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
       <section className="qp-newsmain">
         <div className="container-wide">
+          <SearchInterest query={query} />
+          {query.length < 2 && <ForYou title="Có thể bạn muốn đọc" eyebrow="Gợi ý" limit={4} />}
           {query.length >= 2 && total === 0 ? (
             <div className="qp-empty">
               <div className="qp-empty__title">Không tìm thấy “{query}”</div>

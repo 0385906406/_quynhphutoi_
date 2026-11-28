@@ -91,7 +91,7 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ s
               )}
             </div>
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/cho" />
             <DetailSocial type="cho" slug={slug} title={m.name} />
           </div>
 

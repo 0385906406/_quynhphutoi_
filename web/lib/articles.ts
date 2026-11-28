@@ -183,6 +183,53 @@ export async function countArticles(opts: ListOpts = {}) {
   return col.countDocuments(filter);
 }
 
+// ---- Phân trang tin tức (API /api/news) ----
+export type NewsQuery = {
+  scope: ArticleScope;
+  category?: string;          // TÊN danh mục (khớp trường `category`)
+  search?: string;            // khớp 1 phần trong tiêu đề / tóm tắt
+  sort?: "newest" | "oldest" | "popular";
+  exclude?: string[];         // slug bài đã nằm ở vùng nổi bật → không lặp ở lưới
+  page: number;               // từ 1
+  pageSize: number;
+};
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Trả đúng 1 trang + tổng số bài khớp bộ lọc (để dựng phân trang). Chỉ bài công khai.
+export async function queryNewsPage(q: NewsQuery) {
+  const col = await articles();
+  const filter: Filter<ArticleDoc> = { status: "published", ...PUBLIC_GATE, scope: scopeFilter(q.scope) };
+  if (q.category) filter.category = q.category;
+  if (q.exclude?.length) filter.slug = { $nin: q.exclude };
+  const term = q.search?.trim();
+  if (term) {
+    const re = new RegExp(escapeRegex(term), "i");
+    filter.$or = [{ title: re }, { excerpt: re }];
+  }
+  const sort: Record<string, 1 | -1> =
+    q.sort === "oldest" ? { publishedAt: 1, _id: 1 }
+    : q.sort === "popular" ? { views: -1, publishedAt: -1, _id: 1 }
+    : { publishedAt: -1, _id: 1 };
+  const [docs, total] = await Promise.all([
+    col.find(filter).sort(sort).skip((q.page - 1) * q.pageSize).limit(q.pageSize).toArray(),
+    col.countDocuments(filter),
+  ]);
+  return { docs, total, totalPages: Math.max(1, Math.ceil(total / q.pageSize)) };
+}
+
+// Số bài công khai theo phạm vi + danh sách danh mục — cho nhãn tab & ô lọc danh mục.
+export async function newsFacets() {
+  const col = await articles();
+  const base: Filter<ArticleDoc> = { status: "published", ...PUBLIC_GATE };
+  const [local, outside, categories] = await Promise.all([
+    col.countDocuments({ ...base, scope: scopeFilter("trong-xa") }),
+    col.countDocuments({ ...base, scope: scopeFilter("ngoai-xa") }),
+    col.distinct("category", base),
+  ]);
+  return { counts: { "trong-xa": local, "ngoai-xa": outside }, categories: (categories as string[]).filter(Boolean).sort((a, b) => a.localeCompare(b, "vi")) };
+}
+
 // Bài liên quan: ưu tiên cùng chuyên mục, mới nhất.
 export async function relatedArticles(slug: string, n = 3) {
   const col = await articles();
@@ -316,13 +363,6 @@ export function buildArticleJsonLd(a: ArticleDoc) {
       "@id": articleUrl(a),
       isPartOf: { "@id": SITE_URL },
     },
-    aggregateRating: a.views ? {
-      "@type": "AggregateRating",
-      ratingValue: 4.5,
-      bestRating: 5,
-      worstRating: 1,
-      ratingCount: Math.min(a.views, 1000),
-    } : undefined,
   };
 }
 

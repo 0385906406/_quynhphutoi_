@@ -16,6 +16,9 @@ import { BarList } from "@/components/admin/charts/BarList";
 import { ChartSwitcher, type SwitchOption } from "@/components/admin/charts/ChartSwitcher";
 import { DashboardDatePanel } from "@/components/admin/dashboard/DashboardDatePanel";
 import { getCurrentUser } from "@/lib/admin";
+import { getModulePerm } from "@/lib/admin-guard";
+import { trafficOverview } from "@/lib/visits";
+import { TrafficPanel } from "@/components/admin/dashboard/TrafficPanel";
 import { isAdmin } from "@/lib/users";
 
 export const metadata: Metadata = { title: "Bảng điều khiển — Quản trị", robots: { index: false, follow: false } };
@@ -197,6 +200,9 @@ function SectionHead({ label, title }: { label: string; title: string }) {
 export default async function AdminHomePage() {
   const user = await getCurrentUser();
   const isAdminUser = isAdmin(user);
+
+  const canTraffic = ((await getModulePerm("thong-ke")) ?? "none") !== "none";
+  const traffic = canTraffic ? await trafficOverview().catch(() => null) : null;
 
   const now = new Date();
   const som = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -388,6 +394,8 @@ export default async function AdminHomePage() {
           <div /> {/* placeholder giữ grid */}
         </div>
       )}
+
+      {traffic && <TrafficPanel data={traffic} />}
 
       {/* ── Thống kê theo ngày (interactive) ─────────────────── */}
       <div style={{ marginBottom: "var(--space-6)" }}>

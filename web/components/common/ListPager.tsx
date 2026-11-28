@@ -1,6 +1,6 @@
 "use client";
 // Chân danh sách: desktop hiện Pagination; mobile hiện vùng "sentinel" cho infinite scroll.
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Pagination } from "@/components/common/Pagination";
 import type { PagerControls } from "@/lib/use-paged-list";
 
@@ -14,10 +14,31 @@ function stickyOffset(): number {
   return h + 16;
 }
 
-export function ListPager({ pager }: { pager: PagerControls }) {
+// anchorId: nơi cuộn tới khi sang trang 2+ (đầu danh sách). firstPageAnchorId: nơi cuộn tới khi về trang 1
+// (thường cao hơn — gồm cả khối nổi bật phía trên danh sách). Thiếu thì dùng phần tử ngay trước pager.
+export function ListPager({ pager, anchorId, firstPageAnchorId }: { pager: PagerControls; anchorId?: string; firstPageAnchorId?: string }) {
   // Tách field: object pager chứa ref → React Compiler coi cả object là ref nếu đọc qua pager.x.
-  const { page, totalPages, setPage, mobile, sentinelRef, hasMore } = pager;
+  const { page, totalPages, setPage, mobile, sentinelRef, hasMore, settledPage, busy } = pager;
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Cuộn về đầu danh sách SAU KHI trang mới đã hiện (settledPage đổi cùng lúc với nội dung).
+  // Trước đây đo vị trí ngay lúc bấm — lúc đó bố cục còn của trang cũ (vd khối "nổi bật" ở trang 1 sắp
+  // biến mất) nên cuộn lệch, đẩy người dùng xuống đáy trang.
+  const shown = settledPage ?? page;
+  const prevShown = useRef(shown);
+  useEffect(() => {
+    if (prevShown.current === shown) return;
+    prevShown.current = shown;
+    if (mobile) return;
+    const id = shown === 1 && firstPageAnchorId ? firstPageAnchorId : anchorId;
+    const target = (id ? document.getElementById(id) : null) ?? wrapRef.current?.previousElementSibling;
+    if (!target) return;
+    const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset();
+    if (top < window.scrollY) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+    }
+  }, [shown, mobile, anchorId, firstPageAnchorId]);
 
   if (mobile) {
     return (
@@ -32,22 +53,9 @@ export function ListPager({ pager }: { pager: PagerControls }) {
     );
   }
 
-  // Đổi trang → cuộn về đầu danh sách (lưới kết quả nằm ngay trước ListPager),
-  // nếu không người dùng vẫn đứng ở đáy trang sau khi bấm số trang.
-  const onPage = (p: number) => {
-    setPage(p);
-    const list = wrapRef.current?.previousElementSibling;
-    if (!list) return;
-    const top = list.getBoundingClientRect().top + window.scrollY - stickyOffset();
-    if (top < window.scrollY) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
-    }
-  };
-
   return (
-    <div ref={wrapRef}>
-      <Pagination page={page} totalPages={totalPages} onPage={onPage} />
+    <div ref={wrapRef} aria-busy={busy || undefined}>
+      <Pagination page={page} totalPages={totalPages} onPage={setPage} />
     </div>
   );
 }

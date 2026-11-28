@@ -22,8 +22,9 @@ function FIcon({ name }: { name: string }) {
 export async function Footer() {
   const year = new Date().getFullYear();
   const s = await getSettings();
-  const colInfo = NAV.slice(0, 5); // Trang chủ, Tổng quan, Trường học, Y tế, Việc làm
-  const colUtil = NAV.slice(5);    // Tìm đồ rơi, Chợ, Giao thông, Di tích, Tin tức, Liên hệ
+  const half = Math.ceil(NAV.length / 2);
+  const colInfo = NAV.slice(0, half);
+  const colUtil = NAV.slice(half);
 
   return (
     <footer className="qp-footer">

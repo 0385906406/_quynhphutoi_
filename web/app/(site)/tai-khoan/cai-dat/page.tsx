@@ -15,13 +15,13 @@ export default async function AccountSettingsPage() {
     <div className="qp-acc-page">
       <header className="qp-acc-page__head">
         <h2 className="type-h2">Cài đặt tài khoản</h2>
-        <p className="type-body-small text-muted">Cập nhật thông tin hiển thị và đổi mật khẩu đăng nhập.</p>
+        <p className="type-body-small text-muted">Cập nhật thông tin cá nhân (tuỳ chọn) để nhận tin phù hợp với bạn, và đổi mật khẩu đăng nhập.</p>
       </header>
 
       <div className="qp-acc-grid2">
         <div className="qp-acc-card">
           <div className="qp-acc-card__title">Thông tin tài khoản</div>
-          <ProfileForm initialName={user.name} email={user.email} initialAvatar={user.avatar ?? ""} />
+          <ProfileForm initialName={user.name} email={user.email} initialAvatar={user.avatar ?? ""} initialProfile={user.profile ?? {}} />
         </div>
 
         <div className="qp-acc-card">

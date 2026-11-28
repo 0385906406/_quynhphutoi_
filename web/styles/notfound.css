@@ -10,7 +10,7 @@
 .wm-404 *, .wm-404 *::before, .wm-404 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .wm-404 {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-primary, system-ui, sans-serif);
   background: radial-gradient(ellipse at 60% 40%, #d8f0e2 0%, #edf7f1 60%);
   min-height: 100vh; min-height: 100dvh;
   display: flex; align-items: center; justify-content: center;
@@ -68,7 +68,7 @@
   opacity: .3; pointer-events: none;
 }
 .wm-404 .nf-watermark span {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: .88rem; font-weight: 700;
   color: white; letter-spacing: .04em;
 }
@@ -113,14 +113,14 @@
 }
 .wm-404 .nf-brand-icon img { object-fit: contain; }
 .wm-404 .nf-brand-name {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.05rem; font-weight: 700;
   color: var(--nf-g1); letter-spacing: .02em;
 }
 
 /* ── TYPOGRAPHY ── */
 .wm-404 .nf-num {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 7rem; font-weight: 700; line-height: 1;
   background: linear-gradient(135deg, var(--nf-g1) 0%, var(--nf-g3) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -138,13 +138,13 @@
   animation: nfFadeUp .7s cubic-bezier(.22,1,.36,1) .18s both;
 }
 .wm-404 .nf-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.75rem; font-weight: 700;
   color: var(--nf-g1); line-height: 1.2; margin-bottom: 8px;
   animation: nfFadeUp .7s cubic-bezier(.22,1,.36,1) .24s both;
 }
 .wm-404 .nf-sub {
-  font-size: .82rem; color: #7a9e87; font-weight: 300;
+  font-size: .82rem; color: #4a6e58; font-weight: 300;
   line-height: 1.65; margin-bottom: 28px;
   animation: nfFadeUp .7s cubic-bezier(.22,1,.36,1) .30s both;
 }
@@ -153,7 +153,7 @@
   padding: 11px 22px; width: fit-content;
   background: linear-gradient(135deg, var(--nf-g1) 0%, var(--nf-g3) 100%);
   color: #fff; border-radius: 10px; text-decoration: none;
-  font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 500;
+  font-family: var(--font-primary, system-ui, sans-serif); font-size: .88rem; font-weight: 500;
   box-shadow: 0 6px 22px rgba(30,80,50,.28);
   transition: transform .15s, box-shadow .2s;
   position: relative; overflow: hidden;
@@ -167,7 +167,7 @@
   pointer-events: none;
 }
 .wm-404 .nf-links {
-  margin-top: 12px; font-size: .78rem; color: #7a9e87;
+  margin-top: 12px; font-size: .78rem; color: #4a6e58;
   animation: nfFadeUp .7s cubic-bezier(.22,1,.36,1) .42s both;
 }
 .wm-404 .nf-links a { color:var(--nf-g2); font-weight:500; text-decoration:none; transition:color .2s; }

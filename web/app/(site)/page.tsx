@@ -4,6 +4,7 @@ import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
 import { type ArticleDoc } from "@/lib/articles";
 import { loadHomeSections } from "@/lib/home-sections";
 import { NewsCard } from "@/components/news/NewsCard";
+import { ForYou } from "@/components/news/ForYou";
 import { HomeModuleCard } from "@/components/home/HomeModuleCard";
 import { SITE, buildMetadata, jsonLdWebSite, jsonLdOrganization } from "@/lib/seo";
 import { getPageSeoConfig, type PageSeoConfig } from "@/lib/page-seo";
@@ -11,8 +12,15 @@ import { JsonLd } from "@/components/common/JsonLd";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { getSettings } from "@/lib/settings";
 import { getWeather, type WeatherData } from "@/lib/weather";
-import { HomeWeatherWidget } from "@/components/weather/HomeWeatherWidget";
-import { HomeWidgetGrid } from "@/components/home/HomeWidgetGrid";
+import { getHomeBlocks } from "@/lib/home-blocks";
+import { DailyHub } from "@/components/daily/DailyHub";
+import { fmtViews } from "@/lib/news";
+import { countJobs } from "@/lib/jobs";
+import { schools } from "@/lib/schools";
+import { health } from "@/lib/health";
+import { transit } from "@/lib/transit";
+import { listMarket } from "@/lib/market";
+import { WARDS } from "@/lib/wards";
 
 // SEO trang chủ — admin chỉnh ở "SEO từng trang" (key "/"); ô trống = mặc định bên dưới.
 // Dùng title tuyệt đối để KHÔNG gắn hậu tố "· Tên site" cho trang gốc.
@@ -30,13 +38,25 @@ export async function generateMetadata(): Promise<Metadata> {
   return { ...base, title: { absolute: title } };
 }
 
-/* ----------------------------- Dữ liệu mẫu ----------------------------- */
-const KPIS = [
-  { num: "230.000", unit: "+", label: "Dân số toàn huyện" },
-  { num: "37", unit: "", label: "Xã & thị trấn" },
-  { num: "120", unit: "+", label: "Trường học các cấp" },
-  { num: "1.000", unit: "+", label: "Tin việc làm" },
+/* ------------------------------ Số liệu vùng ------------------------------ */
+// Vùng Quỳnh Phụ cũ sau sáp nhập 1/7/2025 (NQ 1666/NQ-UBTVQH15): 35 xã, thị trấn → 9 xã thuộc Hưng Yên.
+// Diện tích 9 xã cộng lại ≈ 210 km²; dân số ≈ 241.000 (điều tra 1/4/2024), số liệu sáp nhập từng xã > 250.000.
+const AREA_FACTS = [
+  { num: "240.000", unit: "+", label: "Người dân vùng Quỳnh Phụ" },
+  { num: "9", unit: "", label: "Xã mới (từ 35 xã, thị trấn cũ)" },
+  { num: "210", unit: "km²", label: "Diện tích tự nhiên" },
 ];
+
+// Số khẩn cấp quốc gia + đầu mối UBND xã Quỳnh Phụ theo Thông báo 25378/TB-UBND ngày 11/11/2026
+// (số di động cán bộ do xã công khai — đổi người phụ trách thì cập nhật lại tại đây).
+const HOTLINES = [
+  { label: "Cấp cứu y tế", value: "115", icon: "ambulance" },
+  { label: "Công an", value: "113", icon: "shield" },
+  { label: "Cứu hoả, cứu nạn", value: "114", icon: "flame" },
+  { label: "Văn phòng UBND xã Quỳnh Phụ", value: "0976 399 942", icon: "building" },
+  { label: "Trung tâm Phục vụ hành chính công xã", value: "0985 110 981", icon: "megaphone" },
+];
+const HOTLINE_SOURCE = "https://quynhphu.hungyen.gov.vn/danh-ba-dien-tu.html";
 
 const TILES = [
   { href: "/truong-hoc", title: "Trường học", desc: "Danh bạ trường mầm non đến THPT theo xã.", icon: "school" },
@@ -48,38 +68,30 @@ const TILES = [
 ];
 
 
-const EVENTS = [
-  { day: "12", month: "06", title: "Phiên chợ Quỳnh Côi", place: "TT Quỳnh Côi", time: "Cả ngày", type: "Chợ phiên" },
-  { day: "15", month: "06", title: "Khám sức khoẻ miễn phí cho người cao tuổi", place: "TYT xã An Bài", time: "07:30 – 11:00", type: "Y tế" },
-  { day: "20", month: "06", title: "Ngày hội việc làm xã Quỳnh Phụ", place: "Trung tâm VH huyện", time: "08:00 – 16:00", type: "Việc làm" },
-];
-
-const SERVICES = [
-  {
-    tone: "is-school", icon: "school", cat: "Giáo dục", title: "Trường học", href: "/truong-hoc", linkLabel: "Xem danh bạ",
-    desc: "Danh bạ trường mầm non đến THPT theo từng xã, kèm địa chỉ và thông tin tuyển sinh.",
-    stats: [{ num: "120+", label: "Trường" }, { num: "37", label: "Xã/TT" }],
-    tags: ["Mầm non", "Tiểu học", "THCS", "THPT"],
-  },
-  {
-    tone: "is-health", icon: "health", cat: "Sức khoẻ", title: "Y tế", href: "/y-te", linkLabel: "Xem cơ sở",
-    desc: "Bệnh viện, trạm y tế và phòng khám trên địa bàn, kèm số điện thoại và giờ làm việc.",
-    stats: [{ num: "15", label: "Cơ sở" }, { num: "115", label: "Cấp cứu" }],
-    tags: ["Bệnh viện", "Trạm y tế", "Phòng khám"],
-  },
-  {
-    tone: "is-transit", icon: "bus", cat: "Đi lại", title: "Giao thông", href: "/giao-thong", linkLabel: "Xem tuyến",
-    desc: "Tuyến xe buýt, xe khách và lộ trình kết nối Quỳnh Phụ với các huyện, tỉnh lân cận.",
-    stats: [{ num: "8", label: "Tuyến" }, { num: "5", label: "Bến xe" }],
-    tags: ["Xe buýt", "Xe khách", "Lộ trình"],
-  },
-];
-
-const HOTLINES = [
-  { label: "Cấp cứu y tế", value: "115", icon: "ambulance" },
-  { label: "Công an huyện", value: "113", icon: "shield" },
-  { label: "Đường dây phản ánh", value: "0227 386 xxxx", icon: "megaphone" },
-];
+// Thẻ dịch vụ: số liệu đếm từ dữ liệu thật của web (truyền vào lúc render).
+function buildServices(c: { schools: number; health: number; transit: number }) {
+  const n = (v: number) => (v > 0 ? v.toLocaleString("vi-VN") : "—");
+  return [
+    {
+      tone: "is-school", icon: "school", cat: "Giáo dục", title: "Trường học", href: "/truong-hoc", linkLabel: "Xem danh bạ trường học",
+      desc: "Danh bạ trường mầm non đến THPT theo từng xã, kèm địa chỉ và thông tin tuyển sinh.",
+      stats: [{ num: n(c.schools), label: "Trường" }, { num: "9", label: "Xã mới" }],
+      tags: ["Mầm non", "Tiểu học", "THCS", "THPT"],
+    },
+    {
+      tone: "is-health", icon: "health", cat: "Sức khoẻ", title: "Y tế", href: "/y-te", linkLabel: "Xem cơ sở y tế",
+      desc: "Bệnh viện, trạm y tế và phòng khám trên địa bàn, kèm số điện thoại và giờ làm việc.",
+      stats: [{ num: n(c.health), label: "Cơ sở" }, { num: "115", label: "Cấp cứu" }],
+      tags: ["Bệnh viện", "Trạm y tế", "Phòng khám"],
+    },
+    {
+      tone: "is-transit", icon: "bus", cat: "Đi lại", title: "Giao thông", href: "/giao-thong", linkLabel: "Xem tuyến xe",
+      desc: "Tuyến xe buýt, xe khách và lộ trình kết nối Quỳnh Phụ với các xã, tỉnh lân cận.",
+      stats: [{ num: n(c.transit), label: "Tuyến xe" }],
+      tags: ["Xe buýt", "Xe khách", "Lộ trình"],
+    },
+  ];
+}
 
 /* ------------------------------- Icons -------------------------------- */
 function Icon({ name, size = 24 }: { name: string; size?: number }) {
@@ -101,6 +113,8 @@ function Icon({ name, size = 24 }: { name: string; size?: number }) {
     case "ambulance": return (<svg {...p}><path d="M10 10H6M8 8v4" /><path d="M3 17V7a1 1 0 0 1 1-1h11v11" /><path d="M15 9h4l2 3v5h-6" /><circle cx="7" cy="19" r="2" /><circle cx="17" cy="19" r="2" /></svg>);
     case "shield": return (<svg {...p}><path d="M12 3l8 3v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" /></svg>);
     case "megaphone": return (<svg {...p}><path d="M3 11v2a1 1 0 0 0 1 1h3l8 5V5L7 10H4a1 1 0 0 0-1 1z" /><path d="M18 9a3 3 0 0 1 0 6" /></svg>);
+    case "flame": return (<svg {...p}><path d="M12 22a7 7 0 0 0 7-7c0-4-3-6.5-4-10-2 2.5-2.5 4-2.5 6-1.5-1-2.5-2.5-2.5-4C7 9.5 5 12 5 15a7 7 0 0 0 7 7z" /></svg>);
+    case "building": return (<svg {...p}><path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3" /></svg>);
     default: return null;
   }
 }
@@ -135,15 +149,30 @@ function toHeroSlide(d: ArticleDoc): HeroSlide {
     image: d.coverImage,
     imageAlt: d.coverAlt ?? "",
     cta: { label: "Đọc bài viết", href: `/tin-tuc/${d.slug}` },
-    byline: { avatar: initials, role: d.author?.title || d.category, name: d.author?.name || "Ban biên tập", time: `${d.readingMinutes} phút đọc` },
+    byline: { avatar: initials, role: d.author?.title || d.category, name: d.author?.name || "Ban biên tập", time: fmtViews(d.views ?? 0) },
   };
 }
 
 export default async function HomePage() {
   // Các khối trang chủ (Tin tức / Việc làm / Tìm đồ rơi / Mua bán) — đọc theo cấu hình admin.
-  const [home, settings] = await Promise.all([loadHomeSections(), getSettings()]);
+  const [home, settings, openJobs, counts, markets, blocks] = await Promise.all([
+    loadHomeSections(),
+    getSettings(),
+    countJobs({ status: "open" }).catch(() => 0),
+    Promise.all([
+      schools().then((c) => c.countDocuments({ active: true })),
+      health().then((c) => c.countDocuments({ active: true })),
+      transit().then((c) => c.countDocuments({ active: true })),
+    ]).then(([s, h, t]) => ({ schools: s, health: h, transit: t })).catch(() => ({ schools: 0, health: 0, transit: 0 })),
+    listMarket({ activeOnly: true }).catch(() => []),
+    getHomeBlocks(),
+  ]);
+  const kpis = [...AREA_FACTS, { num: openJobs.toLocaleString("vi-VN"), unit: "", label: "Tin việc làm đang tuyển" }];
+  const services = buildServices(counts);
+  // Lịch chợ phiên thật (mục Chợ có ghi lịch họp) thay cho sự kiện gõ tay.
+  const marketDays = markets.filter((m) => m.schedule?.trim()).slice(0, 3);
   const weather: WeatherData | null =
-    settings.weatherEnabled && settings.weatherShowOnHome ? await getWeather(settings).catch(() => null) : null;
+    blocks.daily && blocks.weather && settings.weatherEnabled && settings.weatherShowOnHome ? await getWeather(settings).catch(() => null) : null;
 
   const heroSlides: HeroSlide[] = home.sliderDocs.map(toHeroSlide);
   return (
@@ -151,10 +180,33 @@ export default async function HomePage() {
       <JsonLd data={[jsonLdWebSite(), jsonLdOrganization(settings)]} />
       <HeroSlider articleSlides={heroSlides} />
 
+      {/* THÔNG TIN HÔM NAY — xổ số, bóng đá, giá vàng, tỷ giá + thời tiết */}
+      <DailyHub weather={weather} cfg={blocks} />
+
+      {/* TRUY CẬP NHANH — lưới icon gọn: 6 cột desktop · 3 cột tablet · 2 cột điện thoại */}
+      {blocks.quick && (
+      <section className="section section-alt qp-quick">
+        <div className="container-wide">
+          <SectionHead eyebrow="Tiện ích" title="Truy cập nhanh" desc="Các mục thông tin được người dân quan tâm nhất." />
+          <div className="qp-quick__grid">
+            {TILES.map((t) => (
+              <Link className="qp-tile qp-tile--compact" href={t.href} key={t.href}>
+                <span className="qp-tile__icon"><Icon name={t.icon} /></span>
+                <span className="qp-tile__title">{t.title}</span>
+                <span className="qp-tile__desc">{t.desc}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      )}
+
       {/* KPI STRIP */}
+      {blocks.kpi && (
       <section className="qp-kpi-strip">
         <div className="container-wide qp-kpi-grid">
-          {KPIS.map((k) => (
+          {kpis.map((k) => (
             <div className="qp-kpi" key={k.label}>
               <div className="qp-kpi__value">
                 <span className="num">{k.num}</span>
@@ -166,33 +218,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeWeatherWidget data={weather} forecastDays={settings.weatherForecastDays} />
-
-      {/* WIDGETS — Sổ số, Bóng đá, Phim, Giá vàng, Tỷ giá, Thời tiết, Chiêm tinh */}
-      <HomeWidgetGrid />
-
-      {/* TRUY CẬP NHANH */}
-      <section className="section">
-        <div className="container-wide">
-          <SectionHead eyebrow="Tiện ích" title="Truy cập nhanh" desc="Các mục thông tin được người dân quan tâm nhất." />
-          <div className="grid grid-3 qp-scroller">
-            {TILES.map((t) => (
-              <Link className="qp-tile" href={t.href} key={t.href}>
-                <span className="qp-tile__icon"><Icon name={t.icon} /></span>
-                <span className="qp-tile__title">{t.title}</span>
-                <span className="qp-tile__desc">{t.desc}</span>
-                <span className="qp-tile__link">Xem chi tiết <span aria-hidden>→</span></span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      )}
 
       {/* TIN TỨC & THÔNG BÁO — theo cấu hình admin (Trang chủ) */}
       {home.news.length > 0 && (
         <section className="section section-alt qp-section--news-bg">
           <div className="container-wide">
-            <SectionHead eyebrow="Cập nhật" title="Tin tức & thông báo" href="/tin-tuc" />
+            <SectionHead eyebrow="Cập nhật" title="Tin tức & thông báo" href="/tin-tuc" linkLabel="Xem tất cả tin tức" />
             <div className="qp-grid-news qp-scroller">
               {home.news.map((a) => (
                 <NewsCard key={a.id} a={a} />
@@ -202,11 +234,18 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* GỢI Ý THEO SỞ THÍCH — tự ẩn nếu chưa có bài */}
+      <section className="section">
+        <div className="container-wide">
+          <ForYou limit={4} exclude={home.news.map((n) => n.slug)} />
+        </div>
+      </section>
+
       {/* VIỆC LÀM — theo cấu hình admin */}
       {home.jobs.length > 0 && (
         <section className="section">
           <div className="container-wide">
-            <SectionHead eyebrow="Tuyển dụng" title="Việc làm mới nhất" href="/viec-lam" />
+            <SectionHead eyebrow="Tuyển dụng" title="Việc làm mới nhất" href="/viec-lam" linkLabel="Xem tất cả việc làm" />
             <div className="qp-grid-news qp-scroller">
               {home.jobs.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
             </div>
@@ -218,7 +257,7 @@ export default async function HomePage() {
       {home.lostfound.length > 0 && (
         <section className="section section-alt">
           <div className="container-wide">
-            <SectionHead eyebrow="Cộng đồng" title="Tìm đồ rơi gần đây" href="/tim-do-roi" />
+            <SectionHead eyebrow="Cộng đồng" title="Tìm đồ rơi gần đây" href="/tim-do-roi" linkLabel="Xem tất cả tin tìm đồ" />
             <div className="qp-grid-news qp-scroller">
               {home.lostfound.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
             </div>
@@ -230,7 +269,7 @@ export default async function HomePage() {
       {home.classifieds.length > 0 && (
         <section className="section">
           <div className="container-wide">
-            <SectionHead eyebrow="Rao vặt" title="Mua bán mới nhất" href="/mua-ban" />
+            <SectionHead eyebrow="Rao vặt" title="Mua bán mới nhất" href="/mua-ban" linkLabel="Xem tất cả tin mua bán" />
             <div className="qp-grid-news qp-scroller">
               {home.classifieds.map((c) => <HomeModuleCard key={c.slug} card={c} />)}
             </div>
@@ -238,32 +277,37 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* LỊCH SỰ KIỆN & CHỢ PHIÊN */}
-      <section className="section">
-        <div className="container-wide">
-          <SectionHead eyebrow="Sắp diễn ra" title="Lịch sự kiện & chợ phiên" href="/cho" />
-          <div className="grid grid-3">
-            {EVENTS.map((e) => (
-              <article className="qp-event-card" key={e.title}>
-                <div className="qp-event-card__date">
-                  <div className="qp-event-card__day">{e.day}</div>
-                  <div className="qp-event-card__month">Th{e.month}</div>
-                </div>
-                <div className="qp-event-card__body">
-                  <span className="qp-category-badge">{e.type}</span>
-                  <h3 className="qp-event-card__title">{e.title}</h3>
-                  <div className="qp-event-card__meta">
-                    <span><Icon name="map-pin" size={14} />{e.place}</span>
-                    <span><Icon name="clock" size={14} />{e.time}</span>
+      {/* LỊCH CHỢ PHIÊN — từ dữ liệu mục Chợ (chợ có ghi lịch họp); chưa có thì ẩn cả khối */}
+      {blocks.market && marketDays.length > 0 && (
+        <section className="section">
+          <div className="container-wide">
+            <SectionHead eyebrow="Chợ quê" title="Lịch chợ phiên" href="/cho" linkLabel="Xem tất cả chợ" />
+            <div className="grid grid-3">
+              {marketDays.map((m) => (
+                <Link className="qp-event-card" href={`/cho/${m.slug}`} key={m.slug}>
+                  <div className="qp-event-card__date" aria-hidden>
+                    <div className="qp-event-card__day"><Icon name="market" size={26} /></div>
+                    <div className="qp-event-card__month">Chợ</div>
                   </div>
-                </div>
-              </article>
-            ))}
+                  <div className="qp-event-card__body">
+                    <span className="qp-category-badge">{m.categoryLabel}</span>
+                    <h3 className="qp-event-card__title">{m.name}</h3>
+                    <div className="qp-event-card__meta">
+                      <span><Icon name="clock" size={14} />{m.schedule}</span>
+                      {(m.address || WARDS.find((w) => w.slug === m.wardSlug)?.name) && (
+                        <span><Icon name="map-pin" size={14} />{m.address || WARDS.find((w) => w.slug === m.wardSlug)?.name}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* TIỆN ÍCH & DỊCH VỤ THIẾT YẾU */}
+      {blocks.services && (
       <section className="section section-alt">
         <div className="container-wide">
           <SectionHead
@@ -272,7 +316,7 @@ export default async function HomePage() {
             desc="Tra cứu nhanh trường học, cơ sở y tế và giao thông trên địa bàn xã Quỳnh Phụ — kèm địa chỉ, số điện thoại và giờ làm việc."
           />
           <div className="grid grid-3">
-            {SERVICES.map((s) => (
+            {services.map((s) => (
               <article className="qp-service-card" key={s.title}>
                 <div className="qp-service-card__top">
                   <span className={`qp-service-card__icon ${s.tone}`}><Icon name={s.icon} size={26} /></span>
@@ -302,28 +346,38 @@ export default async function HomePage() {
         </div>
       </section>
 
+      )}
+
       {/* HOTLINE BAND */}
+      {blocks.hotline && (
       <section className="section">
         <div className="container-wide">
           <div className="qp-cta-band">
+            <h2 className="qp-cta-band__title">Đường dây nóng & liên hệ khẩn cấp</h2>
             {HOTLINES.map((h) => (
               <div className="qp-cta-item" key={h.label}>
                 <span className="qp-cta-item__icon"><Icon name={h.icon} size={24} /></span>
                 <div>
                   <div className="qp-cta-item__label">{h.label}</div>
-                  <div className="qp-cta-item__value">{h.value}</div>
+                  <a className="qp-cta-item__value" href={`tel:${h.value.replace(/\s/g, "")}`}>{h.value}</a>
                 </div>
               </div>
             ))}
+            <p className="qp-cta-band__note">
+              Số của UBND xã Quỳnh Phụ theo thông báo ngày 11/11/2026 — nhận phản ánh trong giờ hành chính.{" "}
+              <a href={HOTLINE_SOURCE} target="_blank" rel="noopener noreferrer">Xem danh bạ đầy đủ trên cổng thông tin xã</a>
+            </p>
           </div>
         </div>
       </section>
+
+      )}
 
       {/* NEWSLETTER */}
       <section className="section section-alt">
         <div className="container-wide">
           <div className="qp-newsletter">
-            <h2 className="type-h2">Nhận tin huyện nhà qua email</h2>
+            <h2 className="type-h2">Nhận tin quê nhà qua email</h2>
             <p className="type-body">Tin tức, thông báo và việc làm mới — gửi gọn vào hộp thư của bạn.</p>
             <NewsletterForm source="home" />
           </div>

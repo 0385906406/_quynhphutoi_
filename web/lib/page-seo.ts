@@ -34,6 +34,9 @@ export const PAGE_SEO_DEFS: { key: string; label: string }[] = [
   { key: "/noi-quy", label: "Nội quy" },
   { key: "/quang-cao", label: "Quảng cáo" },
   { key: "/tim-kiem", label: "Tìm kiếm" },
+  { key: "/xo-so", label: "Xổ số miền Bắc" },
+  { key: "/bong-da", label: "Bóng đá" },
+  { key: "/gia-vang", label: "Giá vàng & tỷ giá" },
 ];
 export const PAGE_SEO_KEYS = PAGE_SEO_DEFS.map((d) => d.key);
 

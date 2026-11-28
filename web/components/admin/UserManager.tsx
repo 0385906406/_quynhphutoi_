@@ -9,6 +9,10 @@ import { usePagination, PageSizeControl } from "@/components/admin/AdminPaging";
 import { RowActions } from "@/components/admin/RowActions";
 import { formatDate } from "@/lib/datetime";
 import { useToast } from "@/components/common/Toast";
+import { AGE_GROUPS, GENDERS, GENDER_LABEL, INTERESTS, OCCUPATIONS } from "@/lib/profile-options";
+import { WARDS } from "@/lib/wards";
+
+const wardName = (slug: string) => WARDS.find((w) => w.slug === slug)?.name ?? "";
 
 const SUPERADMIN_EMAIL = "duongnv10504@gmail.com";
 
@@ -24,19 +28,29 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
   const [q, setQ]             = useState("");
   const [fRole, setFRole]     = useState("");
   const [fStatus, setFStatus] = useState("");
+  const [fGender, setFGender] = useState("");
+  const [fAge, setFAge]       = useState("");
+  const [fWard, setFWard]     = useState("");
+  const [fJob, setFJob]       = useState("");
+  const [fInt, setFInt]       = useState("");
   const { toast } = useToast();
 
   const filtered = useMemo(() => {
     const kw = q.trim().toLowerCase();
     return rows.filter((r) => {
       if (fRole && r.role !== fRole) return false;
+      if (fGender && r.gender !== fGender) return false;
+      if (fAge && r.ageGroup !== fAge) return false;
+      if (fWard && r.wardSlug !== fWard) return false;
+      if (fJob && r.occupation !== fJob) return false;
+      if (fInt && !r.interests.includes(fInt)) return false;
       if (fStatus === "banned" && !r.banned) return false;
       if (fStatus === "warned" && (r.banned || r.warnCount === 0)) return false;
       if (fStatus === "active" && (r.banned || r.warnCount > 0)) return false;
       if (kw && !r.email.toLowerCase().includes(kw) && !r.name.toLowerCase().includes(kw)) return false;
       return true;
     });
-  }, [rows, q, fRole, fStatus]);
+  }, [rows, q, fRole, fStatus, fGender, fAge, fWard, fJob, fInt]);
 
   const pg = usePagination(filtered, 20);
 
@@ -180,6 +194,26 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
           <option value="user">Người dùng</option>
           {customRoles.length > 0 && <option value="custom">Vai trò tùy chỉnh</option>}
         </select>
+        <select className="qp-select" style={{ maxWidth: 150 }} aria-label="Lọc giới tính" value={fGender} onChange={(e) => { setFGender(e.target.value); pg.setPage(1); }}>
+          <option value="">Mọi giới tính</option>
+          {GENDERS.map((g) => <option key={g.value} value={g.value}>{GENDER_LABEL[g.value]}</option>)}
+        </select>
+        <select className="qp-select" style={{ maxWidth: 150 }} aria-label="Lọc nhóm tuổi" value={fAge} onChange={(e) => { setFAge(e.target.value); pg.setPage(1); }}>
+          <option value="">Mọi độ tuổi</option>
+          {AGE_GROUPS.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <select className="qp-select" style={{ maxWidth: 190 }} aria-label="Lọc nơi ở" value={fWard} onChange={(e) => { setFWard(e.target.value); pg.setPage(1); }}>
+          <option value="">Mọi nơi ở</option>
+          {WARDS.map((w) => <option key={w.slug} value={w.slug}>{w.name}</option>)}
+        </select>
+        <select className="qp-select" style={{ maxWidth: 190 }} aria-label="Lọc nghề nghiệp" value={fJob} onChange={(e) => { setFJob(e.target.value); pg.setPage(1); }}>
+          <option value="">Mọi nghề nghiệp</option>
+          {OCCUPATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <select className="qp-select" style={{ maxWidth: 200 }} aria-label="Lọc chủ đề quan tâm" value={fInt} onChange={(e) => { setFInt(e.target.value); pg.setPage(1); }}>
+          <option value="">Mọi chủ đề quan tâm</option>
+          {INTERESTS.map((i) => <option key={i.key} value={i.key}>{i.label}</option>)}
+        </select>
         <span className="qp-admin-toolbar__spacer" />
         <PageSizeControl value={pg.pageSize} onChange={pg.setPageSize} total={filtered.length} />
         <span className="type-body-small text-muted">{filtered.length} tài khoản</span>
@@ -239,6 +273,11 @@ export function UserManager({ initial, me, isSuperAdmin = false, customRoles = [
                       {r.email}
                     </div>
                     <div className="type-body-small text-muted">{r.name}</div>
+                    {(r.gender || r.birthYear || r.wardSlug || r.occupation) && (
+                      <div className="type-body-small text-muted" style={{ marginTop: 2 }}>
+                        {[r.gender ? GENDER_LABEL[r.gender] : "", r.birthYear ? `${r.birthYear}${r.ageGroup ? ` (${r.ageGroup})` : ""}` : "", wardName(r.wardSlug), r.occupation].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
                   </td>
 
                   {/* Trạng thái */}

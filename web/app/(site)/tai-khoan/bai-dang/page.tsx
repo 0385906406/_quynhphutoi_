@@ -17,7 +17,7 @@ export default async function MyPostsPage() {
     <div className="qp-acc-page">
       <header className="qp-acc-page__head">
         <h2 className="type-h2">Bài đăng của tôi</h2>
-        <p className="type-body-small text-muted">Tất cả tin bạn đã đăng ở Tìm đồ rơi, Việc làm và Mua bán — kèm trạng thái duyệt.</p>
+        <p className="type-body-small text-muted">Tất cả bài bạn đã đăng ở Tin tức, Tìm đồ rơi, Việc làm và Mua bán — kèm trạng thái duyệt.</p>
       </header>
       <MyPosts items={posts} />
     </div>

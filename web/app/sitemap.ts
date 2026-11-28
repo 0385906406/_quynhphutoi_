@@ -10,6 +10,7 @@ import { listHealth } from "@/lib/health";
 import { listTransit } from "@/lib/transit";
 import { listRelics } from "@/lib/relics";
 import { listMarket } from "@/lib/market";
+import { listCategories, listTags, listAuthors } from "@/lib/news-taxonomy";
 
 // Đọc DB tại thời điểm request — luôn tươi.
 export const dynamic = "force-dynamic";
@@ -47,6 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...["/tin-tuc", "/viec-lam", "/mua-ban", "/tim-do-roi", "/truong-hoc", "/y-te", "/giao-thong", "/di-tich", "/cho"].map(
       (p) => ({ url: url(p), lastModified: now, changeFrequency: "daily" as const, priority: 0.8 }),
     ),
+    ...["/xo-so", "/bong-da", "/gia-vang"].map(
+      (p) => ({ url: url(p), lastModified: now, changeFrequency: "hourly" as const, priority: 0.8 }),
+    ),
     ...["/tong-quan", "/sap-nhap", "/lien-he", "/noi-quy"].map(
       (p) => ({ url: url(p), lastModified: now, changeFrequency: "monthly" as const, priority: 0.5 }),
     ),
@@ -67,5 +71,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries("/cho", () => listMarket({ activeOnly: true }) as Promise<Row[]>, 0.6),
   ]);
 
-  return [...staticRoutes, ...dynamicGroups.flat()];
+  // Trang chuyên mục / chủ đề / tác giả — mỗi trang có địa chỉ riêng để Google xếp hạng.
+  const taxo = async (prefix: string, fetcher: () => Promise<{ slug: string }[]>, priority: number): Promise<MetadataRoute.Sitemap> => {
+    try { return (await fetcher()).map((t) => ({ url: url(`${prefix}/${t.slug}`), lastModified: now, changeFrequency: "daily" as const, priority })); } catch { return []; }
+  };
+  const taxoGroups = await Promise.all([
+    taxo("/tin-tuc/chuyen-muc", listCategories, 0.7),
+    taxo("/tin-tuc/tag", async () => (await listTags()).filter((t) => t.count >= 2), 0.5),
+    taxo("/tac-gia", listAuthors, 0.4),
+  ]);
+
+  return [...staticRoutes, ...dynamicGroups.flat(), ...taxoGroups.flat()];
 }

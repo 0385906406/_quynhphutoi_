@@ -103,7 +103,7 @@ export default async function RelicDetailPage({ params }: { params: Promise<{ sl
               )}
             </div>
 
-            <AffiliateCTA />
+            <AffiliateCTA page="/di-tich" />
             <DetailSocial type="di-tich" slug={slug} title={r.name} />
           </div>
 

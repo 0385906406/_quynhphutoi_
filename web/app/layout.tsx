@@ -120,7 +120,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
       <ToastProvider>{children}</ToastProvider>
-      <Analytics />
+      {process.env.VERCEL ? <Analytics /> : null}
       {/* Google Analytics 4 — chỉ tải khi đã cấu hình Measurement ID (G-XXXXXXXXXX). */}
       {gaId && (
         <>
